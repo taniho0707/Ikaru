@@ -218,13 +218,13 @@ clean:
 # flash
 #######################################
 flash:
-	~/git/stm32flash-code/stm32flash -b 115200 -w build/Ikaru.hex -g 0x0 /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO02-if00-port0
+	~/git/stm32flash-code/stm32flash -b 230400 -w build/Ikaru.hex -g 0x0 /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO02-if00-port0
 
 #######################################
 # flash and debug
 #######################################
 debug:
-	~/git/stm32flash-code/stm32flash -b 115200 -w build/Ikaru.hex -g 0x0 /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO02-if00-port0
+	~/git/stm32flash-code/stm32flash -b 230400 -w build/Ikaru.hex -g 0x0 /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO02-if00-port0
 	gtkterm --port /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO02-if00-port0 --speed 115200
 
 #######################################

@@ -46,6 +46,8 @@
 // #include "gpio.h"
 #include "Led.h"
 #include "ComPc.h"
+#include "Battery.h"
+#include "Gyro.h"
 
 #include "Walldata.h"
 
@@ -126,11 +128,71 @@ int main(void) {
 	ComPc* compc = ComPc::getInstance();
 	compc->printf("HelloWorld!\n");
 
-	
+	Battery* battery = Battery::getInstance();
+	battery->scan();
+	compc->printf("%f [V], %d\n", battery->getVoltage(), battery->getValue());
+
+	// Gyro* gyro = Gyro::getInstance();
+	// if (gyro->whoami()) {
+	// 	compc->printf("Gyro WhoAmI was SUCCEEDED!!!\n");
+	// } else {
+	// 	compc->printf("Gyro WhoAmI was failed...\n");
+	// }
+
+	__HAL_RCC_SPI2_CLK_ENABLE();
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+
+	GPIO_InitTypeDef GPIO_InitStruct;
+	GPIO_InitStruct.Pin = GPIO_PIN_13;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15;
+	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+
+	SPI_HandleTypeDef port;
+	port.Instance = SPI2;
+	port.Init.Mode = SPI_MODE_MASTER;
+	port.Init.Direction = SPI_DIRECTION_2LINES;
+	port.Init.DataSize = SPI_DATASIZE_8BIT;
+	port.Init.CLKPolarity = SPI_POLARITY_HIGH;
+	port.Init.CLKPhase = SPI_PHASE_2EDGE;
+	port.Init.NSS = SPI_NSS_SOFT;
+	port.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+	port.Init.FirstBit = SPI_FIRSTBIT_MSB;
+	port.Init.TIMode = SPI_TIMODE_DISABLE;
+	port.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+	port.Init.CRCPolynomial = 10;
+	HAL_SPI_Init(&port);
+
+	uint8_t bulk;
+	uint8_t data = 0x0f;
+	HAL_SPI_Transmit(&port, &data, 1, 1000);
+	HAL_SPI_Receive(&port, &bulk, 1, 1000);
+
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+	HAL_SPI_Transmit(&port, &data, 1, 1000);
+	// HAL_SPI_Receive(&port, &bulk, 1, 1000);
+	// HAL_SPI_Transmit(&port, &data, 1, 1000);
+	HAL_SPI_Receive(&port, &bulk, 1, 1000);
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+	compc->printf("write: %2x, %2x\n", data, bulk);
 
 	/* Infinite loop */
 	while (1) {
-		
+		HAL_Delay(500);
+		led->off(LedNumbers::FRONT);
+		HAL_Delay(500);
+		led->on(LedNumbers::FRONT);
 	}
 }
 
