@@ -179,7 +179,7 @@ void SysTick_Handler(void)
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
   /* USER CODE BEGIN SysTick_IRQn 1 */
-
+  Timer::interrupt();
   /* USER CODE END SysTick_IRQn 1 */
 }
 

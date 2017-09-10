@@ -113,42 +113,80 @@ int main(void) {
 	/* Initialize interrupts */
 	// MX_NVIC_Init();
 
-	// __HAL_RCC_GPIOA_CLK_ENABLE();
-	// GPIO_InitTypeDef GPIO_InitStructure;
-	// /*Configure GPIO pin : PtPin */
-	// GPIO_InitStructure.Pin = GPIO_PIN_11;
-	// GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-	// GPIO_InitStructure.Pull = GPIO_NOPULL;
-	// GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-	// HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
-	// HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_SET);
 
 	Led* led = Led::getInstance();
+	led->flickSync(LedNumbers::FRONT, 2, 2000);
+	led->flickAsync(LedNumbers::FRONT, 5, 2000);
 	led->on(LedNumbers::FRONT);
 	ComPc* compc = ComPc::getInstance();
-	compc->printf("HelloWorld!\n");
+	compc->printf("Hello Ikaru!\n");
 
 	Battery* battery = Battery::getInstance();
 	battery->scan();
-	compc->printf("%f [V], %d\n", battery->getVoltage(), battery->getValue());
+	compc->printf("%f [V]\n", battery->getVoltage());
 
+	compc->printf("Gyro Setting...\n");
 	// Gyro* gyro = Gyro::getInstance();
+
 	// if (gyro->whoami()) {
 	// 	compc->printf("Gyro WhoAmI was SUCCEEDED!!!\n");
 	// } else {
 	// 	compc->printf("Gyro WhoAmI was failed...\n");
 	// }
 
+	// // FRAM
+	// __HAL_RCC_SPI3_CLK_ENABLE();
+	// __HAL_RCC_GPIOA_CLK_ENABLE();
+	// __HAL_RCC_GPIOB_CLK_ENABLE();
+
+	// GPIO_InitTypeDef GPIO_InitStruct;
+	// GPIO_InitStruct.Pin = GPIO_PIN_14;
+	// GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	// GPIO_InitStruct.Pull = GPIO_NOPULL;
+	// GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	// HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+	// HAL_GPIO_WritePin(GPIOA, GPIO_PIN_14, GPIO_PIN_SET);
+
+	// GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5;
+	// GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	// GPIO_InitStruct.Pull = GPIO_NOPULL;
+	// GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	// GPIO_InitStruct.Alternate = GPIO_AF6_SPI3;
+	// HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+	// GPIO_InitStruct.Pin = GPIO_PIN_12;
+	// GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	// GPIO_InitStruct.Pull = GPIO_NOPULL;
+	// GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	// GPIO_InitStruct.Alternate = GPIO_AF7_SPI3;
+	// HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+	// SPI_HandleTypeDef port;
+	// port.Instance = SPI3;
+	// port.Init.Mode = SPI_MODE_MASTER;
+	// port.Init.Direction = SPI_DIRECTION_2LINES;
+	// port.Init.DataSize = SPI_DATASIZE_8BIT;
+	// port.Init.CLKPolarity = SPI_POLARITY_HIGH;
+	// port.Init.CLKPhase = SPI_PHASE_2EDGE;
+	// port.Init.NSS = SPI_NSS_SOFT;
+	// port.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+	// port.Init.FirstBit = SPI_FIRSTBIT_MSB;
+	// port.Init.TIMode = SPI_TIMODE_DISABLE;
+	// port.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+	// port.Init.CRCPolynomial = 10;
+	// if (HAL_SPI_Init(&port) != HAL_OK) compc->printf("Error3\n");
+
+	// GYRO
 	__HAL_RCC_SPI2_CLK_ENABLE();
 	__HAL_RCC_GPIOB_CLK_ENABLE();
-	__HAL_RCC_GPIOC_CLK_ENABLE();
 
 	GPIO_InitTypeDef GPIO_InitStruct;
-	GPIO_InitStruct.Pin = GPIO_PIN_13;
+	GPIO_InitStruct.Pin = GPIO_PIN_1;
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);
 
 	GPIO_InitStruct.Pin = GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15;
 	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -156,7 +194,6 @@ int main(void) {
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 	GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
 
 	SPI_HandleTypeDef port;
 	port.Instance = SPI2;
@@ -166,33 +203,197 @@ int main(void) {
 	port.Init.CLKPolarity = SPI_POLARITY_HIGH;
 	port.Init.CLKPhase = SPI_PHASE_2EDGE;
 	port.Init.NSS = SPI_NSS_SOFT;
-	port.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+	port.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
 	port.Init.FirstBit = SPI_FIRSTBIT_MSB;
 	port.Init.TIMode = SPI_TIMODE_DISABLE;
 	port.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
 	port.Init.CRCPolynomial = 10;
-	HAL_SPI_Init(&port);
+	if (HAL_SPI_Init(&port) != HAL_OK) compc->printf("Error3\n");
 
-	uint8_t bulk;
-	uint8_t data = 0x0f;
-	HAL_SPI_Transmit(&port, &data, 1, 1000);
-	HAL_SPI_Receive(&port, &bulk, 1, 1000);
+	uint8_t recv[5] = {0x00, 0x00, 0x00, 0x00, 0x00};
+	uint8_t data[5] = {0x8F, 0x00, 0x00, 0x00, 0x00};
+	if (HAL_SPI_Transmit(&port, data, 1, 1000) != HAL_OK) compc->printf("Error4\n");
+	// HAL_SPI_Receive(&port, bulk, 1, 1000);
 
 	HAL_Delay(1);
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
-	HAL_SPI_Transmit(&port, &data, 1, 1000);
-	// HAL_SPI_Receive(&port, &bulk, 1, 1000);
-	// HAL_SPI_Transmit(&port, &data, 1, 1000);
-	HAL_SPI_Receive(&port, &bulk, 1, 1000);
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-	compc->printf("write: %2x, %2x\n", data, bulk);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET);
+	// HAL_Delay(1);
+	if (HAL_SPI_TransmitReceive(&port, data, recv, 2, 1000) != HAL_OK) compc->printf("Error5\n");
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);
+	compc->printf("write: %2x, %2x, %2x, %2x, %2x\n", data[0], data[1], data[2], data[3], data[4]);
+	compc->printf("read : %2x, %2x, %2x, %2x, %2x\n", recv[0], recv[1], recv[2], recv[3], recv[4]);
+
+
+	// AD1_4-8
+	__HAL_RCC_ADC1_CLK_ENABLE();
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+	GPIO_InitTypeDef GPIO_InitStructADC;
+    GPIO_InitStructADC.Pin = GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
+    GPIO_InitStructADC.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStructADC.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStructADC);
+    GPIO_InitStructADC.Pin = GPIO_PIN_0;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStructADC);
+	ADC_HandleTypeDef hadc1_6;
+	ADC_ChannelConfTypeDef s_config;
+	hadc1_6.Instance = ADC1;
+	hadc1_6.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+	hadc1_6.Init.Resolution = ADC_RESOLUTION_12B;
+	hadc1_6.Init.ScanConvMode = DISABLE;
+	hadc1_6.Init.ContinuousConvMode = DISABLE;
+	hadc1_6.Init.DiscontinuousConvMode = DISABLE;
+	hadc1_6.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+	hadc1_6.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+	hadc1_6.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+	hadc1_6.Init.NbrOfConversion = 1;
+	hadc1_6.Init.DMAContinuousRequests = DISABLE;
+	hadc1_6.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+	HAL_ADC_Init(&hadc1_6);
+	s_config.Rank = 1;
+	s_config.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+	s_config.Channel = ADC_CHANNEL_4|ADC_CHANNEL_5|ADC_CHANNEL_6|ADC_CHANNEL_7|ADC_CHANNEL_8;
+	HAL_ADC_ConfigChannel(&hadc1_6, &s_config);
+
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	GPIO_InitTypeDef GPIO_InitStruct3;
+	GPIO_InitStruct3.Pin = GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13;
+	GPIO_InitStruct3.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct3.Pull = GPIO_NOPULL;
+	GPIO_InitStruct3.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct3);
+	GPIO_InitStruct3.Pin = GPIO_PIN_10|GPIO_PIN_2;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct3);
+	HAL_Delay(1000);
+
+	// // motor_left right
+	// GPIO_InitTypeDef GPIO_InitStruct4;
+	// GPIO_InitStruct4.Pin = GPIO_PIN_8|GPIO_PIN_9 | GPIO_PIN_6|GPIO_PIN_7;
+	// GPIO_InitStruct4.Mode = GPIO_MODE_OUTPUT_PP;
+	// GPIO_InitStruct4.Pull = GPIO_NOPULL;
+	// GPIO_InitStruct4.Speed = GPIO_SPEED_FREQ_LOW;
+	// HAL_GPIO_Init(GPIOB, &GPIO_InitStruct4);
+	// HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
+	// HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_SET);
+	// HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+	// HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
+
+	// speaker
+	GPIO_InitTypeDef GPIO_InitStruct5;
+	GPIO_InitStruct5.Pin = GPIO_PIN_2;
+	GPIO_InitStruct5.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct5.Pull = GPIO_NOPULL;
+	GPIO_InitStruct5.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct5);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET);
+
+	// encoder
+	__TIM5_CLK_ENABLE();
+	__TIM2_CLK_ENABLE();
+	__HAL_RCC_TIM5_CLK_ENABLE();
+	__HAL_RCC_TIM2_CLK_ENABLE();
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	GPIO_InitTypeDef GPIO_InitStruct6;
+    GPIO_InitStruct6.Pin = GPIO_PIN_0|GPIO_PIN_1;
+    GPIO_InitStruct6.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct6.Pull = GPIO_PULLUP; // NOPULL
+    GPIO_InitStruct6.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct6.Alternate = GPIO_AF2_TIM5;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct6);
+    GPIO_InitStruct6.Alternate = GPIO_AF1_TIM2;
+    GPIO_InitStruct6.Pin = GPIO_PIN_3;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct6);
+	GPIO_InitStruct6.Pin = GPIO_PIN_15;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct6);
+	TIM_HandleTypeDef htim2;
+	TIM_HandleTypeDef htim5;
+	TIM_Encoder_InitTypeDef sConfig_enl;
+	TIM_MasterConfigTypeDef sMasterConfig;
+	htim2.Instance = TIM2;
+	htim2.Init.Prescaler = 0;
+	htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+	htim2.Init.Period = 0;
+	htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	htim5.Instance = TIM5;
+	htim5.Init.Prescaler = 0;
+	htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
+	htim5.Init.Period = 0;
+	htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	sConfig_enl.EncoderMode = TIM_ENCODERMODE_TI12;
+	sConfig_enl.IC1Polarity = TIM_ICPOLARITY_BOTHEDGE;
+	sConfig_enl.IC1Selection = TIM_ICSELECTION_DIRECTTI;
+	sConfig_enl.IC1Prescaler = TIM_ICPSC_DIV1;
+	sConfig_enl.IC1Filter = 0;
+	sConfig_enl.IC2Polarity = TIM_ICPOLARITY_BOTHEDGE;
+	sConfig_enl.IC2Selection = TIM_ICSELECTION_DIRECTTI;
+	sConfig_enl.IC2Prescaler = TIM_ICPSC_DIV1;
+	sConfig_enl.IC2Filter = 0;
+	if (HAL_TIM_Encoder_Init(&htim2, &sConfig_enl) != HAL_OK) compc->printf("EN_ERROR_1");
+	if (HAL_TIM_Encoder_Init(&htim5, &sConfig_enl) != HAL_OK) compc->printf("EN_ERROR_1");
+	sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+	sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+	if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK) compc->printf("EN_ERROR_2");;
+	if (HAL_TIMEx_MasterConfigSynchronization(&htim5, &sMasterConfig) != HAL_OK) compc->printf("EN_ERROR_2");;
+	TIM2->CNT = 30000;
+	TIM5->CNT = 30000;
+	HAL_Delay(500);
+	if (HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL) != HAL_OK) compc->printf("EN_ERROR_3");
+	if (HAL_TIM_Encoder_Start(&htim5, TIM_CHANNEL_ALL) != HAL_OK) compc->printf("EN_ERROR_3");
+
+	int sensorvalue[5];
 
 	/* Infinite loop */
 	while (1) {
-		HAL_Delay(500);
 		led->off(LedNumbers::FRONT);
-		HAL_Delay(500);
+		HAL_Delay(99);
 		led->on(LedNumbers::FRONT);
+
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_13, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
+		HAL_Delay(1);
+		//
+		s_config.Channel = ADC_CHANNEL_4;
+		HAL_ADC_ConfigChannel(&hadc1_6, &s_config);
+		HAL_ADC_Start(&hadc1_6);
+		HAL_ADC_PollForConversion(&hadc1_6, 10);
+		sensorvalue[0] = HAL_ADC_GetValue(&hadc1_6);
+		s_config.Channel = ADC_CHANNEL_5;
+		HAL_ADC_ConfigChannel(&hadc1_6, &s_config);
+		HAL_ADC_Start(&hadc1_6);
+		HAL_ADC_PollForConversion(&hadc1_6, 10);
+		sensorvalue[1] = HAL_ADC_GetValue(&hadc1_6);
+		s_config.Channel = ADC_CHANNEL_6;
+		HAL_ADC_ConfigChannel(&hadc1_6, &s_config);
+		HAL_ADC_Start(&hadc1_6);
+		HAL_ADC_PollForConversion(&hadc1_6, 10);
+		sensorvalue[2] = HAL_ADC_GetValue(&hadc1_6);
+		s_config.Channel = ADC_CHANNEL_7;
+		HAL_ADC_ConfigChannel(&hadc1_6, &s_config);
+		HAL_ADC_Start(&hadc1_6);
+		HAL_ADC_PollForConversion(&hadc1_6, 10);
+		sensorvalue[3] = HAL_ADC_GetValue(&hadc1_6);
+		s_config.Channel = ADC_CHANNEL_8;
+		HAL_ADC_ConfigChannel(&hadc1_6, &s_config);
+		HAL_ADC_Start(&hadc1_6);
+		HAL_ADC_PollForConversion(&hadc1_6, 10);
+		sensorvalue[4] = HAL_ADC_GetValue(&hadc1_6);
+
+		// HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_RESET);
+		// HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
+		// HAL_GPIO_WritePin(GPIOA, GPIO_PIN_13, GPIO_PIN_RESET);
+		// HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2,  GPIO_PIN_RESET);
+		// HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);
+		compc->printf("%4d %4d %4d %4d %4d, %6d %6d\n", sensorvalue[0], sensorvalue[1], sensorvalue[2], sensorvalue[3], sensorvalue[4], __HAL_TIM_GetCounter(&htim2), __HAL_TIM_GetCounter(&htim5));
+
+		// while(1){
+		// 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET);
+		// 	HAL_Delay(1);
+		// 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_RESET);
+		// 	HAL_Delay(1);
+		// };
 	}
 }
 
@@ -247,6 +448,8 @@ void SystemClock_Config(void) {
 	/* SysTick_IRQn interrupt configuration */
 	HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
+
+
 
 /** NVIC Configuration
 */

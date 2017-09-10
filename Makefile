@@ -218,14 +218,52 @@ clean:
 # flash
 #######################################
 flash:
+	@echo d > /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0
+	@echo w > /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0
+	@sleep 0.1
+	@echo u > /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0
+	@sleep 0.3
 	~/git/stm32flash-code/stm32flash -b 230400 -w build/Ikaru.hex -g 0x0 /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO02-if00-port0
+	@echo d > /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0
+	@echo r > /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0
 
 #######################################
 # flash and debug
 #######################################
 debug:
+	@echo d > /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0
+	@echo w > /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0
+	@sleep 0.1
+	@echo u > /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0
+	@sleep 0.3
 	~/git/stm32flash-code/stm32flash -b 230400 -w build/Ikaru.hex -g 0x0 /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO02-if00-port0
-	gtkterm --port /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO02-if00-port0 --speed 115200
+	@echo d > /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0
+	@echo r > /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0
+	gtkterm --port /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO02-if00-port0 --speed 115200&
+	@sleep 1
+	@echo u > /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0
+	@echo "Press [Enter] to Power OFF"
+	@read
+	@echo d > /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0
+
+#######################################
+# run
+#######################################
+run:
+	@echo d > /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0
+	@echo r > /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0
+	gtkterm --port /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO02-if00-port0 --speed 115200&
+	@sleep 1
+	@echo u > /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0
+	@echo "Press [Enter] to Power OFF"
+	@read
+	@echo d > /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0
+
+#######################################
+# initialize for writing
+#######################################
+init:
+	sudo stty -F /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0 ospeed 115200
 
 #######################################
 # dependencies

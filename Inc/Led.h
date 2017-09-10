@@ -4,10 +4,9 @@
 #pragma once
 
 #include "stm32f4xx_hal.h"
+#include "Timer.h"
 
 #include <array>
-
-/* #include "Timer.h" */
 
 enum class LedNumbers : uint8_t {
 	FRONT,
@@ -32,6 +31,9 @@ private:
 	void setType(LedNumbers num);
 
 public:
+	void initPort(LedNumbers num);
+	void deinitPort(LedNumbers num);
+
 	void on(LedNumbers num);
 	void off(LedNumbers num);
 
