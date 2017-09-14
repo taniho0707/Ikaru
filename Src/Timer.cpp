@@ -3,11 +3,14 @@
  */
 
 #include "Timer.h"
-// #include "Encoder.h"
-// #include "MotorControl.h"
+#include "Encoder.h"
+#include "MotorControl.h"
 // #include "VelocityControl.h"
 #include "Led.h"
 #include "Battery.h"
+#include "Speaker.h"
+#include "Gyro.h"
+#include "WallSensor.h"
 
 __IO int32_t Timer::total = 0;
 
@@ -18,18 +21,21 @@ int32_t Timer::getTime(){
 
 void Timer::interrupt(){
 	++ total;
-	// static Encoder *encoder = Encoder::getInstance();
-	// static MotorControl *motor = MotorControl::getInstance();
-	// static VelocityControl* vc = VelocityControl::getInstance();
-	// static Gyro* gy = Gyro::getInstance();
 	static Led* led = Led::getInstance();
 	static Battery* battery = Battery::getInstance();
-	// encoder->interrupt();
-	// gy->readGyroYaw();
-	// gy->readAccelFront();
-	// vc->interrupt();
-	// motor->interrupt();
+	static Speaker* speaker = Speaker::getInstance();
+	static Encoder* encoder = Encoder::getInstance();
+	static Gyro* gy = Gyro::getInstance();
+	static MotorControl* motor = MotorControl::getInstance();
+	// static VelocityControl* vc = VelocityControl::getInstance();
+	static WallSensor* ws = WallSensor::getInstance();
 	led->interrupt();
 	battery->interrupt();
-	// Speaker::interrupt();
+	speaker->interrupt();
+	encoder->interrupt();
+	gy->readGyroYaw();
+	// gy->readAccelFront();
+	motor->interrupt();
+	// vc->interrupt();
+	ws->interrupt();
 }

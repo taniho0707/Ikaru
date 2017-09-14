@@ -1,3 +1,4 @@
+
 /**
  * @file Usart.h
  */
@@ -46,4 +47,3 @@ public:
 	uint16_t printf(const char *fmt, ...);
 
 };
-
