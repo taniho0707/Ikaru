@@ -5,21 +5,27 @@
 #include "main.h"
 #include "stm32f4xx_hal.h"
 
+#include "SlalomParams.h"
+
 #include "Led.h"
 #include "ComPc.h"
 #include "Battery.h"
 #include "Speaker.h"
 #include "Gyro.h"
 #include "Fram.h"
+#include "Datalog.h"
 
 #include "Motor.h"
 #include "Encoder.h"
 #include "WallSensor.h"
 
 #include "MotorControl.h"
+#include "VelocityControl.h"
 
 #include "Walldata.h"
 
+
+using namespace slalomparams;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -36,7 +42,7 @@ int main(void) {
 	Led* led = Led::getInstance();
 	led->on(LedNumbers::FRONT);
 	HAL_Delay(10);
-	led->flickAsync(LedNumbers::FRONT, 5, 200000);
+	led->flickAsync(LedNumbers::FRONT, 5, 1000);
 	Speaker* speaker = Speaker::getInstance();
 	speaker->playMusic(MusicNumber::KIRBY3_POWERON);
 	ComPc* compc = ComPc::getInstance();
@@ -104,147 +110,58 @@ int main(void) {
 	// port.Init.CRCPolynomial = 10;
 	// if (HAL_SPI_Init(&port) != HAL_OK) compc->printf("Error3\n");
 
-	// // AD1_4-8
-	// __HAL_RCC_ADC1_CLK_ENABLE();
-	// __HAL_RCC_GPIOA_CLK_ENABLE();
-	// __HAL_RCC_GPIOB_CLK_ENABLE();
-	// GPIO_InitTypeDef GPIO_InitStructADC;
-	// GPIO_InitStructADC.Pin = GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
-	// GPIO_InitStructADC.Mode = GPIO_MODE_ANALOG;
-	// GPIO_InitStructADC.Pull = GPIO_NOPULL;
-	// HAL_GPIO_Init(GPIOA, &GPIO_InitStructADC);
-	// GPIO_InitStructADC.Pin = GPIO_PIN_0;
-	// HAL_GPIO_Init(GPIOB, &GPIO_InitStructADC);
-
-	// ADC_HandleTypeDef hadc1_6;
-	// ADC_ChannelConfTypeDef s_config;
-	// hadc1_6.Instance = ADC1;
-	// hadc1_6.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
-	// hadc1_6.Init.Resolution = ADC_RESOLUTION_12B;
-	// hadc1_6.Init.ScanConvMode = DISABLE;
-	// hadc1_6.Init.ContinuousConvMode = DISABLE;
-	// hadc1_6.Init.DiscontinuousConvMode = DISABLE;
-	// hadc1_6.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-	// hadc1_6.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-	// hadc1_6.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-	// hadc1_6.Init.NbrOfConversion = 1;
-	// hadc1_6.Init.DMAContinuousRequests = DISABLE;
-	// hadc1_6.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-	// HAL_ADC_Init(&hadc1_6);
-	// s_config.Rank = 1;
-	// s_config.SamplingTime = ADC_SAMPLETIME_3CYCLES;
-	// s_config.Channel = ADC_CHANNEL_4|ADC_CHANNEL_5|ADC_CHANNEL_6|ADC_CHANNEL_7|ADC_CHANNEL_8;
-	// HAL_ADC_ConfigChannel(&hadc1_6, &s_config);
-
-	// __HAL_RCC_GPIOA_CLK_ENABLE();
-	// GPIO_InitTypeDef GPIO_InitStruct3;
-	// GPIO_InitStruct3.Pin = GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13;
-	// GPIO_InitStruct3.Mode = GPIO_MODE_OUTPUT_PP;
-	// GPIO_InitStruct3.Pull = GPIO_NOPULL;
-	// GPIO_InitStruct3.Speed = GPIO_SPEED_FREQ_LOW;
-	// HAL_GPIO_Init(GPIOA, &GPIO_InitStruct3);
-	// GPIO_InitStruct3.Pin = GPIO_PIN_10|GPIO_PIN_2;
-	// HAL_GPIO_Init(GPIOB, &GPIO_InitStruct3);
+	HAL_Delay(2000);
+	led->flickSync(LedNumbers::FRONT, 10, 1000);
+	led->flickAsync(LedNumbers::FRONT, 4, 1000);
+	gyro->resetCalibration();
+	speaker->playMusic(MusicNumber::HIRAPA);
 
 	Encoder* encoder = Encoder::getInstance();
 
-	// WallSensor* wallsensor = WallSensor::getInstance();
-	// wallsensor->start();
-	ADC_HandleTypeDef hadc1_6;
-	__HAL_RCC_ADC1_CLK_ENABLE();
-	__HAL_RCC_GPIOA_CLK_ENABLE();
-	__HAL_RCC_GPIOB_CLK_ENABLE();
+	WallSensor* wallsensor = WallSensor::getInstance();
+	wallsensor->start();
 
-	GPIO_InitTypeDef GPIO_InitStruct;
-	GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
-	GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-	GPIO_InitStruct.Pin = GPIO_PIN_0;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-	ADC_ChannelConfTypeDef s_config;
-	hadc1_6.Instance = ADC1;
-	hadc1_6.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
-	hadc1_6.Init.Resolution = ADC_RESOLUTION_12B;
-	hadc1_6.Init.ScanConvMode = DISABLE;
-	hadc1_6.Init.ContinuousConvMode = DISABLE;
-	hadc1_6.Init.DiscontinuousConvMode = DISABLE;
-	hadc1_6.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-	hadc1_6.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-	hadc1_6.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-	hadc1_6.Init.NbrOfConversion = 1;
-	hadc1_6.Init.DMAContinuousRequests = DISABLE;
-	hadc1_6.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-	HAL_ADC_Init(&hadc1_6);
-	s_config.Rank = 1;
-	s_config.SamplingTime = ADC_SAMPLETIME_3CYCLES;
-	s_config.Channel = ADC_CHANNEL_4|ADC_CHANNEL_5|ADC_CHANNEL_6|ADC_CHANNEL_7|ADC_CHANNEL_8;
-	HAL_ADC_ConfigChannel(&hadc1_6, &s_config);
-
-	__HAL_RCC_GPIOA_CLK_ENABLE();
-	GPIO_InitTypeDef GPIO_InitStruct3;
-	GPIO_InitStruct3.Pin = GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13;
-	GPIO_InitStruct3.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct3.Pull = GPIO_NOPULL;
-	GPIO_InitStruct3.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct3);
-	GPIO_InitStruct3.Pin = GPIO_PIN_10|GPIO_PIN_2;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct3);
-	int sensorvalue[5];
-
-	// MotorControl* mc = MotorControl::getInstance();
-	// mc->stay();
+	MotorControl* mc = MotorControl::getInstance();
+	mc->stay();
+	led->on(LedNumbers::FRONT);
+	VelocityControl* vc = VelocityControl::getInstance();
+	vc->disableWallgap();
+	HAL_Delay(1000);
+	vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.045f, 3.0f);
+	vc->disableWallgap();
+	while(vc->isRunning());
 
 	/* Infinite loop */
 	while (1) {
-		led->off(LedNumbers::FRONT);
-		HAL_Delay(99);
-		led->on(LedNumbers::FRONT);
+		if(wallsensor->isExistWall(SensorPosition::Left) == false){
+			vc->runSlalom(RunType::SLALOM90SML_LEFT, 0.3f);
+			vc->disableWallgap();
+			while(vc->isRunning());
+		} else if(wallsensor->isExistWall(SensorPosition::Front) == false){
+			vc->runTrapAccel(0.3f, 0.3f, 0.3f, 0.09f, 3.0f);
+			vc->disableWallgap();
+			while(vc->isRunning());
+		} else if(wallsensor->isExistWall(SensorPosition::Right) == false){
+			vc->runSlalom(RunType::SLALOM90SML_RIGHT, 0.3f);
+			vc->disableWallgap();
+			while(vc->isRunning());
+		} else {
+			vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.045f, 3.0f);
+			vc->disableWallgap();
+			while(vc->isRunning());
+			vc->runPivotTurn(1000, -90, 3000);
+			while(vc->isRunning());
+			vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.045f, 3.0f);
+			vc->disableWallgap();
+			while(vc->isRunning());
+		}
 
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_13, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
 
-		for (int i=0; i<100; ++i);
-
-		ADC_ChannelConfTypeDef s_config;
-		s_config.Channel = ADC_CHANNEL_4;
-		HAL_ADC_ConfigChannel(&hadc1_6, &s_config);
-		HAL_ADC_Start(&hadc1_6);
-		HAL_ADC_PollForConversion(&hadc1_6, 10);
-		sensorvalue[0] = HAL_ADC_GetValue(&hadc1_6);
-		s_config.Channel = ADC_CHANNEL_5;
-		HAL_ADC_ConfigChannel(&hadc1_6, &s_config);
-		HAL_ADC_Start(&hadc1_6);
-		HAL_ADC_PollForConversion(&hadc1_6, 10);
-		sensorvalue[1] = HAL_ADC_GetValue(&hadc1_6);
-		s_config.Channel = ADC_CHANNEL_6;
-		HAL_ADC_ConfigChannel(&hadc1_6, &s_config);
-		HAL_ADC_Start(&hadc1_6);
-		HAL_ADC_PollForConversion(&hadc1_6, 10);
-		sensorvalue[2] = HAL_ADC_GetValue(&hadc1_6);
-		s_config.Channel = ADC_CHANNEL_7;
-		HAL_ADC_ConfigChannel(&hadc1_6, &s_config);
-		HAL_ADC_Start(&hadc1_6);
-		HAL_ADC_PollForConversion(&hadc1_6, 10);
-		sensorvalue[3] = HAL_ADC_GetValue(&hadc1_6);
-		s_config.Channel = ADC_CHANNEL_8;
-		HAL_ADC_ConfigChannel(&hadc1_6, &s_config);
-		HAL_ADC_Start(&hadc1_6);
-		HAL_ADC_PollForConversion(&hadc1_6, 10);
-		sensorvalue[4] = HAL_ADC_GetValue(&hadc1_6);
-
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_13, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2,  GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);
-
+		// led->off(LedNumbers::FRONT);
+		// HAL_Delay(99);
+		// led->on(LedNumbers::FRONT);
+		// HAL_Delay(1);
 		// compc->printf("%4d %4d %4d %4d %4d, %f, %f %f\n", wallsensor->getValue(SensorPosition::FLeft), wallsensor->getValue(SensorPosition::Left), wallsensor->getValue(SensorPosition::Front), wallsensor->getValue(SensorPosition::Right), wallsensor->getValue(SensorPosition::FRight), gyro->getGyroYaw(), encoder->getVelocity(EncoderSide::LEFT), encoder->getVelocity(EncoderSide::RIGHT));
-		compc->printf("%6d %6d %6d %6d %6d\n", sensorvalue[4], sensorvalue[3], sensorvalue[2], sensorvalue[1], sensorvalue[0], battery->getValue());
 	}
 }
 

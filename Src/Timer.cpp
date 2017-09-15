@@ -5,7 +5,7 @@
 #include "Timer.h"
 #include "Encoder.h"
 #include "MotorControl.h"
-// #include "VelocityControl.h"
+#include "VelocityControl.h"
 #include "Led.h"
 #include "Battery.h"
 #include "Speaker.h"
@@ -27,8 +27,8 @@ void Timer::interrupt(){
 	static Encoder* encoder = Encoder::getInstance();
 	static Gyro* gy = Gyro::getInstance();
 	static MotorControl* motor = MotorControl::getInstance();
-	// static VelocityControl* vc = VelocityControl::getInstance();
 	static WallSensor* ws = WallSensor::getInstance();
+	static VelocityControl* vc = VelocityControl::getInstance();
 	led->interrupt();
 	battery->interrupt();
 	speaker->interrupt();
@@ -36,6 +36,6 @@ void Timer::interrupt(){
 	gy->readGyroYaw();
 	// gy->readAccelFront();
 	motor->interrupt();
-	// vc->interrupt();
 	ws->interrupt();
+	vc->interrupt();
 }

@@ -6,12 +6,12 @@
 
 MotorControl::MotorControl() : 
 	GAIN_LIN_P(600),
-	GAIN_LIN_I(6),
+	GAIN_LIN_I(2),
 	GAIN_LIN_D(0.0),
-	GAIN_RAD_P(-1.0f),
+	GAIN_RAD_P(-0.5f),
 	GAIN_RAD_I(-0.05f),
 	GAIN_RAD_D(0.0f),
-	GAIN_WALL_P(0.4f),
+	GAIN_WALL_P(-4.0f),
 	GAIN_WALL_SHRT_P(0.0f),
 	GAIN_WALL_I(0.0f),
 	GAIN_WALL_D(0.0f),
@@ -149,18 +149,18 @@ void MotorControl::controlVel(){
 		return;
 	}
 
-	// if(enabled_wall_control){
-	// 	if(is_comb_wall_control){
-	// 		current_wall_correction = wall->getCorrectionComb(500);
-	// 	} else {
+	if(enabled_wall_control){
+		if(is_comb_wall_control){
+			current_wall_correction = wall->getCorrectionComb(500);
+		} else {
 			current_wall_correction = wall->getCorrection(50);
-	// 	}
-	// } else {
-	// 	current_wall_correction = 0;
-	// }
-	// if(tar_lin_vel < 0.025f){
-	// 	current_wall_correction = 0;
-	// }
+		}
+	} else {
+		current_wall_correction = 0;
+	}
+	if(tar_lin_vel < 0.025f){
+		current_wall_correction = 0;
+	}
 
 	// // 壁積分値の計算
 	// integral_wall += wall->getCorrection(10000) * enabled_wall_control;

@@ -5,26 +5,26 @@ using namespace std;
 
 /// @todo add wait REDEN flag
 WallSensor::WallSensor() :
-	VAL_REF_FLEFT(173),
-	VAL_REF_LEFT(60),
-	VAL_REF_FRONT(400),
-	VAL_REF_RIGHT(100),
-	VAL_REF_FRIGHT(161),
-	VAL_THR_FLEFT(6),
-	VAL_THR_LEFT(20),
-	VAL_THR_FRONT(150),
-	VAL_THR_RIGHT(30),
-	VAL_THR_FRIGHT(10),
+	VAL_REF_FLEFT(100),
+	VAL_REF_LEFT(30),
+	VAL_REF_FRONT(100),
+	VAL_REF_RIGHT(25),
+	VAL_REF_FRIGHT(100),
+	VAL_THR_FLEFT(100),
+	VAL_THR_LEFT(18),
+	VAL_THR_FRONT(12),
+	VAL_THR_RIGHT(18),
+	VAL_THR_FRIGHT(100),
 	VAL_THR_CONTROL_LEFT(100),
 	VAL_THR_CONTROL_RIGHT(100),
-	VAL_THR_GAP_LEFT(20),
-	VAL_THR_GAP_RIGHT(25),
-	VAL_THR_GAP_DIAGO_LEFT(40),
-	VAL_THR_GAP_DIAGO_RIGHT(40),
-	VAL_THR_SLALOM_FLEFT(150),
-	VAL_THR_SLALOM_LEFT(230),
-	VAL_THR_SLALOM_RIGHT(230),
-	VAL_THR_SLALOM_FRIGHT(190),
+	VAL_THR_GAP_LEFT(10),
+	VAL_THR_GAP_RIGHT(10),
+	VAL_THR_GAP_DIAGO_LEFT(10),
+	VAL_THR_GAP_DIAGO_RIGHT(10),
+	VAL_THR_SLALOM_FLEFT(500),
+	VAL_THR_SLALOM_LEFT(500),
+	VAL_THR_SLALOM_RIGHT(500),
+	VAL_THR_SLALOM_FRIGHT(500),
 	THR_WALL_DISAPPEAR(5) // サーキットなら50に，ハーフなら5に
 {
 	__HAL_RCC_ADC1_CLK_ENABLE();
@@ -39,7 +39,6 @@ WallSensor::WallSensor() :
 	GPIO_InitStruct.Pin = GPIO_PIN_0;
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-	ADC_ChannelConfTypeDef s_config;
 	hadc.Instance = ADC1;
 	hadc.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
 	hadc.Init.Resolution = ADC_RESOLUTION_12B;
@@ -70,12 +69,14 @@ WallSensor::WallSensor() :
 
 	thr_straight_value[0] = VAL_THR_FLEFT;
 	thr_straight_value[1] = VAL_THR_LEFT;
-	thr_straight_value[2] = VAL_THR_RIGHT;
-	thr_straight_value[3] = VAL_THR_FRIGHT;
+	thr_straight_value[2] = VAL_THR_FRONT;
+	thr_straight_value[3] = VAL_THR_RIGHT;
+	thr_straight_value[4] = VAL_THR_FRIGHT;
 	ref_straight_value[0] = VAL_REF_FLEFT;
 	ref_straight_value[1] = VAL_REF_LEFT;
-	ref_straight_value[2] = VAL_REF_RIGHT;
-	ref_straight_value[3] = VAL_REF_FRIGHT;
+	ref_straight_value[2] = VAL_REF_FRONT;
+	ref_straight_value[3] = VAL_REF_RIGHT;
+	ref_straight_value[4] = VAL_REF_FRIGHT;
 
 	had_gap[0] = false;
 	had_gap[1] = false;
@@ -252,9 +253,6 @@ void WallSensor::interrupt(){
 	
 	array<int, 5> tmp = {0};
 
-	ADC_ChannelConfTypeDef s_config;
-	s_config.Rank = 1;
-	s_config.SamplingTime = ADC_SAMPLETIME_3CYCLES;
 	s_config.Channel = ADC_CHANNEL_4;
 	HAL_ADC_ConfigChannel(&hadc, &s_config);
 	HAL_ADC_Start(&hadc);
@@ -325,13 +323,8 @@ uint16_t WallSensor::getLastValue(SensorPosition pos){
 }
 
 bool WallSensor::isExistWall(SensorPosition pos){
-	if(pos == SensorPosition::Left || pos == SensorPosition::Right)
-		if(current_value[static_cast<uint8_t>(pos)] > thr_straight_value[static_cast<uint8_t>(pos)]) return true;
-		else return false;
-	else
-		if(current_value[static_cast<uint8_t>(SensorPosition::FLeft)] > thr_straight_value[static_cast<uint8_t>(SensorPosition::FLeft)]
-		   || current_value[static_cast<uint8_t>(SensorPosition::FRight)] > thr_straight_value[static_cast<uint8_t>(SensorPosition::FRight)]) return true;
-		else return false;
+	if(current_value[static_cast<uint8_t>(pos)] > thr_straight_value[static_cast<uint8_t>(pos)]) return true;
+	else return false;
 }
 
 bool WallSensor::canSlalom(){

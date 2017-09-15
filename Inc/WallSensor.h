@@ -44,6 +44,7 @@ private:
 	const uint16_t VAL_THR_SLALOM_FRIGHT;
 
 	ADC_HandleTypeDef hadc;
+	ADC_ChannelConfTypeDef s_config;
 
 	RingBufferHistory< array<float, 5>, 10 > buf;
 
