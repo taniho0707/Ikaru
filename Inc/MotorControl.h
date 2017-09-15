@@ -14,7 +14,7 @@
 #include "Led.h"
 #include "Speaker.h"
 
-/* #include "Datalog.h" */
+#include "Datalog.h"
 
 class MotorControl{
 private:
@@ -26,7 +26,7 @@ private:
 	Gyro* gyro = Gyro::getInstance();
 	Led* led = Led::getInstance();
 
-	/* Datalog* log = Datalog::getInstance(); */
+	Datalog* log = Datalog::getInstance();
 
 	const float GAIN_LIN_P;
 	const float GAIN_LIN_I;

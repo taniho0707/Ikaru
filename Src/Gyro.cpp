@@ -5,7 +5,7 @@
 
 Gyro::Gyro() :
 	Spi(port, GPIOB, GPIO_PIN_1),
-	lsb2dps(0.03476),
+	lsb2dps(0.0334),
 	// lsb2dps(0.035),
 	lsb2mps(0.000049762),
 	zero_gyroz(0.0),

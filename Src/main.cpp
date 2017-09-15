@@ -127,6 +127,33 @@ int main(void) {
 	VelocityControl* vc = VelocityControl::getInstance();
 	vc->disableWallgap();
 	HAL_Delay(1000);
+
+	vc->runTrapAccel(0.0f, 0.3f, 0.0f, 1.26f, 3.0f);
+	vc->disableWallgap();
+	// mc->disableWallControl();
+	
+	mc->stay();
+	// Motor* motor = Motor::getInstance();
+	// motor->disable();
+	HAL_Delay(10000);
+	// speaker->playMusic(MusicNumber::KIRBY_GOURMETRACE);
+	// Datalog *log = Datalog::getInstance();
+	// constexpr auto num = 10;
+	// for(auto i=0; i<log->getSize()/num; ++i){
+	// 	compc->printf("%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", i,
+	// 				  log->readFloat(num*i),
+	// 				  log->readFloat(num*i+1),
+	// 				  log->readFloat(num*i+2),
+	// 				  log->readFloat(num*i+3),
+	// 				  log->readFloat(num*i+4),
+	// 				  log->readFloat(num*i+5),
+	// 				  log->readFloat(num*i+6),
+	// 				  log->readFloat(num*i+7),
+	// 				  log->readFloat(num*i+8),
+	// 				  log->readFloat(num*i+9)
+	// 		);
+	// }
+	
 	vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.045f, 3.0f);
 	vc->disableWallgap();
 	while(vc->isRunning());
@@ -149,7 +176,7 @@ int main(void) {
 			vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.045f, 3.0f);
 			vc->disableWallgap();
 			while(vc->isRunning());
-			vc->runPivotTurn(1000, -90, 3000);
+			vc->runPivotTurn(1000, 180, 3000);
 			while(vc->isRunning());
 			vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.045f, 3.0f);
 			vc->disableWallgap();

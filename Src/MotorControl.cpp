@@ -5,13 +5,13 @@
 #include "MotorControl.h"
 
 MotorControl::MotorControl() : 
-	GAIN_LIN_P(600),
-	GAIN_LIN_I(2),
+	GAIN_LIN_P(1200),
+	GAIN_LIN_I(3.5),
 	GAIN_LIN_D(0.0),
 	GAIN_RAD_P(-0.5f),
 	GAIN_RAD_I(-0.05f),
 	GAIN_RAD_D(0.0f),
-	GAIN_WALL_P(-4.0f),
+	GAIN_WALL_P(-2.0f),
 	GAIN_WALL_SHRT_P(0.0f),
 	GAIN_WALL_I(0.0f),
 	GAIN_WALL_D(0.0f),
@@ -206,17 +206,19 @@ void MotorControl::controlVel(){
 	motor->setDuty(MotorSide::LEFT, tar_motor_l_power);
 	motor->setDuty(MotorSide::RIGHT, tar_motor_r_power);
 
-	// log->writeFloat(tar_lin_vel);
-	// log->writeFloat((encoder->getVelocity(EncoderSide::LEFT)+encoder->getVelocity(EncoderSide::RIGHT))/2);
-	// log->writeFloat(cur_lin_x);
-	// log->writeFloat(gyro->getGyroYaw());
-	// log->writeFloat(tar_rad_vel);
-	// log->writeFloat(wall->getValue(SensorPosition::Left));
-	// log->writeFloat(wall->getValue(SensorPosition::Right));
-	// // log->writeFloat(current_wall_correction);
-	// // log->writeFloat(tar_motor_l_power);
-	// // log->writeFloat(tar_motor_r_power);
-	// log->writeFloat(getIntegralEncoder());
+	log->writeFloat(tar_lin_vel);
+	log->writeFloat(encoder->getVelocity(EncoderSide::LEFT));
+	log->writeFloat(encoder->getVelocity(EncoderSide::RIGHT));
+	log->writeFloat((encoder->getVelocity(EncoderSide::LEFT)+encoder->getVelocity(EncoderSide::RIGHT))/2);
+	log->writeFloat(cur_lin_x);
+	log->writeFloat(gyro->getGyroYaw());
+	log->writeFloat(tar_rad_vel);
+	log->writeFloat(wall->getValue(SensorPosition::Left));
+	log->writeFloat(wall->getValue(SensorPosition::Right));
+	// log->writeFloat(current_wall_correction);
+	// log->writeFloat(tar_motor_l_power);
+	// log->writeFloat(tar_motor_r_power);
+	log->writeFloat(getIntegralEncoder());
 	// log->writeFloat(getDistanceFromGap());
 	// log->writeFloat(getDistanceFromGapDiago());
 
