@@ -6,26 +6,31 @@ using namespace std;
 /// @todo add wait REDEN flag
 WallSensor::WallSensor() :
 	VAL_REF_FLEFT(100),
-	VAL_REF_LEFT(30),
-	VAL_REF_FRONT(100),
-	VAL_REF_RIGHT(25),
+	VAL_REF_LEFT(180),
+	VAL_REF_FRONT(400),
+	VAL_REF_RIGHT(280),
 	VAL_REF_FRIGHT(100),
-	VAL_THR_FLEFT(100),
-	VAL_THR_LEFT(18),
-	VAL_THR_FRONT(12),
-	VAL_THR_RIGHT(18),
+	
+	VAL_THR_FLEFT(112),
+	VAL_THR_LEFT(130),
+	VAL_THR_FRONT(115),
+	VAL_THR_RIGHT(190),
 	VAL_THR_FRIGHT(100),
+	
 	VAL_THR_CONTROL_LEFT(100),
-	VAL_THR_CONTROL_RIGHT(100),
-	VAL_THR_GAP_LEFT(18),
-	VAL_THR_GAP_RIGHT(18),
-	VAL_THR_GAP_DIAGO_LEFT(10),
-	VAL_THR_GAP_DIAGO_RIGHT(10),
+	VAL_THR_CONTROL_RIGHT(110),
+	
+	VAL_THR_GAP_LEFT(120),
+	VAL_THR_GAP_RIGHT(105),
+	VAL_THR_GAP_DIAGO_LEFT(130),
+	VAL_THR_GAP_DIAGO_RIGHT(180),
+	
 	VAL_THR_SLALOM_FLEFT(500),
 	VAL_THR_SLALOM_LEFT(500),
 	VAL_THR_SLALOM_RIGHT(500),
 	VAL_THR_SLALOM_FRIGHT(500),
-	THR_WALL_DISAPPEAR(5) // サーキットなら50に，ハーフなら5に
+	
+	THR_WALL_DISAPPEAR(50) // サーキットなら50に，ハーフなら5に
 {
 	__HAL_RCC_ADC1_CLK_ENABLE();
 	__HAL_RCC_GPIOA_CLK_ENABLE();
@@ -280,7 +285,8 @@ void WallSensor::interrupt(){
 	tmp[static_cast<uint8_t>(SensorPosition::FLeft)] = HAL_ADC_GetValue(&hadc);
 
 	onLed();
-	for(int i=0; i<100; ++i);
+	for(int i=0; i<5000; ++i);
+	// 待ち時間を極力減らしたい
 
 	s_config.Channel = ADC_CHANNEL_4;
 	HAL_ADC_ConfigChannel(&hadc, &s_config);
@@ -309,6 +315,8 @@ void WallSensor::interrupt(){
 	current_value[static_cast<uint8_t>(SensorPosition::FLeft)] = HAL_ADC_GetValue(&hadc) - tmp[static_cast<uint8_t>(SensorPosition::FLeft)];
 
 	offLed();
+	
+	checkGap();
 }
 
 
@@ -328,9 +336,9 @@ bool WallSensor::isExistWall(SensorPosition pos){
 }
 
 bool WallSensor::canSlalom(){
-	if(getValue(SensorPosition::FLeft) > VAL_THR_SLALOM_FLEFT || getValue(SensorPosition::FRight) > VAL_THR_SLALOM_FRIGHT){
+	if(getValue(SensorPosition::Left) > VAL_THR_SLALOM_LEFT || getValue(SensorPosition::Right) > VAL_THR_SLALOM_RIGHT){
 		return false;
-	} else if(isExistWall(SensorPosition::FLeft) && (getValue(SensorPosition::Left) > VAL_THR_SLALOM_LEFT || getValue(SensorPosition::Right) > VAL_THR_SLALOM_RIGHT)){
+	} else if(isExistWall(SensorPosition::Left) && (getValue(SensorPosition::Left) > VAL_THR_SLALOM_LEFT || getValue(SensorPosition::Right) > VAL_THR_SLALOM_RIGHT)){
 		return false;
 	} else {
 		return true;
@@ -424,7 +432,7 @@ int16_t WallSensor::getCorrection(uint16_t max){
 	int16_t tmpL = VAL_REF_LEFT - getValue(SensorPosition::Left);
 	bool is_singlewall = false;
 
-	if(current_value[static_cast<uint8_t>(SensorPosition::FLeft)] > VAL_THR_CONTROL_LEFT && current_value[static_cast<uint8_t>(SensorPosition::FRight)] > VAL_THR_CONTROL_RIGHT) return 0;
+	// if(current_value[static_cast<uint8_t>(SensorPosition::Left)] > VAL_THR_CONTROL_LEFT && current_value[static_cast<uint8_t>(SensorPosition::Right)] > VAL_THR_CONTROL_RIGHT) return 0;
 
 	if(!isExistWall(SensorPosition::Left) || ((static_cast<int16_t>(getLastValue(SensorPosition::Left))-static_cast<int16_t>(getValue(SensorPosition::Left))) > THR_WALL_DISAPPEAR)){
 		tmpL = 0;

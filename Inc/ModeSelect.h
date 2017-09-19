@@ -14,7 +14,7 @@
 
 namespace mode {
 	enum class MODE_PRIME : uint8_t {
-		TURNADJUST,
+		TURNADJUST = 0x0,
 		SENSORLOG,
 		RUNLOG,
 		EXPR,
@@ -24,26 +24,34 @@ namespace mode {
 	};
 
 	enum class MODE_TURNADJUST : uint8_t {
+		HOGE,
 		LAST // コレより下に定義しない
 	};
 
 	enum class MODE_SENSORLOG : uint8_t {
+		HOGE,
 		LAST // コレより下に定義しない
 	};
 
 	enum class MODE_RUNLOG : uint8_t {
+		HOGE,
 		LAST // コレより下に定義しない
 	};
 
 	enum class MODE_EXPR : uint8_t {
+		WITHOUT_MAE,
+		WITH_MAE,
 		LAST // コレより下に定義しない
 	};
 
 	enum class MODE_SHRT : uint8_t {
+		HOGE,
 		LAST // コレより下に定義しない
 	};
 
 	enum class MODE_HIDARITE : uint8_t {
+		WITHOUT_MAE,
+		WITH_MAE,
 		LAST // コレより下に定義しない
 	};
 
@@ -89,7 +97,15 @@ private:
 
 	bool enabled;
 
+	uint8_t mode_prime;
+	uint8_t mode_sub;
+
 	WallSensor* wallsensor = WallSensor::getInstance();
+	Led* led = Led::getInstance();
+	Speaker* speaker = Speaker::getInstance();
+	Gyro* gyro = Gyro::getInstance();
+
+	uint8_t getModeSubLast(uint8_t prime);
 
 public:
 	mode::StructMode select();

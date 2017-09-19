@@ -5,14 +5,14 @@
 #include "MotorControl.h"
 
 MotorControl::MotorControl() : 
-	GAIN_LIN_P(1200),
+	GAIN_LIN_P(1300),
 	GAIN_LIN_I(3.5),
 	GAIN_LIN_D(0.0),
 	GAIN_RAD_P(-0.5f),
 	GAIN_RAD_I(-0.05f),
 	GAIN_RAD_D(0.0f),
 	GAIN_WALL_P(-2.0f),
-	GAIN_WALL_SHRT_P(0.0f),
+	GAIN_WALL_SHRT_P(-1.5f),
 	GAIN_WALL_I(0.0f),
 	GAIN_WALL_D(0.0f),
 	TREAD(380.0f)
@@ -137,6 +137,7 @@ void MotorControl::controlVel(){
 	static int16_t current_wall_correction = 0;
 
 	if(integral_lin_encoder > 100 || integral_rad_gyro > 50000){
+		led->initPort(LedNumbers::TOP1);
 		led->flickAsync(LedNumbers::FRONT, 4.0f, 0);
 		led->flickAsync(LedNumbers::TOP1, 4.0f, 0);
 		is_failsafe = true;
@@ -153,7 +154,7 @@ void MotorControl::controlVel(){
 		if(is_comb_wall_control){
 			current_wall_correction = wall->getCorrectionComb(500);
 		} else {
-			current_wall_correction = wall->getCorrection(50);
+			current_wall_correction = wall->getCorrection(20);
 		}
 	} else {
 		current_wall_correction = 0;
@@ -166,7 +167,7 @@ void MotorControl::controlVel(){
 	// integral_wall += wall->getCorrection(10000) * enabled_wall_control;
 
 	// rotation成分の計算
-	tar_rad_rev = ((tar_rad_vel - (is_shrt_wall_control ? GAIN_WALL_SHRT_P : GAIN_WALL_P) * current_wall_correction) - gyro->getGyroYaw());
+	tar_rad_rev = ((tar_rad_vel - (is_shrt_wall_control ? GAIN_WALL_SHRT_P : GAIN_WALL_P) * ((tar_lin_vel < 0.001f) ? 3 : 1) * current_wall_correction) - gyro->getGyroYaw());
 	// tar_rad_rev = ((tar_rad_vel - enabled_wall_control * GAIN_WALL_P * wall->getCorrection(10000) - enabled_wall_control * GAIN_WALL_D * (wall->getCorrection(10000)-lastwall)) - gyro->getGyroYaw());
 	// d_rad_gyro = (tar_rad_vel - gyro->getGyroYaw()) - tar_rad_rev;
 	// integral_rad_gyro += (tar_rad_vel - gyro->getGyroYaw());
@@ -179,25 +180,25 @@ void MotorControl::controlVel(){
 	integral_lin_encoder += tar_vel_rev;
 	tar_motor_lin_power = GAIN_LIN_P * tar_vel_rev + GAIN_LIN_I * integral_lin_encoder;
 
-	// // 壁切れ用の計算
-	// dist_from_gap += 0.001f * cur_lin_vel;
-	// if(wall->hadGap(SensorPosition::Left)){
-	// 	dist_from_gap = 0.0f;
-	// 	is_left_gap = true;
-	// }
-	// if(wall->hadGap(SensorPosition::Right)){
-	// 	dist_from_gap = 0.0f;
-	// 	is_left_gap = false;
-	// }
-	// dist_from_gap_diago += 0.001f * cur_lin_vel;
-	// if(wall->hadGapDiago(SensorPosition::Left)){
-	// 	dist_from_gap_diago = 0.0f;
-	// 	is_left_gap_diago = true;
-	// }
-	// if(wall->hadGapDiago(SensorPosition::Right)){
-	// 	dist_from_gap_diago = 0.0f;
-	// 	is_left_gap_diago = false;
-	// }
+	// 壁切れ用の計算
+	dist_from_gap += 0.001f * cur_lin_vel;
+	if(wall->hadGap(SensorPosition::Left)){
+		dist_from_gap = 0.0f;
+		is_left_gap = true;
+	}
+	if(wall->hadGap(SensorPosition::Right)){
+		dist_from_gap = 0.0f;
+		is_left_gap = false;
+	}
+	dist_from_gap_diago += 0.001f * cur_lin_vel;
+	if(wall->hadGapDiago(SensorPosition::Left)){
+		dist_from_gap_diago = 0.0f;
+		is_left_gap_diago = true;
+	}
+	if(wall->hadGapDiago(SensorPosition::Right)){
+		dist_from_gap_diago = 0.0f;
+		is_left_gap_diago = false;
+	}
 
 	// モーター出力
 	tar_motor_r_power = static_cast<int16_t>(tar_motor_lin_power - tar_motor_rad_power);

@@ -11,6 +11,7 @@
 #include "Speaker.h"
 #include "Gyro.h"
 #include "WallSensor.h"
+#include "ModeSelect.h"
 
 __IO int32_t Timer::total = 0;
 
@@ -29,6 +30,7 @@ void Timer::interrupt(){
 	static MotorControl* motor = MotorControl::getInstance();
 	static WallSensor* ws = WallSensor::getInstance();
 	static VelocityControl* vc = VelocityControl::getInstance();
+	static ModeSelect* mode = ModeSelect::getInstance();
 	led->interrupt();
 	battery->interrupt();
 	speaker->interrupt();
@@ -38,4 +40,5 @@ void Timer::interrupt(){
 	motor->interrupt();
 	ws->interrupt();
 	vc->interrupt();
+	mode->interrupt();
 }

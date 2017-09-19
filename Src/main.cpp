@@ -21,22 +21,39 @@
 
 #include "MotorControl.h"
 #include "VelocityControl.h"
+#include "ModeSelect.h"
+#include "MotorCollection.h"
 
 #include "Walldata.h"
 
+#include "Position.h"
+#include "Map.h"
+#include "Footmap.h"
+
+#include "MethodAdachi.h"
 
 using namespace slalomparams;
 
-/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_NVIC_Init(void);
 
 
-int main(void) {
-	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-	HAL_Init();
+void frontcorrection(){
+	Led* led = Led::getInstance();
+	MotorControl* mc = MotorControl::getInstance();
+	MotorCollection* motorcollection = MotorCollection::getInstance();
+	led->flickAsync(LedNumbers::FRONT, 5.0f, 1500);
+	mc->disableWallControl();
+	motorcollection->collectionByFrontDuringStop(0.03f);
+	mc->stay();
+	mc->resetRadIntegral();
+	mc->resetLinIntegral();
+	led->flickStop(LedNumbers::FRONT);
+	HAL_Delay(300);
+}
 
-	/* Configure the system clock */
+int main(void) {
+	HAL_Init();
 	SystemClock_Config();
 
 	Led* led = Led::getInstance();
@@ -112,30 +129,283 @@ int main(void) {
 
 	HAL_Delay(2000);
 	led->flickSync(LedNumbers::FRONT, 10, 1000);
-	led->flickAsync(LedNumbers::FRONT, 4, 1000);
+	led->flickAsync(LedNumbers::FRONT, 4, 2000);
 	gyro->resetCalibration();
-	speaker->playMusic(MusicNumber::HIRAPA);
 
 	Encoder* encoder = Encoder::getInstance();
 
 	WallSensor* wallsensor = WallSensor::getInstance();
 	wallsensor->start();
 
-	MotorControl* mc = MotorControl::getInstance();
-	mc->stay();
-	led->on(LedNumbers::FRONT);
-	VelocityControl* vc = VelocityControl::getInstance();
-	vc->disableWallgap();
-	HAL_Delay(1000);
+	HAL_Delay(50);
+	if (wallsensor->getValue(SensorPosition::Front) > 1000) {
+		Datalog *log = Datalog::getInstance();
+		constexpr auto num = 10;
+		for(auto i=0; i<log->getSize()/num; ++i){
+			compc->printf("%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", i,
+						  log->readFloat(num*i),
+						  log->readFloat(num*i+1),
+						  log->readFloat(num*i+2),
+						  log->readFloat(num*i+3),
+						  log->readFloat(num*i+4),
+						  log->readFloat(num*i+5),
+						  log->readFloat(num*i+6),
+						  log->readFloat(num*i+7),
+						  log->readFloat(num*i+8),
+						  log->readFloat(num*i+9)
+				);
+		}
+	}
 
-	vc->runTrapAccel(0.0f, 0.3f, 0.0f, 1.26f, 3.0f);
-	vc->disableWallgap();
-	// mc->disableWallControl();
+	ModeSelect* mode = ModeSelect::getInstance();
+	speaker->playMusic(MusicNumber::KIRBY3_CURSOR);
+	mode::StructMode decided_mode = mode->select();
+	bool enabled_mae = false;
 	
-	mc->stay();
+	switch(decided_mode.prime){
+	case static_cast<uint8_t>(mode::MODE_PRIME::HIDARITE):
+	{
+		switch(decided_mode.sub){
+		case static_cast<uint8_t>(mode::MODE_HIDARITE::WITHOUT_MAE):
+			enabled_mae = false;
+			break;
+		case static_cast<uint8_t>(mode::MODE_HIDARITE::WITH_MAE):
+			enabled_mae = true;
+			break;
+		default:
+			break;
+		}
+		// ここから左手法で走る
+		mode->startcheck(0);
+		led->initPort(LedNumbers::TOP1);
+		led->flickAsync(LedNumbers::TOP1, 4.0f, 2000);
+		speaker->playMusic(MusicNumber::HIRAPA);
+		HAL_Delay(1000);
+
+		MotorControl* mc = MotorControl::getInstance();
+		mc->stay();
+		led->on(LedNumbers::FRONT);
+		VelocityControl* vc = VelocityControl::getInstance();
+		vc->disableWallgap();
+
+		MotorCollection* motorcollection = MotorCollection::getInstance();
+		vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.045f, 3.0f);
+		// vc->enableWallgap();
+		mc->enableWallControl();
+		while(vc->isRunning());
+
+		while (1) {
+			// vc->runTrapAccel(0.3f, 0.3f, 0.3f, 0.09f, 5.0f);
+			// // vc->disableWallgap();
+			// while(vc->isRunning());
+			if(wallsensor->isExistWall(SensorPosition::Left) == false){
+				vc->runSlalom(RunType::SLALOM90SML_LEFT, 0.3f);
+				// vc->disableWallgap();
+				mc->disableWallControl();
+				while(vc->isRunning());
+			} else if(wallsensor->isExistWall(SensorPosition::Front) == false){
+				vc->runTrapAccel(0.3f, 0.3f, 0.3f, 0.09f, 5.0f);
+				// vc->disableWallgap();
+				mc->enableWallControl();
+				while(vc->isRunning());
+			} else if(wallsensor->isExistWall(SensorPosition::Right) == false){
+				vc->runSlalom(RunType::SLALOM90SML_RIGHT, 0.3f);
+				// vc->disableWallgap();
+				mc->disableWallControl();
+				while(vc->isRunning());
+			} else {
+				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.045f, 5.0f);
+				// vc->disableWallgap();
+				mc->disableWallControl();
+				while(vc->isRunning());
+
+				if(enabled_mae){
+					led->flickAsync(LedNumbers::FRONT, 5.0f, 1500);
+					mc->disableWallControl();
+					motorcollection->collectionByFrontDuringStop(0.03f);
+					mc->stay();
+					mc->resetRadIntegral();
+					mc->resetLinIntegral();
+					led->flickStop(LedNumbers::FRONT);
+					HAL_Delay(300);
+					vc->runPivotTurn(500, 90, 1000);
+					mc->disableWallControl();
+					while(vc->isRunning());
+					led->flickAsync(LedNumbers::FRONT, 5.0f, 1500);
+					mc->disableWallControl();
+					motorcollection->collectionByFrontDuringStop(0.03f);
+					mc->stay();
+					mc->resetRadIntegral();
+					mc->resetLinIntegral();
+					led->flickStop(LedNumbers::FRONT);
+					led->on(LedNumbers::FRONT);
+					HAL_Delay(300);
+					vc->runPivotTurn(500, 90, 1000);
+					mc->disableWallControl();
+					while(vc->isRunning());
+					HAL_Delay(300);
+				} else {
+					vc->runPivotTurn(500, 180, 5000);
+					mc->disableWallControl();
+					while(vc->isRunning());
+				}
+			
+				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.045f, 5.0f);
+				// vc->disableWallgap();
+				mc->disableWallControl();
+				while(vc->isRunning());
+			}
+		}
+	}
+	break;
+	case static_cast<uint8_t>(mode::MODE_PRIME::EXPR):
+	{
+		switch(decided_mode.sub){
+		case static_cast<uint8_t>(mode::MODE_EXPR::WITHOUT_MAE):
+			enabled_mae = false;
+			break;
+		case static_cast<uint8_t>(mode::MODE_EXPR::WITH_MAE):
+			enabled_mae = true;
+			break;
+		default:
+			break;
+		}
+
+		mode->startcheck(0);
+		led->initPort(LedNumbers::TOP1);
+		led->flickAsync(LedNumbers::TOP1, 4.0f, 2000);
+		speaker->playMusic(MusicNumber::HIRAPA);
+		HAL_Delay(1000);
+
+		MotorControl* mc = MotorControl::getInstance();
+		mc->stay();
+		led->on(LedNumbers::FRONT);
+		VelocityControl* vc = VelocityControl::getInstance();
+		vc->disableWallgap();
+		MotorCollection* motorcollection = MotorCollection::getInstance();
+
+		mc->stay();
+		vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.045f, 5.0f);
+		while(vc->isRunning());
+		vc->startTrapAccel(0.3f, 0.3f, 0.09f, 5.0f);
+
+		Walldata walldata;
+		Map map;
+		Position pos;
+		MethodAdachi adachi;
+		map.setReached(0, 0);
+		adachi.setGoal(6, 7);
+
+		while(true){
+			led->off(LedNumbers::FRONT);
+			walldata = wallsensor->getWall();
+			map.setWall(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata);
+			map.setReached(pos.getPositionX(), pos.getPositionY());
+			adachi.setCurrent(pos.getPositionX(), pos.getPositionY());
+			adachi.setMap(map);
+			adachi.renewFootmap();
+			RunType runtype = adachi.getNextMotion(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata);
+			led->on(LedNumbers::FRONT);
+		
+			if(runtype == slalomparams::RunType::TRAPACCEL){
+				vc->runTrapAccel(0.3f, 0.3f, 0.3f, 0.09f, 3.0f);
+				while(vc->isRunning());
+			} else if(runtype == slalomparams::RunType::PIVOTTURN){
+				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.045f, 5.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				if(walldata.isExistWall(MouseAngle::FRONT)){
+					frontcorrection();
+				}
+				if(walldata.isExistWall(MouseAngle::RIGHT)){
+					vc->runPivotTurn(500, 90, 1000);
+					while(vc->isRunning());
+					frontcorrection();
+					vc->runPivotTurn(500, 90, 1000);
+					while(vc->isRunning());
+					mc->resetRadIntegral();
+					mc->resetLinIntegral();
+				} else {
+					vc->runPivotTurn(500, 180, 1000);
+					while(vc->isRunning());
+					mc->disableWallControl();
+					mc->resetRadIntegral();
+					mc->resetLinIntegral();
+				}
+
+				mc->resetDistanceFromGap();
+				mc->resetDistanceFromGapDiago();
+				vc->runTrapAccel(0.0f, 0.30f, 0.30f, 0.045f, 5.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+			} else if(runtype == slalomparams::RunType::SLALOM90SML_RIGHT){
+				vc->runSlalom(RunType::SLALOM90SML_RIGHT, 0.3f);
+				while(vc->isRunning());
+			} else if(runtype == slalomparams::RunType::SLALOM90SML_LEFT){
+				vc->runSlalom(RunType::SLALOM90SML_LEFT, 0.3f);
+				while(vc->isRunning());
+			} else {
+				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.045f, 4.0f);
+				while(vc->isRunning());
+				break;
+			}
+		
+			pos.setNextPosition(runtype);
+			vc->startTrapAccel(0.3f, 0.3f, 0.09f, 5.0f);
+		
+			static bool is_first_goal = true; // = has_goal
+			if(pos.getPositionX() == 6 && pos.getPositionY() == 7){ // && is_first_goal){
+				is_first_goal = false;
+				led->on(LedNumbers::TOP1);
+				walldata = wallsensor->getWall();
+				map.setWall(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata);
+				map.setReached(pos.getPositionX(), pos.getPositionY());
+				led->off(LedNumbers::TOP1);
+
+				led->on(LedNumbers::TOP1);
+				adachi.setGoal(0, 0);
+			} else if(pos.getPositionX() == 0 && pos.getPositionY() == 0){
+				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.045f, 5.0f);
+				while(vc->isRunning());
+				mc->disableWallControl();
+				break;
+			}
+		}
+	}
+	break;
+	}
+
+	
+	// // vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.135f, 5.0f);
+	// // while(vc->isRunning());
+	// while(1){
+	// 	// vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 5.0f);
+	// 	// while(vc->isRunning());
+	// 	// vc->runSlalom(RunType::SLALOM90SML_RIGHT, 0.3f);
+	// 	// while(vc->isRunning());
+	// 	vc->runPivotTurn(500, 180, 2000);
+	// 	while(vc->isRunning());
+	// 	HAL_Delay(1000);
+	// }
+
+	// vc->runTrapAccel(0.0f, 0.1f, 0.0f, 0.27f, 5.0f);
+	// while(vc->isRunning());
+	// HAL_Delay(10000);
+	// vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.135f, 5.0f);
+	// while(vc->isRunning());
+	// vc->runSlalom(RunType::SLALOM90SML_LEFT, 0.3f);
+	// while(vc->isRunning());
+	// vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.135f, 5.0f);
+	// mc->disableWallControl();
+	// while(vc->isRunning());
+
+	// vc->runTrapAccel(0.0f, 0.3f, 0.0f, 1.26f, 3.0f);
+	// vc->disableWallgap();
+	// mc->disableWallControl();
+	// mc->stay();
 	// Motor* motor = Motor::getInstance();
 	// motor->disable();
-	HAL_Delay(10000);
+	// HAL_Delay(10000);
 	// speaker->playMusic(MusicNumber::KIRBY_GOURMETRACE);
 	// Datalog *log = Datalog::getInstance();
 	// constexpr auto num = 10;
@@ -154,57 +424,32 @@ int main(void) {
 	// 		);
 	// }
 	
-	vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.045f, 3.0f);
-	vc->disableWallgap();
-	while(vc->isRunning());
-
-	/* Infinite loop */
-	while (1) {
-		if(wallsensor->isExistWall(SensorPosition::Left) == false){
-			vc->runSlalom(RunType::SLALOM90SML_LEFT, 0.3f);
-			vc->disableWallgap();
-			while(vc->isRunning());
-		} else if(wallsensor->isExistWall(SensorPosition::Front) == false){
-			vc->runTrapAccel(0.3f, 0.3f, 0.3f, 0.09f, 3.0f);
-			vc->disableWallgap();
-			while(vc->isRunning());
-		} else if(wallsensor->isExistWall(SensorPosition::Right) == false){
-			vc->runSlalom(RunType::SLALOM90SML_RIGHT, 0.3f);
-			vc->disableWallgap();
-			while(vc->isRunning());
-		} else {
-			vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.045f, 3.0f);
-			vc->disableWallgap();
-			while(vc->isRunning());
-			vc->runPivotTurn(1000, 180, 3000);
-			while(vc->isRunning());
-			vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.045f, 3.0f);
-			vc->disableWallgap();
-			while(vc->isRunning());
-		}
 
 
-		// led->off(LedNumbers::FRONT);
-		// HAL_Delay(99);
-		// led->on(LedNumbers::FRONT);
-		// HAL_Delay(1);
-		// compc->printf("%4d %4d %4d %4d %4d, %f, %f %f\n", wallsensor->getValue(SensorPosition::FLeft), wallsensor->getValue(SensorPosition::Left), wallsensor->getValue(SensorPosition::Front), wallsensor->getValue(SensorPosition::Right), wallsensor->getValue(SensorPosition::FRight), gyro->getGyroYaw(), encoder->getVelocity(EncoderSide::LEFT), encoder->getVelocity(EncoderSide::RIGHT));
+	// if (gyro->readAccelZ() < 0) {
+	while(1){
+		led->off(LedNumbers::FRONT);
+		HAL_Delay(99);
+		led->on(LedNumbers::FRONT);
+		HAL_Delay(1);
+		compc->printf("[%4d %4d %4d %4d %4d ] %+7d %+7d %+7d : %+7d %+7d %+7d, %f %f\n", wallsensor->getValue(SensorPosition::FLeft), wallsensor->getValue(SensorPosition::Left), wallsensor->getValue(SensorPosition::Front), wallsensor->getValue(SensorPosition::Right), wallsensor->getValue(SensorPosition::FRight), gyro->readGyroX(), gyro->readGyroY(), gyro->readGyroZ(), gyro->readAccelX(), gyro->readAccelY(), gyro->readAccelZ(), encoder->getVelocity(EncoderSide::LEFT), encoder->getVelocity(EncoderSide::RIGHT));
 	}
+	// }
 }
 
-/** System Clock Configuration
-*/
+
+
+
+/** System Clock Configuration */
 void SystemClock_Config(void) {
 	RCC_OscInitTypeDef RCC_OscInitStruct;
 	RCC_ClkInitTypeDef RCC_ClkInitStruct;
 
-    /**Configure the main internal regulator output voltage 
-	 */
+    /**Configure the main internal regulator output voltage */
 	__HAL_RCC_PWR_CLK_ENABLE();
 	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-    /**Initializes the CPU, AHB and APB busses clocks 
-	 */
+    /**Initializes the CPU, AHB and APB busses clocks */
 	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
 	RCC_OscInitStruct.HSIState = RCC_HSI_ON;
 	RCC_OscInitStruct.HSICalibrationValue = 16;
@@ -219,8 +464,7 @@ void SystemClock_Config(void) {
 		_Error_Handler(__FILE__, __LINE__);
 	}
 
-    /**Initializes the CPU, AHB and APB busses clocks 
-	 */
+    /**Initializes the CPU, AHB and APB busses clocks */
 	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
 		|RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
 	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
@@ -232,12 +476,10 @@ void SystemClock_Config(void) {
 		_Error_Handler(__FILE__, __LINE__);
 	}
 
-    /**Configure the Systick interrupt time 
-	 */
+    /**Configure the Systick interrupt time */
 	HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
-    /**Configure the Systick 
-	 */
+    /**Configure the Systick */
 	HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
 	/* SysTick_IRQn interrupt configuration */
@@ -272,10 +514,6 @@ static void MX_NVIC_Init(void) {
 	HAL_NVIC_EnableIRQ(DMA2_Stream7_IRQn);
 }
 
-/* USER CODE BEGIN 4 */
-
-/* USER CODE END 4 */
-
 /**
   * @brief  This function is executed in case of error occurrence.
   * @param  None
@@ -306,13 +544,3 @@ void assert_failed(uint8_t* file, uint32_t line) {
 }
 
 #endif
-
-/**
-  * @}
-  */ 
-
-/**
-  * @}
-*/ 
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

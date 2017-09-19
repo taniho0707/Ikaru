@@ -7,30 +7,30 @@
 
 using namespace mode;
 
-MODE_PRIME      first_mode_prime      = MODE_PRIME::EXPR;
-MODE_TURNADJUST first_mode_turnadjust = MODE_TURNADJUST::LAST;
-MODE_SENSORLOG  first_mode_sensorlog  = MODE_SENSORLOG::LAST;
-MODE_RUNLOG     first_mode_runlog     = MODE_RUNLOG::LAST;
-MODE_EXPR       first_mode_expr       = MODE_EXPR::LAST;
-MODE_SHRT       first_mode_shrt       = MODE_SHRT::LAST;
-MODE_HIDARITE   first_mode_hidarite   = MODE_HIDARITE::LAST;
+const static MODE_PRIME      first_mode_prime      = MODE_PRIME::HIDARITE;
+const static MODE_TURNADJUST first_mode_turnadjust = MODE_TURNADJUST::HOGE;
+const static MODE_SENSORLOG  first_mode_sensorlog  = MODE_SENSORLOG::HOGE;
+const static MODE_RUNLOG     first_mode_runlog     = MODE_RUNLOG::HOGE;
+const static MODE_EXPR       first_mode_expr       = MODE_EXPR::WITHOUT_MAE;
+const static MODE_SHRT       first_mode_shrt       = MODE_SHRT::HOGE;
+const static MODE_HIDARITE   first_mode_hidarite   = MODE_HIDARITE::WITHOUT_MAE;
 
 
 ModeSelect::ModeSelect() :
 	WAITTIME_GYRO(10),
 	WAITTIME_ACCEL(100),
-	WAITTIME_WALL(1000),
-	THR_UNDER_GYRO_X(100),
+	WAITTIME_WALL(800),
+	THR_UNDER_GYRO_X(500),
 	THR_OVER_GYRO_X(15000), //Pitch
-	THR_UNDER_GYRO_Y(100),
+	THR_UNDER_GYRO_Y(500),
 	THR_OVER_GYRO_Y(15000), //Roll
-	THR_UNDER_GYRO_Z(100),
+	THR_UNDER_GYRO_Z(500),
 	THR_OVER_GYRO_Z(10000), //Yaw
-	THR_UNDER_ACCEL_X(0),
+	THR_UNDER_ACCEL_X(100),
 	THR_OVER_ACCEL_X(10000), //左右
-	THR_UNDER_ACCEL_Y(0),
+	THR_UNDER_ACCEL_Y(100),
 	THR_OVER_ACCEL_Y(10000), //前後
-	THR_UNDER_ACCEL_Z(0),
+	THR_UNDER_ACCEL_Z(100),
 	THR_OVER_ACCEL_Z(0), //G
 	THR_WALL_FRONT(1000),
 	THR_WALL_FLEFT(1000),
@@ -50,8 +50,98 @@ ModeSelect::ModeSelect() :
 }
 
 
+uint8_t ModeSelect::getModeSubLast(uint8_t prime){
+	switch(static_cast<MODE_PRIME>(prime)){
+	case MODE_PRIME::TURNADJUST:
+		return static_cast<uint8_t>(MODE_TURNADJUST::LAST);
+		break;
+	case MODE_PRIME::SENSORLOG:
+		return static_cast<uint8_t>(MODE_SENSORLOG::LAST);
+		break;
+	case MODE_PRIME::RUNLOG:
+		return static_cast<uint8_t>(MODE_RUNLOG::LAST);
+		break;
+	case MODE_PRIME::EXPR:
+		return static_cast<uint8_t>(MODE_EXPR::LAST);
+		break;
+	case MODE_PRIME::SHRT:
+		return static_cast<uint8_t>(MODE_SHRT::LAST);
+		break;
+	case MODE_PRIME::HIDARITE:
+		return static_cast<uint8_t>(MODE_HIDARITE::LAST);
+		break;
+	}
+}
+
 mode::StructMode ModeSelect::select(){
-	
+	uint16_t stable_time1 = 0, stable_time2 = 0;
+	int16_t ax, ay, az, gx, gy, gz;
+	mode_prime = static_cast<uint8_t>(first_mode_prime);
+	mode_sub = 0; /// @todo 初期値代入する
+	while(true){
+		ax = gyro->readAccelX();
+		ay = gyro->readAccelY();
+		az = gyro->readAccelZ();
+		gx = gyro->readGyroX();
+		gy = gyro->readGyroY();
+		gz = gyro->readGyroZ();
+
+		if(abs(gy) > THR_OVER_GYRO_Y){
+			int16_t ad = 0;
+			if(gy > 0){
+				ad = -1;
+			} else {
+				ad = 1;
+			}
+			if(ad == -1 && mode_prime != 0){
+				speaker->playMusic(MusicNumber::KIRBY3_ORIG_DESELECT);
+				-- mode_prime;
+				mode_sub = 0;
+			} else if(ad == 1 && mode_prime != static_cast<uint8_t>(MODE_PRIME::LAST)-1){
+				speaker->playMusic(MusicNumber::KIRBY3_SELECT);
+				++ mode_prime;
+				mode_sub = 0;
+			} else {
+				speaker->playMusic(MusicNumber::KIRBY_DYING);
+			}
+			HAL_Delay(300);
+		}
+
+		if(abs(gx) > THR_OVER_GYRO_X){
+			int16_t ad = 0;
+			if(gx > 0){
+				ad = 1;
+			} else {
+				ad = -1;
+			}
+			if(ad == -1 && mode_sub != 0){
+				speaker->playMusic(MusicNumber::KIRBY3_ORIG_DESELECT);
+				-- mode_sub;
+			} else if(ad == 1 && mode_sub != getModeSubLast(mode_prime)-1){
+				speaker->playMusic(MusicNumber::KIRBY3_SELECT);
+				++ mode_sub;
+			} else {
+				speaker->playMusic(MusicNumber::KIRBY_DYING);
+			}
+			HAL_Delay(300);
+		}
+
+		if(abs(gx) < THR_UNDER_GYRO_X && abs(gy) < THR_UNDER_GYRO_Y && abs(gz) < THR_UNDER_GYRO_Z){
+			led->on(LedNumbers::FRONT);
+		} else {
+			stable_time1 = 0;
+			led->off(LedNumbers::FRONT);
+		}
+		if(stable_time1++ > 100){
+			break;
+		}
+		HAL_Delay(10);
+	}
+
+	StructMode ret_mode;
+	ret_mode.prime = mode_prime;
+	ret_mode.sub = mode_sub;
+	return ret_mode;
 }
 
 bool ModeSelect::startcheck(uint16_t timeout){
