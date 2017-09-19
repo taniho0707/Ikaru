@@ -75,6 +75,8 @@ Src/dma.c \
 Src/adc.c \
 Src/tim.c
 
+C_SOURCES += $(wildcard Drivers/CMSIS/DSP_Lib/Source/*/*.c)
+
 # CPP sources
 CPP_SOURCES = \
 $(wildcard Src/*.cpp)
@@ -113,7 +115,8 @@ CPU = -mcpu=cortex-m4
 FPU = -mfpu=fpv4-sp-d16
 
 # float-abi
-FLOAT-ABI = -mfloat-abi=hard
+# FLOAT-ABI = -mfloat-abi=hard
+FLOAT-ABI = -mfloat-abi=softfp
 
 # mcu
 MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
@@ -125,11 +128,12 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DUSE_HAL_DRIVER \
--DSTM32F412Cx
+-DSTM32F412Cx \
+-D__FPU_PRESENT -DARM_MATH_CM4
 
 
 # AS includes
-AS_INCLUDES = 
+AS_INCLUDES = -x assembler-with-cpp
 
 # C includes
 C_INCLUDES =  \
@@ -145,7 +149,9 @@ C_INCLUDES =  \
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 
-CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
+CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections \
+-fmessage-length=0 -fexceptions -fno-rtti -funsigned-char -fpermissive -fno-use-cxa-atexit -std=c++11 -Wno-narrowing
+# -Wno-narrowingに注意
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
@@ -165,9 +171,11 @@ LDSCRIPT = STM32F412CGUx_FLASH.ld
 # libraries
 LIBS = -lc -lm -lnosys \
 -lgcc -lrdimon -lstdc++ -lmouse_arm -lpathbasic1_arm -lpathbasic2_arm
+#-larm_cortexM4lfsp_math
 
-LIBDIR = -Llibmouse -Llibpath
-LDFLAGS = $(MCU) -specs=nano.specs -specs=rdimon.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections -u _printf_float
+LIBDIR = -Llibmouse -Llibpath -LDrivers/CMSIS/DSP_Lib
+LDFLAGS = $(MCU) -specs=nano.specs -specs=rdimon.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections -u _printf_float \
+-Wl,-lgcc,-lc,-lm,-lrdimon,--gc-sections
 
 # default action: build all
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin

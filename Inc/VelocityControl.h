@@ -3,6 +3,10 @@
 #include "SlalomParams.h"
 
 #include <cmath>
+#define ARM_MATH_CM4
+#define __FPU_PRESENT 1U
+#include "arm_const_structs.h"
+#include "arm_math.h"
 
 #include "Speaker.h"
 #include "Motor.h"

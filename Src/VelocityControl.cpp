@@ -5,8 +5,8 @@
 using namespace slalomparams;
 
 VelocityControl::VelocityControl() :
-	DIST_GAP_FROM_R(0.040),
-	DIST_GAP_FROM_L(0.043)
+	DIST_GAP_FROM_R(0.002),
+	DIST_GAP_FROM_L(0.012)
 {
 	// mc = MotorControl::getInstance();
 	// sens = WallSensor::getInstance();
@@ -99,18 +99,18 @@ void VelocityControl::runTrapAccel(
 		t3 = static_cast<int32_t>(pi*(reg_max_vel-reg_end_vel)/2.0f/reg_accel*1000.0f);
 		t2 = 0;
 	} else {
-		// x1 = ((reg_max_vel*reg_max_vel-reg_start_vel*reg_start_vel)*pi/4.0f/reg_accel);
-		// x3 = ((reg_max_vel*reg_max_vel-reg_end_vel*reg_end_vel)*pi/4.0f/reg_accel);
-		// x2 = abs(reg_distance) - x1 - x3;
-		// t1 = static_cast<int32_t>(pi*(reg_max_vel-reg_start_vel)/2.0f/reg_accel*1000.0f);
-		// t3 = static_cast<int32_t>(pi*(reg_max_vel-reg_end_vel)/2.0f/reg_accel*1000.0f);
-		// t2 = static_cast<int32_t>(1000.0f * x2 / reg_max_vel);
-		x1 = reg_start_vel*((reg_max_vel-reg_start_vel)/reg_accel) + reg_accel/2*((reg_max_vel-reg_start_vel)/reg_accel)*((reg_max_vel-reg_start_vel)/reg_accel);
-		x3 = reg_max_vel*((reg_max_vel-reg_end_vel)/reg_accel) + reg_accel/2*((reg_max_vel-reg_start_vel)/reg_accel)*((reg_max_vel-reg_end_vel)/reg_accel);
-		x2 = reg_distance - x1 - x3;
-		t1 = static_cast<int32_t>(1000.0f * (reg_max_vel - reg_start_vel) / reg_accel);
-		t2 = t1 + static_cast<int32_t>(1000.0f * (x2/reg_max_vel));
-		t3 = t2 + static_cast<int32_t>(1000.0f * (reg_max_vel - reg_end_vel) / reg_accel);
+		x1 = ((reg_max_vel*reg_max_vel-reg_start_vel*reg_start_vel)*pi/4.0f/reg_accel);
+		x3 = ((reg_max_vel*reg_max_vel-reg_end_vel*reg_end_vel)*pi/4.0f/reg_accel);
+		x2 = abs(reg_distance) - x1 - x3;
+		t1 = static_cast<int32_t>(pi*(reg_max_vel-reg_start_vel)/2.0f/reg_accel*1000.0f);
+		t3 = static_cast<int32_t>(pi*(reg_max_vel-reg_end_vel)/2.0f/reg_accel*1000.0f);
+		t2 = static_cast<int32_t>(1000.0f * x2 / reg_max_vel);
+		// x1 = reg_start_vel*((reg_max_vel-reg_start_vel)/reg_accel) + reg_accel/2*((reg_max_vel-reg_start_vel)/reg_accel)*((reg_max_vel-reg_start_vel)/reg_accel);
+		// x3 = reg_max_vel*((reg_max_vel-reg_end_vel)/reg_accel) + reg_accel/2*((reg_max_vel-reg_start_vel)/reg_accel)*((reg_max_vel-reg_end_vel)/reg_accel);
+		// x2 = reg_distance - x1 - x3;
+		// t1 = static_cast<int32_t>(1000.0f * (reg_max_vel - reg_start_vel) / reg_accel);
+		// t2 = t1 + static_cast<int32_t>(1000.0f * (x2/reg_max_vel));
+		// t3 = t2 + static_cast<int32_t>(1000.0f * (reg_max_vel - reg_end_vel) / reg_accel);
 	}
 }
 
@@ -165,32 +165,33 @@ void VelocityControl::calcTrapAccel(int32_t t){
 		}
 	}
 
-	// if(t0 < t1){
-	//	 v += reg_accel*sinf(2.0f*reg_accel/(reg_max_vel-reg_start_vel)*t0/1000.0f)/1000.0f;
-	// } else if(t0 < t1+t2){
-	// 	v = reg_max_vel;
-	// } else if(t0 < t1+t2+t3){
-	// 	v -= reg_accel*sinf(2.0f*reg_accel/(reg_max_vel-reg_end_vel)*(t0-t2-t1)/1000.0f)/1000.0f;
-	// } else {
-	// 	v = reg_end_vel;
-	// 	end_flag = true;
-	// 	if(reg_type == RunType::TRAPDIAGO)
-	// 		mc->resetDistanceFromGapDiago();
-	// }
-	// target_linvel = (reg_distance>0?1:-1) * v;
-
-	// 台形！！
+	// 三角
 	if(t0 < t1){
-		v = reg_start_vel + reg_accel*t0/1000.0f;
-	} else if(t0 < t2){
+		 v += reg_accel*arm_sin_f32(2.0f*reg_accel/(reg_max_vel-reg_start_vel)*t0/1000.0f)/1000.0f;
+	} else if(t0 < t1+t2){
 		v = reg_max_vel;
-	} else if(t0 < t3){
-		v = reg_max_vel - reg_accel*(t0-t2)/1000.0f;
+	} else if(t0 < t1+t2+t3){
+		v -= reg_accel*arm_sin_f32(2.0f*reg_accel/(reg_max_vel-reg_end_vel)*(t0-t2-t1)/1000.0f)/1000.0f;
 	} else {
 		v = reg_end_vel;
 		end_flag = true;
+		if(reg_type == RunType::TRAPDIAGO)
+			mc->resetDistanceFromGapDiago();
 	}
 	target_linvel = (reg_distance>0?1:-1) * v;
+
+	// // 台形！！
+	// if(t0 < t1){
+	// 	v = reg_start_vel + reg_accel*t0/1000.0f;
+	// } else if(t0 < t2){
+	// 	v = reg_max_vel;
+	// } else if(t0 < t3){
+	// 	v = reg_max_vel - reg_accel*(t0-t2)/1000.0f;
+	// } else {
+	// 	v = reg_end_vel;
+	// 	end_flag = true;
+	// }
+	// target_linvel = (reg_distance>0?1:-1) * v;
 }
 
 
@@ -296,11 +297,11 @@ void VelocityControl::calcSlalom(int32_t t){
 				){
 				reg_slalom_pos = 2;
 				time = Timer::getTime();
-				if(!sens->canSlalom()){
-					end_flag = true;
-					has_done_slalom = false;
-					speaker->playSound(1200, 1000, false);
-				}
+				// if(!sens->canSlalom()){
+				// 	end_flag = true;
+				// 	has_done_slalom = false;
+				// 	speaker->playSound(1200, 1000, false);
+				// }
 			}
 		} else if(static_cast<uint8_t>(reg_type) == static_cast<uint8_t>(RunType::SLALOM45OUT_LEFT)
 				  || static_cast<uint8_t>(reg_type) == static_cast<uint8_t>(RunType::SLALOM45OUT_RIGHT)
