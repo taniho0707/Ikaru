@@ -79,7 +79,9 @@ C_SOURCES += $(wildcard Drivers/CMSIS/DSP_Lib/Source/*/*.c)
 
 # CPP sources
 CPP_SOURCES = \
-$(wildcard Src/*.cpp)
+$(wildcard Src/*.cpp) \
+$(wildcard libmouse/*.cpp)
+
 
 # ASM sources
 ASM_SOURCES =  \
@@ -170,8 +172,9 @@ LDSCRIPT = STM32F412CGUx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys \
--lgcc -lrdimon -lstdc++ -lmouse_arm -lpathbasic1_arm -lpathbasic2_arm
-#-larm_cortexM4lfsp_math
+-lgcc -lrdimon -lstdc++
+# -lmouse_arm -lpathbasic1_arm -lpathbasic2_arm
+# -larm_cortexM4lfsp_math
 
 LIBDIR = -Llibmouse -Llibpath -LDrivers/CMSIS/DSP_Lib
 LDFLAGS = $(MCU) -specs=nano.specs -specs=rdimon.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections -u _printf_float \

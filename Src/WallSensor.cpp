@@ -6,15 +6,21 @@ using namespace std;
 /// @todo add wait REDEN flag
 WallSensor::WallSensor() :
 	VAL_REF_FLEFT(100),
-	VAL_REF_LEFT(180),
-	VAL_REF_FRONT(400),
-	VAL_REF_RIGHT(280),
+	// VAL_REF_LEFT(630),   // Q
+	// VAL_REF_FRONT(1150), // Q
+	// VAL_REF_RIGHT(780),  // Q
+	VAL_REF_LEFT(180),  // H
+	VAL_REF_FRONT(350), // H
+	VAL_REF_RIGHT(240), // H
 	VAL_REF_FRIGHT(100),
 	
 	VAL_THR_FLEFT(112),
-	VAL_THR_LEFT(130),
-	VAL_THR_FRONT(115),
-	VAL_THR_RIGHT(190),
+	// VAL_THR_LEFT(400),  // Q
+	// VAL_THR_FRONT(200), // Q
+	// VAL_THR_RIGHT(400), // Q
+	VAL_THR_LEFT(130),  // H
+	VAL_THR_FRONT(115), // H
+	VAL_THR_RIGHT(190), // H
 	VAL_THR_FRIGHT(100),
 	
 	VAL_THR_CONTROL_LEFT(100),
@@ -207,7 +213,8 @@ void WallSensor::setDarkValue(SensorPosition pos){
 		break;
 	}
 	s_config.Rank = 1;
-	s_config.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+	s_config.SamplingTime = ADC_SAMPLETIME_144CYCLES;
+	/// @todo 変換時間は要調整
 	HAL_ADC_ConfigChannel(&hadc, &s_config);
 	HAL_ADC_Start(&hadc);
 	HAL_ADC_PollForConversion(&hadc, 10);
@@ -285,7 +292,7 @@ void WallSensor::interrupt(){
 	tmp[static_cast<uint8_t>(SensorPosition::FLeft)] = HAL_ADC_GetValue(&hadc);
 
 	onLed();
-	for(int i=0; i<5000; ++i);
+	for(int i=0; i<3000; ++i);
 	// 待ち時間を極力減らしたい
 
 	s_config.Channel = ADC_CHANNEL_4;

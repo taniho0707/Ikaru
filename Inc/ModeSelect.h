@@ -24,7 +24,7 @@ namespace mode {
 	};
 
 	enum class MODE_TURNADJUST : uint8_t {
-		HOGE,
+		STRAIGHT_6,
 		LAST // コレより下に定義しない
 	};
 
@@ -34,7 +34,7 @@ namespace mode {
 	};
 
 	enum class MODE_RUNLOG : uint8_t {
-		HOGE,
+		MAZE1,
 		LAST // コレより下に定義しない
 	};
 

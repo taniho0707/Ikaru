@@ -5,13 +5,13 @@
 #include "MotorControl.h"
 
 MotorControl::MotorControl() : 
-	GAIN_LIN_P(1300),
-	GAIN_LIN_I(3.5),
-	GAIN_LIN_D(0.0),
-	GAIN_RAD_P(-0.5f),
-	GAIN_RAD_I(-0.05f),
+	GAIN_LIN_P(1600),
+	GAIN_LIN_I(2.8),
+	GAIN_LIN_D(0.01), //要パラメータ調整
+	GAIN_RAD_P(-0.4f),
+	GAIN_RAD_I(-0.03f),
 	GAIN_RAD_D(0.0f),
-	GAIN_WALL_P(-2.0f),
+	GAIN_WALL_P(-1.0f),
 	GAIN_WALL_SHRT_P(-1.5f),
 	GAIN_WALL_I(0.0f),
 	GAIN_WALL_D(0.0f),
@@ -178,7 +178,9 @@ void MotorControl::controlVel(){
 	// linear成分の計算
 	tar_vel_rev = (tar_lin_vel) - ((encoder->getVelocity(EncoderSide::RIGHT)+encoder->getVelocity(EncoderSide::LEFT))/2/* + gyro->getAccelFront() * 0.0005*/);
 	integral_lin_encoder += tar_vel_rev;
-	tar_motor_lin_power = GAIN_LIN_P * tar_vel_rev + GAIN_LIN_I * integral_lin_encoder;
+	difference_lin_encoder = last_lin_encoder - tar_vel_rev;
+	last_lin_encoder = tar_vel_rev;
+	tar_motor_lin_power = GAIN_LIN_P * tar_vel_rev + GAIN_LIN_I * integral_lin_encoder + GAIN_LIN_D * difference_lin_encoder;
 
 	// 壁切れ用の計算
 	dist_from_gap += 0.001f * cur_lin_vel;
@@ -207,21 +209,21 @@ void MotorControl::controlVel(){
 	motor->setDuty(MotorSide::LEFT, tar_motor_l_power);
 	motor->setDuty(MotorSide::RIGHT, tar_motor_r_power);
 
-	log->writeFloat(tar_lin_vel);
-	log->writeFloat(encoder->getVelocity(EncoderSide::LEFT));
-	log->writeFloat(encoder->getVelocity(EncoderSide::RIGHT));
-	log->writeFloat((encoder->getVelocity(EncoderSide::LEFT)+encoder->getVelocity(EncoderSide::RIGHT))/2);
-	log->writeFloat(cur_lin_x);
-	log->writeFloat(gyro->getGyroYaw());
-	log->writeFloat(tar_rad_vel);
-	log->writeFloat(wall->getValue(SensorPosition::Left));
-	log->writeFloat(wall->getValue(SensorPosition::Right));
-	// log->writeFloat(current_wall_correction);
-	// log->writeFloat(tar_motor_l_power);
-	// log->writeFloat(tar_motor_r_power);
-	log->writeFloat(getIntegralEncoder());
-	// log->writeFloat(getDistanceFromGap());
-	// log->writeFloat(getDistanceFromGapDiago());
+	// log->writeFloat(tar_lin_vel);
+	// log->writeFloat(encoder->getVelocity(EncoderSide::LEFT));
+	// log->writeFloat(encoder->getVelocity(EncoderSide::RIGHT));
+	// log->writeFloat((encoder->getVelocity(EncoderSide::LEFT)+encoder->getVelocity(EncoderSide::RIGHT))/2);
+	// log->writeFloat(cur_lin_x);
+	// log->writeFloat(gyro->getGyroYaw());
+	// log->writeFloat(tar_rad_vel);
+	// log->writeFloat(wall->getValue(SensorPosition::Left));
+	// log->writeFloat(wall->getValue(SensorPosition::Right));
+	// // log->writeFloat(current_wall_correction);
+	// // log->writeFloat(tar_motor_l_power);
+	// // log->writeFloat(tar_motor_r_power);
+	// log->writeFloat(getIntegralEncoder());
+	// // log->writeFloat(getDistanceFromGap());
+	// // log->writeFloat(getDistanceFromGapDiago());
 
 	// lastwall = wall->getCorrection(10000);
 

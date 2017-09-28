@@ -52,6 +52,9 @@ private:
 	float integral_rad_gyro;
 	float integral_lin_encoder;
 
+	float difference_lin_encoder;
+	float last_lin_encoder;
+
 	float dist_from_gap;
 	bool is_left_gap;
 	float dist_from_gap_diago;

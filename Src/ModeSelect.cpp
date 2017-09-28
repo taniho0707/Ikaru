@@ -8,9 +8,9 @@
 using namespace mode;
 
 const static MODE_PRIME      first_mode_prime      = MODE_PRIME::HIDARITE;
-const static MODE_TURNADJUST first_mode_turnadjust = MODE_TURNADJUST::HOGE;
+const static MODE_TURNADJUST first_mode_turnadjust = MODE_TURNADJUST::STRAIGHT_6;
 const static MODE_SENSORLOG  first_mode_sensorlog  = MODE_SENSORLOG::HOGE;
-const static MODE_RUNLOG     first_mode_runlog     = MODE_RUNLOG::HOGE;
+const static MODE_RUNLOG     first_mode_runlog     = MODE_RUNLOG::MAZE1;
 const static MODE_EXPR       first_mode_expr       = MODE_EXPR::WITHOUT_MAE;
 const static MODE_SHRT       first_mode_shrt       = MODE_SHRT::HOGE;
 const static MODE_HIDARITE   first_mode_hidarite   = MODE_HIDARITE::WITHOUT_MAE;
@@ -32,9 +32,9 @@ ModeSelect::ModeSelect() :
 	THR_OVER_ACCEL_Y(10000), //前後
 	THR_UNDER_ACCEL_Z(100),
 	THR_OVER_ACCEL_Z(0), //G
-	THR_WALL_FRONT(1000),
-	THR_WALL_FLEFT(1000),
-	THR_WALL_FRIGHT(1000)
+	THR_WALL_FRONT(500),
+	THR_WALL_FLEFT(500),
+	THR_WALL_FRIGHT(500)
 {
 	count_gyro_x = 0;
 	count_gyro_y = 0;

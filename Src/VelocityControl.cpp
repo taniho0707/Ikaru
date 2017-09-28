@@ -172,6 +172,8 @@ void VelocityControl::calcTrapAccel(int32_t t){
 		v = reg_max_vel;
 	} else if(t0 < t1+t2+t3){
 		v -= reg_accel*arm_sin_f32(2.0f*reg_accel/(reg_max_vel-reg_end_vel)*(t0-t2-t1)/1000.0f)/1000.0f;
+	} else if(x0 < reg_distance){
+		v = (reg_end_vel<0.02f ? 0.02f : reg_end_vel);
 	} else {
 		v = reg_end_vel;
 		end_flag = true;
