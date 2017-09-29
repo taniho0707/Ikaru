@@ -5,13 +5,13 @@
 #include "MotorControl.h"
 
 MotorControl::MotorControl() : 
-	GAIN_LIN_P(1600),
-	GAIN_LIN_I(2.8),
-	GAIN_LIN_D(0.01), //要パラメータ調整
-	GAIN_RAD_P(-0.4f),
-	GAIN_RAD_I(-0.03f),
+	GAIN_LIN_P(1400),//1800
+	GAIN_LIN_I(3.2f),//2.8
+	GAIN_LIN_D(0.01f), //要パラメータ調整
+	GAIN_RAD_P(-0.2f),//0.5
+	GAIN_RAD_I(-0.03f),//0.05
 	GAIN_RAD_D(0.0f),
-	GAIN_WALL_P(-1.0f),
+	GAIN_WALL_P(-0.8f),
 	GAIN_WALL_SHRT_P(-1.5f),
 	GAIN_WALL_I(0.0f),
 	GAIN_WALL_D(0.0f),
@@ -29,6 +29,7 @@ MotorControl::MotorControl() :
 	integral_lin_encoder = 0.0f;
 	is_left_gap = false;
 	is_left_gap_diago = false;
+	is_expr_gap = true;
 }
 
 void MotorControl::setVelocity(float vel){
@@ -78,6 +79,14 @@ float MotorControl::getDistanceFromGap(){
 
 bool MotorControl::isLeftGap(){
 	return is_left_gap;
+}
+
+void MotorControl::setExprGap(){
+	is_expr_gap = true;
+}
+
+void MotorControl::setShrtGap(){
+	is_expr_gap = false;
 }
 
 
@@ -154,7 +163,7 @@ void MotorControl::controlVel(){
 		if(is_comb_wall_control){
 			current_wall_correction = wall->getCorrectionComb(500);
 		} else {
-			current_wall_correction = wall->getCorrection(20);
+			current_wall_correction = wall->getCorrection(100);
 		}
 	} else {
 		current_wall_correction = 0;
@@ -184,20 +193,31 @@ void MotorControl::controlVel(){
 
 	// 壁切れ用の計算
 	dist_from_gap += 0.001f * cur_lin_vel;
-	if(wall->hadGap(SensorPosition::Left)){
-		dist_from_gap = 0.0f;
-		is_left_gap = true;
-	}
-	if(wall->hadGap(SensorPosition::Right)){
-		dist_from_gap = 0.0f;
-		is_left_gap = false;
+	if (is_expr_gap) {
+		if(wall->hadGap(SensorPosition::Left)){
+			dist_from_gap = 0.0f;
+			is_left_gap = true;
+		}
+		if(wall->hadGap(SensorPosition::Right)){
+			dist_from_gap = 0.0f;
+			is_left_gap = false;
+		}
+	} else { // is_shrt_gap
+		if(wall->hadGap(SensorPosition::FLeft)){
+			dist_from_gap = 0.0f;
+			is_left_gap = true;
+		}
+		if(wall->hadGap(SensorPosition::FRight)){
+			dist_from_gap = 0.0f;
+			is_left_gap = false;
+		}
 	}
 	dist_from_gap_diago += 0.001f * cur_lin_vel;
-	if(wall->hadGapDiago(SensorPosition::Left)){
+	if(wall->hadGapDiago(SensorPosition::FLeft)){
 		dist_from_gap_diago = 0.0f;
 		is_left_gap_diago = true;
 	}
-	if(wall->hadGapDiago(SensorPosition::Right)){
+	if(wall->hadGapDiago(SensorPosition::FRight)){
 		dist_from_gap_diago = 0.0f;
 		is_left_gap_diago = false;
 	}
@@ -209,21 +229,24 @@ void MotorControl::controlVel(){
 	motor->setDuty(MotorSide::LEFT, tar_motor_l_power);
 	motor->setDuty(MotorSide::RIGHT, tar_motor_r_power);
 
-	// log->writeFloat(tar_lin_vel);
-	// log->writeFloat(encoder->getVelocity(EncoderSide::LEFT));
-	// log->writeFloat(encoder->getVelocity(EncoderSide::RIGHT));
-	// log->writeFloat((encoder->getVelocity(EncoderSide::LEFT)+encoder->getVelocity(EncoderSide::RIGHT))/2);
-	// log->writeFloat(cur_lin_x);
-	// log->writeFloat(gyro->getGyroYaw());
-	// log->writeFloat(tar_rad_vel);
+	log->writeFloat(tar_lin_vel);
+	log->writeFloat(encoder->getVelocity(EncoderSide::LEFT));
+	log->writeFloat(encoder->getVelocity(EncoderSide::RIGHT));
+	log->writeFloat((encoder->getVelocity(EncoderSide::LEFT)+encoder->getVelocity(EncoderSide::RIGHT))/2);
+	log->writeFloat(cur_lin_x);
+	log->writeFloat(gyro->getGyroYaw());
+	log->writeFloat(tar_rad_vel);
 	// log->writeFloat(wall->getValue(SensorPosition::Left));
 	// log->writeFloat(wall->getValue(SensorPosition::Right));
-	// // log->writeFloat(current_wall_correction);
-	// // log->writeFloat(tar_motor_l_power);
-	// // log->writeFloat(tar_motor_r_power);
+	log->writeFloat(wall->getValue(SensorPosition::FLeft));
+	log->writeFloat(wall->getValue(SensorPosition::FRight));
+	log->writeFloat(current_wall_correction);
+	// log->writeFloat(tar_motor_l_power);
+	// log->writeFloat(tar_motor_r_power);
+	// log->writeFloat(getDistanceFromGap());
+	// log->writeFloat(getDistanceFromGapDiago());
 	// log->writeFloat(getIntegralEncoder());
-	// // log->writeFloat(getDistanceFromGap());
-	// // log->writeFloat(getDistanceFromGapDiago());
+	// log->writeFloat(0.0f);
 
 	// lastwall = wall->getCorrection(10000);
 

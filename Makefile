@@ -80,7 +80,8 @@ C_SOURCES += $(wildcard Drivers/CMSIS/DSP_Lib/Source/*/*.c)
 # CPP sources
 CPP_SOURCES = \
 $(wildcard Src/*.cpp) \
-$(wildcard libmouse/*.cpp)
+$(wildcard libmouse/*.cpp) \
+libpath/libpathbasic1.cpp
 
 
 # ASM sources

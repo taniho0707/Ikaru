@@ -34,10 +34,14 @@ private:
 	const int16_t THR_WALL_DISAPPEAR;
 	const int16_t VAL_THR_CONTROL_LEFT;
 	const int16_t VAL_THR_CONTROL_RIGHT;
+	const uint16_t VAL_THR_GAP_FLEFT;
 	const uint16_t VAL_THR_GAP_LEFT;
 	const uint16_t VAL_THR_GAP_RIGHT;
+	const uint16_t VAL_THR_GAP_FRIGHT;
+	const uint16_t VAL_THR_GAP_DIAGO_FLEFT;
 	const uint16_t VAL_THR_GAP_DIAGO_LEFT;
 	const uint16_t VAL_THR_GAP_DIAGO_RIGHT;
+	const uint16_t VAL_THR_GAP_DIAGO_FRIGHT;
 	const uint16_t VAL_THR_SLALOM_FLEFT;
 	const uint16_t VAL_THR_SLALOM_LEFT;
 	const uint16_t VAL_THR_SLALOM_RIGHT;
@@ -57,10 +61,10 @@ private:
 	array< array<float, 5>, 5 > log_value;
 
 	// 壁切れ用
-	bool had_gap[2];
-	bool is_waiting_gap[2];
-	bool had_gap_diago[2];
-	bool is_waiting_gap_diago[2];
+	bool had_gap[4];
+	bool is_waiting_gap[4];
+	bool had_gap_diago[4];
+	bool is_waiting_gap_diago[4];
 
 	WallSensor();
 

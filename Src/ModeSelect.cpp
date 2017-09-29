@@ -7,19 +7,19 @@
 
 using namespace mode;
 
-const static MODE_PRIME      first_mode_prime      = MODE_PRIME::HIDARITE;
+const static MODE_PRIME      first_mode_prime      = MODE_PRIME::EXPR;
 const static MODE_TURNADJUST first_mode_turnadjust = MODE_TURNADJUST::STRAIGHT_6;
 const static MODE_SENSORLOG  first_mode_sensorlog  = MODE_SENSORLOG::HOGE;
 const static MODE_RUNLOG     first_mode_runlog     = MODE_RUNLOG::MAZE1;
-const static MODE_EXPR       first_mode_expr       = MODE_EXPR::WITHOUT_MAE;
-const static MODE_SHRT       first_mode_shrt       = MODE_SHRT::HOGE;
+const static MODE_EXPR       first_mode_expr       = MODE_EXPR::WITH_MAE;
+const static MODE_SHRT       first_mode_shrt       = MODE_SHRT::SMALL1;
 const static MODE_HIDARITE   first_mode_hidarite   = MODE_HIDARITE::WITHOUT_MAE;
 
 
 ModeSelect::ModeSelect() :
-	WAITTIME_GYRO(10),
+	WAITTIME_GYRO(100),
 	WAITTIME_ACCEL(100),
-	WAITTIME_WALL(800),
+	WAITTIME_WALL(500),
 	THR_UNDER_GYRO_X(500),
 	THR_OVER_GYRO_X(15000), //Pitch
 	THR_UNDER_GYRO_Y(500),

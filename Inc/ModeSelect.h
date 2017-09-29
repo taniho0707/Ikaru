@@ -25,6 +25,11 @@ namespace mode {
 
 	enum class MODE_TURNADJUST : uint8_t {
 		STRAIGHT_6,
+		PIVOTTURN,
+		SLALOM90SML_LEFT1,
+		SLALOM90SML_LEFT2,
+		SLALOM90SML_RIGHT1,
+		SLALOM90SML_RIGHT2,
 		LAST // コレより下に定義しない
 	};
 
@@ -35,6 +40,7 @@ namespace mode {
 
 	enum class MODE_RUNLOG : uint8_t {
 		MAZE1,
+		ERASE,
 		LAST // コレより下に定義しない
 	};
 
@@ -45,13 +51,17 @@ namespace mode {
 	};
 
 	enum class MODE_SHRT : uint8_t {
-		HOGE,
+		SMALL1,
+		SMALL2,
+		BIG,
+		DIAGO,
 		LAST // コレより下に定義しない
 	};
+	// 迷路番号0〜2を任意に呼び出せるように
 
 	enum class MODE_HIDARITE : uint8_t {
-		WITHOUT_MAE,
 		WITH_MAE,
+		WITHOUT_MAE,
 		LAST // コレより下に定義しない
 	};
 

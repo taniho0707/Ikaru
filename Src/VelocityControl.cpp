@@ -5,7 +5,7 @@
 using namespace slalomparams;
 
 VelocityControl::VelocityControl() :
-	DIST_GAP_FROM_R(0.002),
+	DIST_GAP_FROM_R(0.012),
 	DIST_GAP_FROM_L(0.012)
 {
 	// mc = MotorControl::getInstance();
@@ -131,7 +131,8 @@ void VelocityControl::calcTrapAccel(int32_t t){
 		&& ((reg_distance < 0.091f && reg_distance > 0.089f)
 			|| (reg_distance < 0.046f && reg_distance > 0.044f && reg_end_vel > 0.01f)
 			|| (reg_distance < 0.056f && reg_distance > 0.054f)
-			|| reg_distance < 0.091f)
+			|| reg_distance < 0.091f
+			|| (abs(x0 - reg_distance) < 0.04f)) /// @todo ここの条件なんか編
 		){
 		if(mc->isLeftGap()){
 			mc->setIntegralEncoder(reg_distance - DIST_GAP_FROM_L);
@@ -147,6 +148,7 @@ void VelocityControl::calcTrapAccel(int32_t t){
 		}
 	}
 
+	/// @todo 壁制御をかけるタイミングを新作にあわせる
 	if(enabled_wallgap){
 		auto kabekire = reg_distance - (mc->isLeftGap() ? DIST_GAP_FROM_L : DIST_GAP_FROM_R);
 		if(reg_type == RunType::TRAPDIAGO){

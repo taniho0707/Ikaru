@@ -11,7 +11,7 @@ Flash::Flash(){
 bool Flash::eraseSector(const uint32_t sector){
 	FLASH_EraseInitTypeDef EraseInitStruct;
 	EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
-	EraseInitStruct.Sector = FLASH_SECTOR_0;
+	EraseInitStruct.Sector = sector;
 	EraseInitStruct.NbSectors = 1;
 	EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
 	uint32_t PageError = 0;

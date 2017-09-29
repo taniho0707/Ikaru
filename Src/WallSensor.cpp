@@ -5,31 +5,35 @@ using namespace std;
 
 /// @todo add wait REDEN flag
 WallSensor::WallSensor() :
-	VAL_REF_FLEFT(100),
+	VAL_REF_FLEFT(190),
 	// VAL_REF_LEFT(630),   // Q
 	// VAL_REF_FRONT(1150), // Q
 	// VAL_REF_RIGHT(780),  // Q
-	VAL_REF_LEFT(180),  // H
-	VAL_REF_FRONT(350), // H
-	VAL_REF_RIGHT(240), // H
-	VAL_REF_FRIGHT(100),
+	VAL_REF_LEFT(320),  // H
+	VAL_REF_FRONT(370), // H
+	VAL_REF_RIGHT(210), // H
+	VAL_REF_FRIGHT(120),
 	
-	VAL_THR_FLEFT(112),
+	VAL_THR_FLEFT(165),
 	// VAL_THR_LEFT(400),  // Q
-	// VAL_THR_FRONT(200), // Q
+	// VAL_THR_FRONT(250), // Q
 	// VAL_THR_RIGHT(400), // Q
-	VAL_THR_LEFT(130),  // H
-	VAL_THR_FRONT(115), // H
-	VAL_THR_RIGHT(190), // H
-	VAL_THR_FRIGHT(100),
+	VAL_THR_LEFT(285),  // H
+	VAL_THR_FRONT(135), // H
+	VAL_THR_RIGHT(155), // H
+	VAL_THR_FRIGHT(185),
 	
 	VAL_THR_CONTROL_LEFT(100),
 	VAL_THR_CONTROL_RIGHT(110),
 	
-	VAL_THR_GAP_LEFT(120),
-	VAL_THR_GAP_RIGHT(105),
-	VAL_THR_GAP_DIAGO_LEFT(130),
-	VAL_THR_GAP_DIAGO_RIGHT(180),
+	VAL_THR_GAP_FLEFT(120),
+	VAL_THR_GAP_LEFT(260),
+	VAL_THR_GAP_RIGHT(140),
+	VAL_THR_GAP_FRIGHT(120),
+	VAL_THR_GAP_DIAGO_FLEFT(120),
+	VAL_THR_GAP_DIAGO_LEFT(250),
+	VAL_THR_GAP_DIAGO_RIGHT(130),
+	VAL_THR_GAP_DIAGO_FRIGHT(130),
 	
 	VAL_THR_SLALOM_FLEFT(500),
 	VAL_THR_SLALOM_LEFT(500),
@@ -292,7 +296,7 @@ void WallSensor::interrupt(){
 	tmp[static_cast<uint8_t>(SensorPosition::FLeft)] = HAL_ADC_GetValue(&hadc);
 
 	onLed();
-	for(int i=0; i<3000; ++i);
+	for(int i=0; i<5000; ++i);
 	// 待ち時間を極力減らしたい
 
 	s_config.Channel = ADC_CHANNEL_4;
@@ -356,12 +360,17 @@ Walldata WallSensor::getWall(){
 	Walldata w;
 	if(isExistWall(SensorPosition::Left)) w.addWall(MouseAngle::LEFT);
 	if(isExistWall(SensorPosition::Right)) w.addWall(MouseAngle::RIGHT);
-	if(isExistWall(SensorPosition::FLeft) || isExistWall(SensorPosition::FRight)) w.addWall(MouseAngle::FRONT);
+	if(isExistWall(SensorPosition::Front)) w.addWall(MouseAngle::FRONT);
 	return w;
 }
 
 void WallSensor::waitGap(SensorPosition sp){
-	is_waiting_gap[(sp==SensorPosition::Left ? 0 : 1)] = true;
+	int tmp;
+	if (sp == SensorPosition::Left) tmp = 0;
+	else if (sp == SensorPosition::Right) tmp = 1;
+	else if (sp == SensorPosition::FLeft) tmp = 2;
+	else if (sp == SensorPosition::FRight) tmp = 3;
+	is_waiting_gap[tmp] = true;
 }
 
 void WallSensor::checkGap(){
@@ -370,7 +379,7 @@ void WallSensor::checkGap(){
 		   && current_value.at(static_cast<uint8_t>(SensorPosition::Left)) < VAL_THR_GAP_LEFT){
 			is_waiting_gap[0] = false;
 			had_gap[0] = true;
-		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::Left)) > VAL_THR_GAP_LEFT+3){
+		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::Left)) > VAL_THR_GAP_LEFT+10){
 			is_waiting_gap[0] = true;
 		}
 	}
@@ -379,16 +388,38 @@ void WallSensor::checkGap(){
 		   && current_value.at(static_cast<uint8_t>(SensorPosition::Right)) < VAL_THR_GAP_RIGHT){
 			is_waiting_gap[1] = false;
 			had_gap[1] = true;
-		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::Right)) > VAL_THR_GAP_RIGHT+3){
+		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::Right)) > VAL_THR_GAP_RIGHT+10){
 			is_waiting_gap[1] = true;
+		}
+	}
+	if(!had_gap[2]){
+		if(is_waiting_gap[2]
+		   && current_value.at(static_cast<uint8_t>(SensorPosition::FLeft)) < VAL_THR_GAP_FLEFT){
+			is_waiting_gap[2] = false;
+			had_gap[2] = true;
+		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::FLeft)) > VAL_THR_GAP_FLEFT+5){
+			is_waiting_gap[2] = true;
+		}
+	}
+	if(!had_gap[3]){
+		if(is_waiting_gap[3]
+		   && current_value.at(static_cast<uint8_t>(SensorPosition::FRight)) < VAL_THR_GAP_FRIGHT){
+			is_waiting_gap[3] = false;
+			had_gap[3] = true;
+		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::FRight)) > VAL_THR_GAP_FRIGHT+5){
+			is_waiting_gap[3] = true;
 		}
 	}
 }
 
 bool WallSensor::hadGap(SensorPosition sp){
-	uint8_t it = (sp==SensorPosition::Left ? 0 : 1);
-	if(had_gap[it]){
-		had_gap[it] = false;
+	int tmp;
+	if (sp == SensorPosition::Left) tmp = 0;
+	else if (sp == SensorPosition::Right) tmp = 1;
+	else if (sp == SensorPosition::FLeft) tmp = 2;
+	else if (sp == SensorPosition::FRight) tmp = 3;
+	if(had_gap[tmp]){
+		had_gap[tmp] = false;
 		return true;
 	} else {
 		return false;
@@ -397,7 +428,12 @@ bool WallSensor::hadGap(SensorPosition sp){
 
 
 void WallSensor::waitGapDiago(SensorPosition sp){
-	is_waiting_gap_diago[(sp==SensorPosition::Left ? 0 : 1)] = true;
+	int tmp;
+	if (sp == SensorPosition::Left) tmp = 0;
+	else if (sp == SensorPosition::Right) tmp = 1;
+	else if (sp == SensorPosition::FLeft) tmp = 2;
+	else if (sp == SensorPosition::FRight) tmp = 3;
+	is_waiting_gap_diago[tmp] = true;
 }
 
 void WallSensor::checkGapDiago(){
@@ -419,12 +455,34 @@ void WallSensor::checkGapDiago(){
 			is_waiting_gap_diago[1] = true;
 		}
 	}
+	if(!had_gap_diago[2]){
+		if(is_waiting_gap_diago[2]
+		   && current_value.at(static_cast<uint8_t>(SensorPosition::FLeft)) < VAL_THR_GAP_DIAGO_FLEFT){
+			is_waiting_gap_diago[2] = false;
+			had_gap_diago[2] = true;
+		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::FLeft)) > VAL_THR_GAP_DIAGO_FLEFT+5){
+			is_waiting_gap_diago[2] = true;
+		}
+	}
+	if(!had_gap_diago[3]){
+		if(is_waiting_gap_diago[3]
+		   && current_value.at(static_cast<uint8_t>(SensorPosition::FRight)) < VAL_THR_GAP_DIAGO_FRIGHT){
+			is_waiting_gap_diago[3] = false;
+			had_gap_diago[3] = true;
+		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::FRight)) > VAL_THR_GAP_DIAGO_FRIGHT+5){
+			is_waiting_gap_diago[3] = true;
+		}
+	}
 }
 
 bool WallSensor::hadGapDiago(SensorPosition sp){
-	uint8_t it = (sp==SensorPosition::Left ? 0 : 1);
-	if(had_gap_diago[it]){
-		had_gap_diago[it] = false;
+	int tmp;
+	if (sp == SensorPosition::Left) tmp = 0;
+	else if (sp == SensorPosition::Right) tmp = 1;
+	else if (sp == SensorPosition::FLeft) tmp = 2;
+	else if (sp == SensorPosition::FRight) tmp = 3;
+	if(had_gap_diago[tmp]){
+		had_gap_diago[tmp] = false;
 		return true;
 	} else {
 		return false;
