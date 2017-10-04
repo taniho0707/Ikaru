@@ -4,6 +4,7 @@
 #include "stm32f4xx_it.h"
 
 #include <array>
+#include <cmath>
 #include "RingBufferHistory.h"
 
 #include "Walldata.h"
@@ -57,6 +58,10 @@ private:
 	array<uint16_t, 5> ref_straight_value;
 	array<uint16_t, 5> thr_straight_value;
 
+	// 値<->距離の変換式用パラメータ y=a/ln(x)+b
+	array<float, 5> param_a;
+	array<float, 5> param_b;
+
 	// <float, 4>, 4 だった
 	array< array<float, 5>, 5 > log_value;
 
@@ -98,6 +103,11 @@ public:
 	int16_t getDiffValue(SensorPosition);
 	uint16_t getLastValue(SensorPosition);
 	bool isExistWall(SensorPosition);
+
+	float getDistance(SensorPosition);
+
+	void calibrate(SensorPosition, float x1, float value1, float x2, float value2);
+	void getCalibrationParams(array<float, 5>& a, array<float, 5>& b);
 
 	bool canSlalom();
 

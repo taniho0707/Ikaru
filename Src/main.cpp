@@ -40,6 +40,9 @@ using namespace slalomparams;
 void SystemClock_Config(void);
 static void MX_NVIC_Init(void);
 
+const uint16_t GOAL_X = 6;
+const uint16_t GOAL_Y = 7;
+
 
 void frontcorrection(){
 	Led* led = Led::getInstance();
@@ -92,49 +95,7 @@ int main(void) {
 	fram->writeEnable();
 	HAL_Delay(1);
 
-	// // FRAM
-	// __HAL_RCC_SPI3_CLK_ENABLE();
-	// __HAL_RCC_GPIOA_CLK_ENABLE();
-	// __HAL_RCC_GPIOB_CLK_ENABLE();
-
-	// GPIO_InitTypeDef GPIO_InitStruct;
-	// GPIO_InitStruct.Pin = GPIO_PIN_14;
-	// GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	// GPIO_InitStruct.Pull = GPIO_NOPULL;
-	// GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	// HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-	// HAL_GPIO_WritePin(GPIOA, GPIO_PIN_14, GPIO_PIN_SET);
-
-	// GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5;
-	// GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	// GPIO_InitStruct.Pull = GPIO_NOPULL;
-	// GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-	// GPIO_InitStruct.Alternate = GPIO_AF6_SPI3;
-	// HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-	// GPIO_InitStruct.Pin = GPIO_PIN_12;
-	// GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	// GPIO_InitStruct.Pull = GPIO_NOPULL;
-	// GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-	// GPIO_InitStruct.Alternate = GPIO_AF7_SPI3;
-	// HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-	// SPI_HandleTypeDef port;
-	// port.Instance = SPI3;
-	// port.Init.Mode = SPI_MODE_MASTER;
-	// port.Init.Direction = SPI_DIRECTION_2LINES;
-	// port.Init.DataSize = SPI_DATASIZE_8BIT;
-	// port.Init.CLKPolarity = SPI_POLARITY_HIGH;
-	// port.Init.CLKPhase = SPI_PHASE_2EDGE;
-	// port.Init.NSS = SPI_NSS_SOFT;
-	// port.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
-	// port.Init.FirstBit = SPI_FIRSTBIT_MSB;
-	// port.Init.TIMode = SPI_TIMODE_DISABLE;
-	// port.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-	// port.Init.CRCPolynomial = 10;
-	// if (HAL_SPI_Init(&port) != HAL_OK) compc->printf("Error3\n");
-
-	HAL_Delay(2000);
+	HAL_Delay(1000);
 	led->flickSync(LedNumbers::FRONT, 10, 1000);
 	led->flickAsync(LedNumbers::FRONT, 4, 2000);
 	gyro->resetCalibration();
@@ -288,12 +249,15 @@ int main(void) {
 		break;
 		case static_cast<uint8_t>(mode::MODE_PRIME::EXPR):
 		{
+			Map map;
+
 			switch(decided_mode.sub){
-			case static_cast<uint8_t>(mode::MODE_EXPR::WITH_MAE):
+			case static_cast<uint8_t>(mode::MODE_EXPR::NEW):
 				enabled_mae = true;
 				break;
-			case static_cast<uint8_t>(mode::MODE_EXPR::WITHOUT_MAE):
-				enabled_mae = false;
+			case static_cast<uint8_t>(mode::MODE_EXPR::LOAD):
+				enabled_mae = true;
+				fram->loadMap(map, decided_mode.number);
 				break;
 			default:
 				break;
@@ -319,11 +283,10 @@ int main(void) {
 			vc->startTrapAccel(0.25f, 0.25f, 0.09f, 5.0f);
 
 			Walldata walldata;
-			Map map;
 			Position pos;
 			MethodAdachi adachi;
 			map.setReached(0, 0);
-			adachi.setGoal(6, 7);
+			adachi.setGoal(GOAL_X, GOAL_Y);
 			uint16_t savenumber = 0;
 
 			Datalog* log = Datalog::getInstance();
@@ -356,7 +319,7 @@ int main(void) {
 					vc->runTrapAccel(0.25f, 0.25f, 0.25f, 0.025f, 3.0f);
 					mc->enableWallControl();
 					while(vc->isRunning()) {
-						if (wallsensor->getValue(SensorPosition::Front) > (150)) { // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+						if (wallsensor->getValue(SensorPosition::Front) > (160)) { // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 							flag_can_straight = false;
 						}
 					}
@@ -443,7 +406,7 @@ int main(void) {
 				vc->startTrapAccel(0.25f, 0.25f, 0.09f, 5.0f);
 		
 				static bool is_first_goal = true; // = has_goal
-				if(pos.getPositionX() == 6 && pos.getPositionY() == 7){ // && is_first_goal){
+				if(pos.getPositionX() == GOAL_X && pos.getPositionY() == GOAL_Y && is_first_goal){
 					is_first_goal = false;
 					led->on(LedNumbers::TOP1);
 					speaker->playSound(1200, 500, false);
@@ -482,6 +445,7 @@ int main(void) {
 			case static_cast<uint8_t>(mode::MODE_SHRT::SMALL2):
 				type = PathType::SMALL;
 				param_max_straight = 0.5f;
+				param_accel = 5.0f;
 				break;
 			case static_cast<uint8_t>(mode::MODE_SHRT::BIG):
 				type = PathType::BIG;
@@ -512,8 +476,8 @@ int main(void) {
 			Position pos;
 			DerivingPathBasic1 padachi;
 
-			fram->loadMap(map, 1);
-			padachi.setGoal(6, 7);
+			fram->loadMap(map, decided_mode.number);
+			padachi.setGoal(GOAL_X, GOAL_Y);
 			padachi.setMap(map);
 			
 			Path path = padachi.getPath(type);
@@ -682,17 +646,45 @@ int main(void) {
 		}
 		case static_cast<uint8_t>(mode::MODE_PRIME::SENSORLOG):
 		{
-			while(1){
-				led->off(LedNumbers::FRONT);
-				HAL_Delay(99);
-				led->on(LedNumbers::FRONT);
-				HAL_Delay(1);
-				compc->printf("[%4d %4d %4d %4d %4d ] %+7d %+7d %+7d : %+7d %+7d %+7d, %f %f\n", wallsensor->getValue(SensorPosition::FLeft), wallsensor->getValue(SensorPosition::Left), wallsensor->getValue(SensorPosition::Front), wallsensor->getValue(SensorPosition::Right), wallsensor->getValue(SensorPosition::FRight), gyro->readGyroX(), gyro->readGyroY(), gyro->readGyroZ(), gyro->readAccelX(), gyro->readAccelY(), gyro->readAccelZ(), encoder->getVelocity(EncoderSide::LEFT), encoder->getVelocity(EncoderSide::RIGHT));
+			switch(decided_mode.sub){
+			case static_cast<uint8_t>(mode::MODE_SENSORLOG::SHOW):
+				while(1){
+					led->off(LedNumbers::FRONT);
+					HAL_Delay(99);
+					led->on(LedNumbers::FRONT);
+					HAL_Delay(1);
+					compc->printf("[%4d %4d %4d %4d %4d ] %+7d %+7d %+7d : %+7d %+7d %+7d, %f %f [%f %f]\n", wallsensor->getValue(SensorPosition::FLeft), wallsensor->getValue(SensorPosition::Left), wallsensor->getValue(SensorPosition::Front), wallsensor->getValue(SensorPosition::Right), wallsensor->getValue(SensorPosition::FRight), gyro->readGyroX(), gyro->readGyroY(), gyro->readGyroZ(), gyro->readAccelX(), gyro->readAccelY(), gyro->readAccelZ(), encoder->getVelocity(EncoderSide::LEFT), encoder->getVelocity(EncoderSide::RIGHT), wallsensor->getDistance(SensorPosition::Left), wallsensor->getDistance(SensorPosition::Right));
+				}
+				break;
+			case static_cast<uint8_t>(mode::MODE_SENSORLOG::CALIBRATE_SIDE):
+				speaker->playMusic(MusicNumber::OIRABOKODAZE1);
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::HIRAPA);
+				float value11 = wallsensor->getValue(SensorPosition::Left);
+				float value21 = wallsensor->getValue(SensorPosition::Right);
+				speaker->playMusic(MusicNumber::KIRBY_DYING);
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::HIRAPA);
+				float value12 = wallsensor->getValue(SensorPosition::Left);
+				float value22 = wallsensor->getValue(SensorPosition::Right);
+				wallsensor->calibrate(SensorPosition::Left, 10.0f, value11, 54.8f, value12);
+				wallsensor->calibrate(SensorPosition::Right, 54.8f, value21, 10.0f, value22);
+				speaker->playMusic(MusicNumber::KIRBY_DYING);
+				break;
 			}
 		}
 		break;
 		case static_cast<uint8_t>(mode::MODE_PRIME::RUNLOG):
 		{
+			led->off(LedNumbers::FRONT);
+			HAL_Delay(1000);
+			for (int i=0; i<decided_mode.number; ++i) {
+				led->off(LedNumbers::FRONT);
+				HAL_Delay(500);
+				led->on(LedNumbers::FRONT);
+				HAL_Delay(500);
+			}
+
 			switch(decided_mode.sub){
 			case static_cast<uint8_t>(mode::MODE_RUNLOG::MAZE1):
 				Map map;

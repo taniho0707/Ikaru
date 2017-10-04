@@ -34,7 +34,8 @@ namespace mode {
 	};
 
 	enum class MODE_SENSORLOG : uint8_t {
-		HOGE,
+		SHOW,
+		CALIBRATE_SIDE,
 		LAST // コレより下に定義しない
 	};
 
@@ -45,8 +46,8 @@ namespace mode {
 	};
 
 	enum class MODE_EXPR : uint8_t {
-		WITHOUT_MAE,
-		WITH_MAE,
+		NEW,
+		LOAD,
 		LAST // コレより下に定義しない
 	};
 
@@ -68,6 +69,7 @@ namespace mode {
 	struct StructMode {
 		uint8_t prime;
 		uint8_t sub;
+		uint8_t number;
 	};
 };
 
@@ -109,6 +111,7 @@ private:
 
 	uint8_t mode_prime;
 	uint8_t mode_sub;
+	uint8_t mode_number;
 
 	WallSensor* wallsensor = WallSensor::getInstance();
 	Led* led = Led::getInstance();
