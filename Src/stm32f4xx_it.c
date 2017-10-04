@@ -40,12 +40,12 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern DMA_HandleTypeDef hdma_adc1;
-extern ADC_HandleTypeDef hadc1;
-extern DMA_HandleTypeDef hdma_spi2_rx;
-extern DMA_HandleTypeDef hdma_spi2_tx;
-extern SPI_HandleTypeDef hspi2;
-extern SPI_HandleTypeDef hspi3;
+/* extern DMA_HandleTypeDef hdma_adc1; */
+/* extern ADC_HandleTypeDef hadc1; */
+/* extern DMA_HandleTypeDef hdma_spi2_rx; */
+/* extern DMA_HandleTypeDef hdma_spi2_tx; */
+/* extern SPI_HandleTypeDef hspi2; */
+/* extern SPI_HandleTypeDef hspi3; */
 /* extern DMA_HandleTypeDef hdma_usart1_tx; */
 
 /******************************************************************************/
@@ -198,7 +198,7 @@ void DMA1_Stream3_IRQHandler(void)
   /* USER CODE BEGIN DMA1_Stream3_IRQn 0 */
 
   /* USER CODE END DMA1_Stream3_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_spi2_rx);
+  /* HAL_DMA_IRQHandler(&hdma_spi2_rx); */
   /* USER CODE BEGIN DMA1_Stream3_IRQn 1 */
 
   /* USER CODE END DMA1_Stream3_IRQn 1 */
@@ -212,7 +212,7 @@ void DMA1_Stream4_IRQHandler(void)
   /* USER CODE BEGIN DMA1_Stream4_IRQn 0 */
 
   /* USER CODE END DMA1_Stream4_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_spi2_tx);
+  /* HAL_DMA_IRQHandler(&hdma_spi2_tx); */
   /* USER CODE BEGIN DMA1_Stream4_IRQn 1 */
 
   /* USER CODE END DMA1_Stream4_IRQn 1 */
@@ -226,7 +226,7 @@ void ADC_IRQHandler(void)
   /* USER CODE BEGIN ADC_IRQn 0 */
 
   /* USER CODE END ADC_IRQn 0 */
-  HAL_ADC_IRQHandler(&hadc1);
+  /* HAL_ADC_IRQHandler(&hadc1); */
   /* USER CODE BEGIN ADC_IRQn 1 */
 
   /* USER CODE END ADC_IRQn 1 */
@@ -240,7 +240,7 @@ void SPI2_IRQHandler(void)
   /* USER CODE BEGIN SPI2_IRQn 0 */
 
   /* USER CODE END SPI2_IRQn 0 */
-  HAL_SPI_IRQHandler(&hspi2);
+  /* HAL_SPI_IRQHandler(&hspi2); */
   /* USER CODE BEGIN SPI2_IRQn 1 */
 
   /* USER CODE END SPI2_IRQn 1 */
@@ -254,7 +254,7 @@ void SPI3_IRQHandler(void)
   /* USER CODE BEGIN SPI3_IRQn 0 */
 
   /* USER CODE END SPI3_IRQn 0 */
-  HAL_SPI_IRQHandler(&hspi3);
+  /* HAL_SPI_IRQHandler(&hspi3); */
   /* USER CODE BEGIN SPI3_IRQn 1 */
 
   /* USER CODE END SPI3_IRQn 1 */
@@ -268,7 +268,7 @@ void DMA2_Stream0_IRQHandler(void)
   /* USER CODE BEGIN DMA2_Stream0_IRQn 0 */
 
   /* USER CODE END DMA2_Stream0_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_adc1);
+  /* HAL_DMA_IRQHandler(&hdma_adc1); */
   /* USER CODE BEGIN DMA2_Stream0_IRQn 1 */
 
   /* USER CODE END DMA2_Stream0_IRQn 1 */

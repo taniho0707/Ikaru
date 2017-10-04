@@ -79,10 +79,22 @@ void Speaker::playMusic(MusicNumber n){
 		playSound(880, 100, true);
 		playSound(1175, 200, true);
 		break;
-	case MusicNumber::KIRBY3_SELECT:
+	case MusicNumber::KIRBY3_SELECT1:
 		playSound(1174, 30, true);
 		playSound(1661, 30, true);
 		playSound(2093, 30, true);
+		break;
+	case MusicNumber::KIRBY3_SELECT2:
+		playSound(1174, 30, true);
+		HAL_Delay(100);
+		playSound(1174, 30, true);
+		playSound(1661, 30, true);
+		playSound(2093, 30, true);
+		break;
+	case MusicNumber::KIRBY3_SELECT3:
+		playSound(1174, 90, true);
+		playSound(1661, 90, true);
+		playSound(2093, 90, true);
 		break;
 	case MusicNumber::KIRBY64_BEGINNER_1:
 		playSound(440, 160, true);
@@ -192,10 +204,22 @@ void Speaker::playMusic(MusicNumber n){
 		playSound(554, 300, true);
 		playSound(466, 600, true);
 		break;
-	case MusicNumber::KIRBY3_ORIG_DESELECT:
+	case MusicNumber::KIRBY3_ORIG_DESELECT1:
 		playSound(2093, 30, true);
 		playSound(1661, 30, true);
 		playSound(1174, 30, true);
+		break;
+	case MusicNumber::KIRBY3_ORIG_DESELECT2:
+		playSound(2093, 30, true);
+		HAL_Delay(100);
+		playSound(2093, 30, true);
+		playSound(1661, 30, true);
+		playSound(1174, 30, true);
+		break;
+	case MusicNumber::KIRBY3_ORIG_DESELECT3:
+		playSound(2093, 90, true);
+		playSound(1661, 90, true);
+		playSound(1174, 90, true);
 		break;
 	case MusicNumber::KANSAIDENKIHOANKYOUKAI:
 		playSound(494, 360, true); //kan
