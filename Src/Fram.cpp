@@ -111,7 +111,7 @@ int Fram::writeData(const std::vector<uint8_t> &data, const uint16_t addr, const
 	for (int i=0; i<num; i++)
 		writedata[i+3] = data[i];
 	writeEnable();
-	HAL_Delay(1);
+	// HAL_Delay(1); // ここコメントアウトした2017年10月5日
 	return rwMultiByte(writedata, writedata, 0, num+3);
 }
 
@@ -124,7 +124,54 @@ int Fram::readData(std::vector<uint8_t> &data, const uint16_t addr, const uint8_
 	return 0;
 }
 
+
+bool Fram::writeUInt16(const uint16_t data, const uint16_t addr) {
+	std::vector<uint8_t> senddata(2);
+	senddata.at(0) = (data >> 8) & 0xFF;
+	senddata.at(1) = data & 0xFF;
+	writeData(senddata, addr, 2);
+	return true;
+}
+
+bool Fram::writeInt16(const int16_t data, const uint16_t addr) {
+	std::vector<uint8_t> senddata(2);
+	senddata.at(0) = (data >> 8) & 0xFF;
+	senddata.at(1) = data & 0xFF;
+	writeData(senddata, addr, 2);
+	return true;
+}
+
+bool Fram::writeUInt32(const uint32_t data, const uint16_t addr) {
+	std::vector<uint8_t> senddata(4);
+	senddata.at(0) = (data >> 24) & 0xFF;
+	senddata.at(1) = (data >> 16) & 0xFF;
+	senddata.at(2) = (data >>  8) & 0xFF;
+	senddata.at(3) = data & 0xFF;
+	writeData(senddata, addr, 4);
+	return true;
+}
+
+uint16_t Fram::readUInt16(const uint16_t addr) {
+	std::vector<uint8_t> readdata(2);
+	readData(readdata, addr, 2);
+	return static_cast<uint16_t>((readdata.at(0) << 8) | readdata.at(1));
+}
+
+int16_t Fram::readInt16(const uint16_t addr) {
+	std::vector<uint8_t> readdata(2);
+	readData(readdata, addr, 2);
+	return static_cast<int16_t>((readdata.at(0) << 8) | readdata.at(1));
+}
+
+uint32_t Fram::readUInt32(const uint16_t addr) {
+	std::vector<uint8_t> readdata(4);
+	readData(readdata, addr, 4);
+	return static_cast<uint32_t>((readdata.at(0) << 24) | (readdata.at(1) << 16) | (readdata.at(2) << 8) | readdata.at(3));
+}
+
+
 bool Fram::saveMap(const Map& map, const int num){
+	if (num > 4) return false;
 	uint16_t baseaddr = 376 * num; // 1 map is 376 byte
 	std::vector<uint8_t> v(128);
 	for(int i=0; i<31; ++i){
@@ -152,6 +199,7 @@ bool Fram::saveMap(const Map& map, const int num){
 }
 
 bool Fram::loadMap(Map& map, const int num){
+	if (num > 4) return false;
 	uint16_t baseaddr = 376 * num;
 	std::vector<uint8_t> v(128);
 	readData(v, baseaddr, 124);

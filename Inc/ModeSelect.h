@@ -36,6 +36,7 @@ namespace mode {
 	enum class MODE_SENSORLOG : uint8_t {
 		SHOW,
 		CALIBRATE_SIDE,
+		CALIBRATE_REFTHR,
 		LAST // コレより下に定義しない
 	};
 

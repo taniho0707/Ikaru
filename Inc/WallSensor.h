@@ -6,8 +6,12 @@
 #include <array>
 #include <cmath>
 #include "RingBufferHistory.h"
+#include <string>
+#include <functional>
 
 #include "Walldata.h"
+
+#include "Fram.h"
 
 using namespace std;
 
@@ -32,9 +36,9 @@ private:
 	const uint16_t VAL_THR_FRONT;
 	const uint16_t VAL_THR_RIGHT;
 	const uint16_t VAL_THR_FRIGHT;
-	const int16_t THR_WALL_DISAPPEAR;
-	const int16_t VAL_THR_CONTROL_LEFT;
-	const int16_t VAL_THR_CONTROL_RIGHT;
+	const  int16_t THR_WALL_DISAPPEAR;
+	const  int16_t VAL_THR_CONTROL_LEFT;
+	const  int16_t VAL_THR_CONTROL_RIGHT;
 	const uint16_t VAL_THR_GAP_FLEFT;
 	const uint16_t VAL_THR_GAP_LEFT;
 	const uint16_t VAL_THR_GAP_RIGHT;
@@ -55,9 +59,37 @@ private:
 
 	bool is_working;
 	bool enabled;
+
+public:
 	array<uint16_t, 5> ref_straight_value;
 	array<uint16_t, 5> thr_straight_value;
+	uint16_t valid_val_ref_fleft;
+	uint16_t valid_val_ref_left;
+	uint16_t valid_val_ref_front;
+	uint16_t valid_val_ref_right;
+	uint16_t valid_val_ref_fright;
+	uint16_t valid_val_thr_fleft;
+	uint16_t valid_val_thr_left;
+	uint16_t valid_val_thr_front;
+	uint16_t valid_val_thr_right;
+	uint16_t valid_val_thr_fright;
+	int16_t  valid_thr_wall_disappear;
+	int16_t  valid_val_thr_control_left;
+	int16_t  valid_val_thr_control_right;
+	uint16_t valid_val_thr_gap_fleft;
+	uint16_t valid_val_thr_gap_left;
+	uint16_t valid_val_thr_gap_right;
+	uint16_t valid_val_thr_gap_fright;
+	uint16_t valid_val_thr_gap_diago_fleft;
+	uint16_t valid_val_thr_gap_diago_left;
+	uint16_t valid_val_thr_gap_diago_right;
+	uint16_t valid_val_thr_gap_diago_fright;
+	uint16_t valid_val_thr_slalom_fleft;
+	uint16_t valid_val_thr_slalom_left;
+	uint16_t valid_val_thr_slalom_right;
+	uint16_t valid_val_thr_slalom_fright;
 
+private:
 	// 値<->距離の変換式用パラメータ y=a/ln(x)+b
 	array<float, 5> param_a;
 	array<float, 5> param_b;
@@ -123,6 +155,15 @@ public:
 
 	int16_t getCorrection(uint16_t max);
 	int16_t getCorrectionComb(uint16_t max);
+
+	uint32_t getParamsHash();
+	bool isLatestFram();
+	void saveParamsToFram();
+	void loadParamsFromFram();
+	void loadParamsFromFlash();
+	void loadParams();
+
+	void refleshStraigntValue();
 
 	static WallSensor* getInstance();
 };

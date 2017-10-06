@@ -21,7 +21,15 @@ enum class FramCommands : unsigned char {
 };
 
 
-// 16Kbit = 2KByte Max 0x7FF
+// 16Kbit = 2KByte = 2048Byte Max 0x7FF
+// 1 map =  376Byte
+// 2 map =  752Byte
+// 3 map = 1128Byte
+// 4 map = 1504Byte
+// 5 map = 1880Byte
+// (u)int16_t = 2Byte
+// 0x758(1880) から 0x7FF がパラメータ領域
+// 0x758 にsize_t(sizeof(size_t)=4)のハッシュ値
 
 class Fram : protected Spi{
 private:
@@ -41,7 +49,14 @@ public:
 	int writeData(const std::vector<uint8_t> &data, const uint16_t addr, const uint8_t num);
 	int readData(std::vector<uint8_t> &data, const uint16_t addr, const uint8_t num);
 
-	// num = (0 .. 9);
+	bool writeUInt16(const uint16_t data, const uint16_t addr);
+	bool writeInt16(const int16_t data, const uint16_t addr);
+	bool writeUInt32(const uint32_t data, const uint16_t addr);
+	uint16_t readUInt16(const uint16_t addr);
+	int16_t readInt16(const uint16_t addr);
+	uint32_t readUInt32(const uint16_t addr);
+
+	// num = (0 .. 4);
 	bool saveMap(const Map& map, const int num);
 	bool loadMap(Map& map, const int num);
 };

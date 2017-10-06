@@ -13,7 +13,7 @@ WallSensor::WallSensor() :
 	// VAL_REF_FRONT(370), // H_OLD
 	// VAL_REF_RIGHT(210), // H_OLD 	
 	VAL_REF_LEFT(350),  // H
-	VAL_REF_FRONT(290), // H
+	VAL_REF_FRONT(370), // H
 	VAL_REF_RIGHT(180), // H
 	VAL_REF_FRIGHT(120),
 	
@@ -92,16 +92,8 @@ WallSensor::WallSensor() :
 	GPIO_InitStruct3.Pin = GPIO_PIN_10|GPIO_PIN_2;
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct3);
 
-	thr_straight_value[0] = VAL_THR_FLEFT;
-	thr_straight_value[1] = VAL_THR_LEFT;
-	thr_straight_value[2] = VAL_THR_FRONT;
-	thr_straight_value[3] = VAL_THR_RIGHT;
-	thr_straight_value[4] = VAL_THR_FRIGHT;
-	ref_straight_value[0] = VAL_REF_FLEFT;
-	ref_straight_value[1] = VAL_REF_LEFT;
-	ref_straight_value[2] = VAL_REF_FRONT;
-	ref_straight_value[3] = VAL_REF_RIGHT;
-	ref_straight_value[4] = VAL_REF_FRIGHT;
+	// loadParams();
+	// 必ず初期化する
 
 	had_gap[0] = false;
 	had_gap[1] = false;
@@ -375,9 +367,9 @@ void WallSensor::getCalibrationParams(array<float, 5>& a, array<float, 5>& b){
 
 
 bool WallSensor::canSlalom(){
-	if(getValue(SensorPosition::Left) > VAL_THR_SLALOM_LEFT || getValue(SensorPosition::Right) > VAL_THR_SLALOM_RIGHT){
+	if(getValue(SensorPosition::Left) > valid_val_thr_slalom_left || getValue(SensorPosition::Right) > valid_val_thr_slalom_right){
 		return false;
-	} else if(isExistWall(SensorPosition::Left) && (getValue(SensorPosition::Left) > VAL_THR_SLALOM_LEFT || getValue(SensorPosition::Right) > VAL_THR_SLALOM_RIGHT)){
+	} else if(isExistWall(SensorPosition::Left) && (getValue(SensorPosition::Left) > valid_val_thr_slalom_left || getValue(SensorPosition::Right) > valid_val_thr_slalom_right)){
 		return false;
 	} else {
 		return true;
@@ -404,37 +396,37 @@ void WallSensor::waitGap(SensorPosition sp){
 void WallSensor::checkGap(){
 	if(!had_gap[0]){
 		if(is_waiting_gap[0]
-		   && current_value.at(static_cast<uint8_t>(SensorPosition::Left)) < VAL_THR_GAP_LEFT){
+		   && current_value.at(static_cast<uint8_t>(SensorPosition::Left)) < valid_val_thr_gap_left){
 			is_waiting_gap[0] = false;
 			had_gap[0] = true;
-		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::Left)) > VAL_THR_GAP_LEFT+10){
+		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::Left)) > valid_val_thr_gap_left+10){
 			is_waiting_gap[0] = true;
 		}
 	}
 	if(!had_gap[1]){
 		if(is_waiting_gap[1]
-		   && current_value.at(static_cast<uint8_t>(SensorPosition::Right)) < VAL_THR_GAP_RIGHT){
+		   && current_value.at(static_cast<uint8_t>(SensorPosition::Right)) < valid_val_thr_gap_right){
 			is_waiting_gap[1] = false;
 			had_gap[1] = true;
-		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::Right)) > VAL_THR_GAP_RIGHT+10){
+		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::Right)) > valid_val_thr_gap_right+10){
 			is_waiting_gap[1] = true;
 		}
 	}
 	if(!had_gap[2]){
 		if(is_waiting_gap[2]
-		   && current_value.at(static_cast<uint8_t>(SensorPosition::FLeft)) < VAL_THR_GAP_FLEFT){
+		   && current_value.at(static_cast<uint8_t>(SensorPosition::FLeft)) < valid_val_thr_gap_fleft){
 			is_waiting_gap[2] = false;
 			had_gap[2] = true;
-		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::FLeft)) > VAL_THR_GAP_FLEFT+5){
+		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::FLeft)) > valid_val_thr_gap_fleft+5){
 			is_waiting_gap[2] = true;
 		}
 	}
 	if(!had_gap[3]){
 		if(is_waiting_gap[3]
-		   && current_value.at(static_cast<uint8_t>(SensorPosition::FRight)) < VAL_THR_GAP_FRIGHT){
+		   && current_value.at(static_cast<uint8_t>(SensorPosition::FRight)) < valid_val_thr_gap_fright){
 			is_waiting_gap[3] = false;
 			had_gap[3] = true;
-		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::FRight)) > VAL_THR_GAP_FRIGHT+5){
+		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::FRight)) > valid_val_thr_gap_fright+5){
 			is_waiting_gap[3] = true;
 		}
 	}
@@ -467,37 +459,37 @@ void WallSensor::waitGapDiago(SensorPosition sp){
 void WallSensor::checkGapDiago(){
 	if(!had_gap_diago[0]){
 		if(is_waiting_gap_diago[0]
-		   && current_value.at(static_cast<uint8_t>(SensorPosition::Left)) < VAL_THR_GAP_DIAGO_LEFT){
+		   && current_value.at(static_cast<uint8_t>(SensorPosition::Left)) < valid_val_thr_gap_diago_left){
 			is_waiting_gap_diago[0] = false;
 			had_gap_diago[0] = true;
-		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::Left)) > VAL_THR_GAP_DIAGO_LEFT+5){
+		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::Left)) > valid_val_thr_gap_diago_left+5){
 			is_waiting_gap_diago[0] = true;
 		}
 	}
 	if(!had_gap_diago[1]){
 		if(is_waiting_gap_diago[1]
-		   && current_value.at(static_cast<uint8_t>(SensorPosition::Right)) < VAL_THR_GAP_DIAGO_RIGHT){
+		   && current_value.at(static_cast<uint8_t>(SensorPosition::Right)) < valid_val_thr_gap_diago_right){
 			is_waiting_gap_diago[1] = false;
 			had_gap_diago[1] = true;
-		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::Right)) > VAL_THR_GAP_DIAGO_RIGHT+5){
+		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::Right)) > valid_val_thr_gap_diago_right+5){
 			is_waiting_gap_diago[1] = true;
 		}
 	}
 	if(!had_gap_diago[2]){
 		if(is_waiting_gap_diago[2]
-		   && current_value.at(static_cast<uint8_t>(SensorPosition::FLeft)) < VAL_THR_GAP_DIAGO_FLEFT){
+		   && current_value.at(static_cast<uint8_t>(SensorPosition::FLeft)) < valid_val_thr_gap_diago_fleft){
 			is_waiting_gap_diago[2] = false;
 			had_gap_diago[2] = true;
-		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::FLeft)) > VAL_THR_GAP_DIAGO_FLEFT+5){
+		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::FLeft)) > valid_val_thr_gap_diago_fleft+5){
 			is_waiting_gap_diago[2] = true;
 		}
 	}
 	if(!had_gap_diago[3]){
 		if(is_waiting_gap_diago[3]
-		   && current_value.at(static_cast<uint8_t>(SensorPosition::FRight)) < VAL_THR_GAP_DIAGO_FRIGHT){
+		   && current_value.at(static_cast<uint8_t>(SensorPosition::FRight)) < valid_val_thr_gap_diago_fright){
 			is_waiting_gap_diago[3] = false;
 			had_gap_diago[3] = true;
-		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::FRight)) > VAL_THR_GAP_DIAGO_FRIGHT+5){
+		} else if(current_value.at(static_cast<uint8_t>(SensorPosition::FRight)) > valid_val_thr_gap_diago_fright+5){
 			is_waiting_gap_diago[3] = true;
 		}
 	}
@@ -521,17 +513,17 @@ bool WallSensor::hadGapDiago(SensorPosition sp){
 int16_t WallSensor::getCorrection(uint16_t max){
 	if(!enabled) return 0;
 
-	int16_t tmpR = getValue(SensorPosition::Right) - VAL_REF_RIGHT;
-	int16_t tmpL = VAL_REF_LEFT - getValue(SensorPosition::Left);
+	int16_t tmpR = getValue(SensorPosition::Right) - valid_val_ref_right;
+	int16_t tmpL = valid_val_ref_left - getValue(SensorPosition::Left);
 	bool is_singlewall = false;
 
 	// if(current_value[static_cast<uint8_t>(SensorPosition::Left)] > VAL_THR_CONTROL_LEFT && current_value[static_cast<uint8_t>(SensorPosition::Right)] > VAL_THR_CONTROL_RIGHT) return 0;
 
-	if(!isExistWall(SensorPosition::Left) || ((static_cast<int16_t>(getLastValue(SensorPosition::Left))-static_cast<int16_t>(getValue(SensorPosition::Left))) > THR_WALL_DISAPPEAR)){
+	if(!isExistWall(SensorPosition::Left) || ((static_cast<int16_t>(getLastValue(SensorPosition::Left))-static_cast<int16_t>(getValue(SensorPosition::Left))) > valid_thr_wall_disappear)){
 		tmpL = 0;
 		is_singlewall = true;
 	}
-	if(!isExistWall(SensorPosition::Right) || ((static_cast<int16_t>(getLastValue(SensorPosition::Right))-static_cast<int16_t>(getValue(SensorPosition::Right))) > THR_WALL_DISAPPEAR)){
+	if(!isExistWall(SensorPosition::Right) || ((static_cast<int16_t>(getLastValue(SensorPosition::Right))-static_cast<int16_t>(getValue(SensorPosition::Right))) > valid_thr_wall_disappear)){
 		tmpR = 0;
 		is_singlewall = true;
 	}
@@ -553,8 +545,8 @@ int16_t WallSensor::getCorrection(uint16_t max){
 int16_t WallSensor::getCorrectionComb(uint16_t max){
 	if(!enabled) return 0;
 
-	int16_t tmpR = getValue(SensorPosition::Right) - VAL_REF_RIGHT;
-	int16_t tmpL = VAL_REF_LEFT - getValue(SensorPosition::Left);
+	int16_t tmpR = getValue(SensorPosition::Right) - valid_val_ref_right;
+	int16_t tmpL = valid_val_ref_left - getValue(SensorPosition::Left);
 
 	if(tmpR < 0) tmpR = 0;
 	if(tmpL > 0) tmpL = 0;
@@ -570,6 +562,181 @@ int16_t WallSensor::getCorrectionComb(uint16_t max){
 	}
 	
 	return retval;
+}
+
+
+uint32_t WallSensor::getParamsHash(){
+	std::hash<std::string> hash_fn;
+	std::string parameters = "";
+	parameters += to_string(VAL_REF_FLEFT);
+	parameters += to_string(VAL_REF_LEFT);
+	parameters += to_string(VAL_REF_FRONT);
+	parameters += to_string(VAL_REF_RIGHT);
+	parameters += to_string(VAL_REF_FRIGHT);
+	parameters += to_string(VAL_THR_FLEFT);
+	parameters += to_string(VAL_THR_LEFT);
+	parameters += to_string(VAL_THR_FRONT);
+	parameters += to_string(VAL_THR_RIGHT);
+	parameters += to_string(VAL_THR_FRIGHT);
+	parameters += to_string(THR_WALL_DISAPPEAR);
+	parameters += to_string(VAL_THR_CONTROL_LEFT);
+	parameters += to_string(VAL_THR_CONTROL_RIGHT);
+	parameters += to_string(VAL_THR_GAP_FLEFT);
+	parameters += to_string(VAL_THR_GAP_LEFT);
+	parameters += to_string(VAL_THR_GAP_RIGHT);
+	parameters += to_string(VAL_THR_GAP_FRIGHT);
+	parameters += to_string(VAL_THR_GAP_DIAGO_FLEFT);
+	parameters += to_string(VAL_THR_GAP_DIAGO_LEFT);
+	parameters += to_string(VAL_THR_GAP_DIAGO_RIGHT);
+	parameters += to_string(VAL_THR_GAP_DIAGO_FRIGHT);
+	parameters += to_string(VAL_THR_SLALOM_FLEFT);
+	parameters += to_string(VAL_THR_SLALOM_LEFT);
+	parameters += to_string(VAL_THR_SLALOM_RIGHT);
+	parameters += to_string(VAL_THR_SLALOM_FRIGHT);
+	uint32_t hash = static_cast<uint32_t>(hash_fn(parameters));
+	return hash;
+}
+
+bool WallSensor::isLatestFram(){
+	Fram* fram = Fram::getInstance();
+	uint32_t hash_fram = fram->readUInt32(1880);
+	uint32_t hash_flash = getParamsHash();
+	if (hash_fram == hash_flash) return true;
+	else return false;
+}
+
+void WallSensor::saveParamsToFram(){
+	Fram* fram = Fram::getInstance();
+	uint16_t addr = 1884;
+	fram->writeUInt16(valid_val_ref_fleft, addr); addr+=2;
+	fram->writeUInt16(valid_val_ref_left, addr); addr+=2;
+	fram->writeUInt16(valid_val_ref_front, addr); addr+=2;
+	fram->writeUInt16(valid_val_ref_right, addr); addr+=2;
+	fram->writeUInt16(valid_val_ref_fright, addr); addr+=2;
+	fram->writeUInt16(valid_val_thr_fleft, addr); addr+=2;
+	fram->writeUInt16(valid_val_thr_left, addr); addr+=2;
+	fram->writeUInt16(valid_val_thr_front, addr); addr+=2;
+	fram->writeUInt16(valid_val_thr_right, addr); addr+=2;
+	fram->writeUInt16(valid_val_thr_fright, addr); addr+=2;
+	fram->writeInt16(valid_thr_wall_disappear, addr); addr+=2;
+	fram->writeInt16(valid_val_thr_control_left, addr); addr+=2;
+	fram->writeInt16(valid_val_thr_control_right, addr); addr+=2;
+	fram->writeUInt16(valid_val_thr_gap_fleft, addr); addr+=2;
+	fram->writeUInt16(valid_val_thr_gap_left, addr); addr+=2;
+	fram->writeUInt16(valid_val_thr_gap_right, addr); addr+=2;
+	fram->writeUInt16(valid_val_thr_gap_fright, addr); addr+=2;
+	fram->writeUInt16(valid_val_thr_gap_diago_fleft, addr); addr+=2;
+	fram->writeUInt16(valid_val_thr_gap_diago_left, addr); addr+=2;
+	fram->writeUInt16(valid_val_thr_gap_diago_right, addr); addr+=2;
+	fram->writeUInt16(valid_val_thr_gap_diago_fright, addr); addr+=2;
+	fram->writeUInt16(valid_val_thr_slalom_fleft, addr); addr+=2;
+	fram->writeUInt16(valid_val_thr_slalom_left, addr); addr+=2;
+	fram->writeUInt16(valid_val_thr_slalom_right, addr); addr+=2;
+	fram->writeUInt16(valid_val_thr_slalom_fright, addr); addr+=2;
+}
+
+void WallSensor::loadParamsFromFram(){
+	Fram* fram = Fram::getInstance();
+	uint16_t addr = 1884;
+	valid_val_ref_fleft = fram->readUInt16(addr); addr+=2;
+	valid_val_ref_left = fram->readUInt16(addr); addr+=2;
+	valid_val_ref_front = fram->readUInt16(addr); addr+=2;
+	valid_val_ref_right = fram->readUInt16(addr); addr+=2;
+	valid_val_ref_fright = fram->readUInt16(addr); addr+=2;
+	valid_val_thr_fleft = fram->readUInt16(addr); addr+=2;
+	valid_val_thr_left = fram->readUInt16(addr); addr+=2;
+	valid_val_thr_front = fram->readUInt16(addr); addr+=2;
+	valid_val_thr_right = fram->readUInt16(addr); addr+=2;
+	valid_val_thr_fright = fram->readUInt16(addr); addr+=2;
+	valid_thr_wall_disappear = fram->readInt16(addr); addr+=2;
+	valid_val_thr_control_left = fram->readInt16(addr); addr+=2;
+	valid_val_thr_control_right = fram->readInt16(addr); addr+=2;
+	valid_val_thr_gap_fleft = fram->readUInt16(addr); addr+=2;
+	valid_val_thr_gap_left = fram->readUInt16(addr); addr+=2;
+	valid_val_thr_gap_right = fram->readUInt16(addr); addr+=2;
+	valid_val_thr_gap_fright = fram->readUInt16(addr); addr+=2;
+	valid_val_thr_gap_diago_fleft = fram->readUInt16(addr); addr+=2;
+	valid_val_thr_gap_diago_left = fram->readUInt16(addr); addr+=2;
+	valid_val_thr_gap_diago_right = fram->readUInt16(addr); addr+=2;
+	valid_val_thr_gap_diago_fright = fram->readUInt16(addr); addr+=2;
+	valid_val_thr_slalom_fleft = fram->readUInt16(addr); addr+=2;
+	valid_val_thr_slalom_left = fram->readUInt16(addr); addr+=2;
+	valid_val_thr_slalom_right = fram->readUInt16(addr); addr+=2;
+	valid_val_thr_slalom_fright = fram->readUInt16(addr); addr+=2;
+
+	thr_straight_value[0] = valid_val_thr_fleft;
+	thr_straight_value[1] = valid_val_thr_left;
+	thr_straight_value[2] = valid_val_thr_front;
+	thr_straight_value[3] = valid_val_thr_right;
+	thr_straight_value[4] = valid_val_thr_fright;
+	ref_straight_value[0] = valid_val_ref_fleft;
+	ref_straight_value[1] = valid_val_ref_left;
+	ref_straight_value[2] = valid_val_ref_front;
+	ref_straight_value[3] = valid_val_ref_right;
+	ref_straight_value[4] = valid_val_ref_fright;
+}
+
+void WallSensor::loadParamsFromFlash(){
+	thr_straight_value[0] = VAL_THR_FLEFT;
+	thr_straight_value[1] = VAL_THR_LEFT;
+	thr_straight_value[2] = VAL_THR_FRONT;
+	thr_straight_value[3] = VAL_THR_RIGHT;
+	thr_straight_value[4] = VAL_THR_FRIGHT;
+	ref_straight_value[0] = VAL_REF_FLEFT;
+	ref_straight_value[1] = VAL_REF_LEFT;
+	ref_straight_value[2] = VAL_REF_FRONT;
+	ref_straight_value[3] = VAL_REF_RIGHT;
+	ref_straight_value[4] = VAL_REF_FRIGHT;
+
+	valid_val_ref_fleft            = VAL_REF_FLEFT;
+	valid_val_ref_left             = VAL_REF_LEFT;
+	valid_val_ref_front            = VAL_REF_FRONT;
+	valid_val_ref_right            = VAL_REF_RIGHT;
+	valid_val_ref_fright           = VAL_REF_FRIGHT;
+	valid_val_thr_fleft            = VAL_THR_FLEFT;
+	valid_val_thr_left             = VAL_THR_LEFT;
+	valid_val_thr_front            = VAL_THR_FRONT;
+	valid_val_thr_right            = VAL_THR_RIGHT;
+	valid_val_thr_fright           = VAL_THR_FRIGHT;
+	valid_thr_wall_disappear       = THR_WALL_DISAPPEAR;
+	valid_val_thr_control_left     = VAL_THR_CONTROL_LEFT;
+	valid_val_thr_control_right    = VAL_THR_CONTROL_RIGHT;
+	valid_val_thr_gap_fleft        = VAL_THR_GAP_FLEFT;
+	valid_val_thr_gap_left         = VAL_THR_GAP_LEFT;
+	valid_val_thr_gap_right        = VAL_THR_GAP_RIGHT;
+	valid_val_thr_gap_fright       = VAL_THR_GAP_FRIGHT;
+	valid_val_thr_gap_diago_fleft  = VAL_THR_GAP_DIAGO_FLEFT;
+	valid_val_thr_gap_diago_left   = VAL_THR_GAP_DIAGO_LEFT;
+	valid_val_thr_gap_diago_right  = VAL_THR_GAP_DIAGO_RIGHT;
+	valid_val_thr_gap_diago_fright = VAL_THR_GAP_DIAGO_FRIGHT;
+	valid_val_thr_slalom_fleft     = VAL_THR_SLALOM_FLEFT;
+	valid_val_thr_slalom_left      = VAL_THR_SLALOM_LEFT;
+	valid_val_thr_slalom_right     = VAL_THR_SLALOM_RIGHT;
+	valid_val_thr_slalom_fright    = VAL_THR_SLALOM_FRIGHT;
+}
+
+void WallSensor::loadParams(){
+	if (isLatestFram()) {
+		loadParamsFromFram();
+	} else {
+		loadParamsFromFlash();
+		Fram* fram = Fram::getInstance();
+		uint32_t hash = getParamsHash();
+		fram->writeUInt32(hash, 1880);
+	}
+}
+
+void WallSensor::refleshStraigntValue(){
+	thr_straight_value[0] = valid_val_thr_fleft;
+	thr_straight_value[1] = valid_val_thr_left;
+	thr_straight_value[2] = valid_val_thr_front;
+	thr_straight_value[3] = valid_val_thr_right;
+	thr_straight_value[4] = valid_val_thr_fright;
+	ref_straight_value[0] = valid_val_ref_fleft;
+	ref_straight_value[1] = valid_val_ref_left;
+	ref_straight_value[2] = valid_val_ref_front;
+	ref_straight_value[3] = valid_val_ref_right;
+	ref_straight_value[4] = valid_val_ref_fright;
 }
 
 

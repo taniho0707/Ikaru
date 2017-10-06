@@ -36,6 +36,7 @@
 #include "libpathbasic1.hpp"
 
 using namespace slalomparams;
+using namespace std;
 
 void SystemClock_Config(void);
 static void MX_NVIC_Init(void);
@@ -50,12 +51,128 @@ void frontcorrection(){
 	MotorCollection* motorcollection = MotorCollection::getInstance();
 	led->flickAsync(LedNumbers::FRONT, 5.0f, 1500);
 	mc->disableWallControl();
-	motorcollection->collectionByFrontDuringStop(0.03f);
+	motorcollection->collectionByFrontDuringStop(0.02f);
 	mc->stay();
 	mc->resetRadIntegral();
 	mc->resetLinIntegral();
 	led->flickStop(LedNumbers::FRONT);
 	HAL_Delay(300);
+}
+
+void calibratewallsensor(){
+	WallSensor* wallsensor = WallSensor::getInstance();
+	ModeSelect* mode = ModeSelect::getInstance();
+	Speaker* speaker = Speaker::getInstance();
+
+	array<uint16_t, 100> tmp_avg1;
+	array<uint16_t, 100> tmp_avg2;
+	array<uint16_t, 100> tmp_avg3;
+	uint16_t thr_fleft, thr_left, thr_front, thr_right, thr_fright;
+	uint16_t ref_fleft, ref_left, ref_front, ref_right, ref_fright;
+	float tmp_sum;
+
+	// 1. 両横壁のみ
+	mode->startcheck(0);
+	speaker->playMusic(MusicNumber::HIRAPA);
+	for (int i=0; i<100; ++i) {
+		tmp_avg1.at(i) = wallsensor->getValue(SensorPosition::Left);
+		tmp_avg2.at(i) = wallsensor->getValue(SensorPosition::Right);
+		HAL_Delay(1);
+	}
+	tmp_sum = 0;
+	for (auto el : tmp_avg1)
+		tmp_sum += el;
+	ref_left = tmp_sum / 100;
+	tmp_sum = 0;
+	for (auto el : tmp_avg2)
+		tmp_sum += el;
+	ref_right = tmp_sum / 100;
+	speaker->playMusic(MusicNumber::KIRBY_DYING);
+
+	// 2. 前壁制御用
+	mode->startcheck(0);
+	speaker->playMusic(MusicNumber::HIRAPA);
+	for (int i=0; i<100; ++i) {
+		tmp_avg1.at(i) = wallsensor->getValue(SensorPosition::Front);
+		HAL_Delay(1);
+	}
+	tmp_sum = 0;
+	for (auto el : tmp_avg1)
+		tmp_sum += el;
+	ref_front = tmp_sum / 100;
+	speaker->playMusic(MusicNumber::KIRBY_DYING);
+
+	// 3. 横・前に壁なし
+	mode->startcheck(0);
+	speaker->playMusic(MusicNumber::HIRAPA);
+	for (int i=0; i<100; ++i) {
+		tmp_avg1.at(i) = wallsensor->getValue(SensorPosition::Left);
+		tmp_avg2.at(i) = wallsensor->getValue(SensorPosition::Right);
+		tmp_avg3.at(i) = wallsensor->getValue(SensorPosition::Front);
+		HAL_Delay(1);
+	}
+	tmp_sum = 0;
+	for (auto el : tmp_avg1)
+		tmp_sum += el;
+	thr_left = (ref_left + (tmp_sum / 100)) / 2;
+	tmp_sum = 0;
+	for (auto el : tmp_avg2)
+		tmp_sum += el;
+	thr_right = (ref_right + (tmp_sum / 100)) / 2;
+	tmp_sum = 0;
+	for (auto el : tmp_avg3)
+		tmp_sum += el;
+	thr_front = (tmp_sum / 100);
+	speaker->playMusic(MusicNumber::KIRBY_DYING);
+
+	// 4. 前壁存在
+	mode->startcheck(0);
+	speaker->playMusic(MusicNumber::HIRAPA);
+	for (int i=0; i<100; ++i) {
+		tmp_avg1.at(i) = wallsensor->getValue(SensorPosition::Left);
+		HAL_Delay(1);
+	}
+	tmp_sum = 0;
+	for (auto el : tmp_avg1)
+		tmp_sum += el;
+	thr_front = ((tmp_sum / 100) + thr_front) / 2.0f;
+	speaker->playMusic(MusicNumber::KIRBY_DYING);
+
+	// // 5. 左壁切れ（キツイパターン）
+	// mode->startcheck(0);
+	// speaker->playMusic(MusicNumber::HIRAPA);
+	// for (int i=0; i<100; ++i) {
+	// 	tmp_avg1.at(i) = wallsensor->getValue(SensorPosition::Left);
+	// 	HAL_Delay(1);
+	// }
+	// tmp_sum = 0;
+	// for (auto el : tmp_avg1)
+	// 	tmp_sum += el;
+	//  = tmp_sum /= 100;
+	// speaker->playMusic(MusicNumber::KIRBY_DYING);
+
+	// // 6. 右壁切れ（キツイパターン）
+	// mode->startcheck(0);
+	// speaker->playMusic(MusicNumber::HIRAPA);
+	// for (int i=0; i<100; ++i) {
+	// 	tmp_avg1.at(i) = wallsensor->getValue(SensorPosition::Left);
+	// 	HAL_Delay(1);
+	// }
+	// tmp_sum = 0;
+	// for (auto el : tmp_avg1)
+	// 	tmp_sum += el;
+	//  = tmp_sum /= 100;
+	// speaker->playMusic(MusicNumber::KIRBY_DYING);
+
+	// 代入
+	wallsensor->valid_val_ref_left = ref_left;
+	wallsensor->valid_val_ref_right = ref_right;
+	wallsensor->valid_val_ref_front = ref_front;
+	wallsensor->valid_val_thr_left = thr_left;
+	wallsensor->valid_val_thr_right = thr_right;
+	wallsensor->valid_val_thr_front = thr_front;
+	wallsensor->refleshStraigntValue();
+	wallsensor->saveParamsToFram();
 }
 
 int main(void) {
@@ -104,6 +221,39 @@ int main(void) {
 
 	WallSensor* wallsensor = WallSensor::getInstance();
 	wallsensor->start();
+
+	if (wallsensor->isLatestFram()) compc->printf("FRAM ");
+	else compc->printf("FLASH ");
+	compc->printf("parameters hash: [%8X]\n", fram->readUInt32(1880));
+	wallsensor->loadParams();
+
+	compc->printf("* Wall Sensor Parameters\n");
+	compc->printf("valid_val_ref_fleft:            %4d\n", wallsensor->valid_val_ref_fleft);
+	compc->printf("valid_val_ref_left:             %4d\n", wallsensor->valid_val_ref_left);
+	compc->printf("valid_val_ref_front:            %4d\n", wallsensor->valid_val_ref_front);
+	compc->printf("valid_val_ref_right:            %4d\n", wallsensor->valid_val_ref_right);
+	compc->printf("valid_val_ref_fright:           %4d\n", wallsensor->valid_val_ref_fright);
+	compc->printf("valid_val_thr_fleft:            %4d\n", wallsensor->valid_val_thr_fleft);
+	compc->printf("valid_val_thr_left:             %4d\n", wallsensor->valid_val_thr_left);
+	compc->printf("valid_val_thr_front:            %4d\n", wallsensor->valid_val_thr_front);
+	compc->printf("valid_val_thr_right:            %4d\n", wallsensor->valid_val_thr_right);
+	compc->printf("valid_val_thr_fright:           %4d\n", wallsensor->valid_val_thr_fright);
+	compc->printf("valid_thr_wall_disappear:       %4d\n", wallsensor->valid_thr_wall_disappear);
+	compc->printf("valid_val_thr_control_left:     %4d\n", wallsensor->valid_val_thr_control_left);
+	compc->printf("valid_val_thr_control_right:    %4d\n", wallsensor->valid_val_thr_control_right);
+	compc->printf("valid_val_thr_gap_fleft:        %4d\n", wallsensor->valid_val_thr_gap_fleft);
+	compc->printf("valid_val_thr_gap_left:         %4d\n", wallsensor->valid_val_thr_gap_left);
+	compc->printf("valid_val_thr_gap_right:        %4d\n", wallsensor->valid_val_thr_gap_right);
+	compc->printf("valid_val_thr_gap_fright:       %4d\n", wallsensor->valid_val_thr_gap_fright);
+	compc->printf("valid_val_thr_gap_diago_fleft:  %4d\n", wallsensor->valid_val_thr_gap_diago_fleft);
+	compc->printf("valid_val_thr_gap_diago_left:   %4d\n", wallsensor->valid_val_thr_gap_diago_left);
+	compc->printf("valid_val_thr_gap_diago_right:  %4d\n", wallsensor->valid_val_thr_gap_diago_right);
+	compc->printf("valid_val_thr_gap_diago_fright: %4d\n", wallsensor->valid_val_thr_gap_diago_fright);
+	compc->printf("valid_val_thr_slalom_fleft:     %4d\n", wallsensor->valid_val_thr_slalom_fleft);
+	compc->printf("valid_val_thr_slalom_left:      %4d\n", wallsensor->valid_val_thr_slalom_left);
+	compc->printf("valid_val_thr_slalom_right:     %4d\n", wallsensor->valid_val_thr_slalom_right);
+	compc->printf("valid_val_thr_slalom_fright:    %4d\n", wallsensor->valid_val_thr_slalom_fright);
+
 
 	HAL_Delay(50);
 	if (wallsensor->getValue(SensorPosition::Front) > 500) {
@@ -209,7 +359,7 @@ int main(void) {
 					if(enabled_mae){
 						led->flickAsync(LedNumbers::FRONT, 5.0f, 1500);
 						mc->disableWallControl();
-						motorcollection->collectionByFrontDuringStop(0.03f);
+						motorcollection->collectionByFrontDuringStop(0.02f);
 						mc->stay();
 						mc->resetRadIntegral();
 						mc->resetLinIntegral();
@@ -220,7 +370,7 @@ int main(void) {
 						while(vc->isRunning());
 						led->flickAsync(LedNumbers::FRONT, 5.0f, 1500);
 						mc->disableWallControl();
-						motorcollection->collectionByFrontDuringStop(0.03f);
+						motorcollection->collectionByFrontDuringStop(0.02f);
 						mc->stay();
 						mc->resetRadIntegral();
 						mc->resetLinIntegral();
@@ -301,17 +451,6 @@ int main(void) {
 				adachi.renewFootmap();
 				RunType runtype = adachi.getNextMotion(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata);
 
-				// log->writeFloat(pos.getPositionX());
-				// log->writeFloat(pos.getPositionY());
-				// log->writeFloat(static_cast<float>(static_cast<int>(pos.getAngle())));
-				// log->writeFloat((walldata.isExistWall(MouseAngle::FRONT)?1.1f:0.0f));
-				// log->writeFloat((walldata.isExistWall(MouseAngle::RIGHT)?1.1f:0.0f));
-				// log->writeFloat((walldata.isExistWall(MouseAngle::BACK) ?1.1f:0.0f));
-				// log->writeFloat((walldata.isExistWall(MouseAngle::LEFT) ?1.1f:0.0f));
-				// log->writeFloat(0.0f);
-				// log->writeFloat(0.0f);
-				// log->writeFloat(0.0f);
-
 				led->on(LedNumbers::FRONT);
 		
 				if(runtype == slalomparams::RunType::TRAPACCEL){
@@ -350,7 +489,6 @@ int main(void) {
 							runtype = slalomparams::RunType::PIVOTTURN;
 							vc->runPivotTurn(500, 180, 1000);
 							while(vc->isRunning());
-							frontcorrection();
 							vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
 							mc->disableWallControl();
 							while(vc->isRunning());
@@ -358,7 +496,7 @@ int main(void) {
 					}
 				} else if(runtype == slalomparams::RunType::PIVOTTURN){
 					fram->saveMap(map, savenumber);
-					vc->runTrapAccel(0.25f, 0.25f, 0.0f, 0.045f, 5.0f);
+					vc->runTrapAccel(0.25f, 0.25f, 0.0f, 0.045f, 3.0f);
 					while(vc->isRunning());
 					if(walldata.isExistWall(MouseAngle::FRONT)){
 						frontcorrection();
@@ -375,18 +513,17 @@ int main(void) {
 						vc->runPivotTurn(500, 180, 1000);
 						/// @todo -180にする
 						while(vc->isRunning());
-						mc->disableWallControl();
 						mc->resetRadIntegral();
 						mc->resetLinIntegral();
 					}
 
-					vc->runTrapAccel(0.0f, 0.25f, 0.0f, -0.015f, 3.0f);
+					vc->runTrapAccel(0.0f, 0.25f, 0.0f, -0.03f, 3.0f);
 					mc->enableWallControl();
 					while(vc->isRunning());
 
 					mc->resetDistanceFromGap();
 					mc->resetDistanceFromGapDiago();
-					vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.06f, 3.0f);
+					vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.075f, 3.0f);
 					mc->enableWallControl();
 					while(vc->isRunning());
 				} else if(runtype == slalomparams::RunType::SLALOM90SML_RIGHT){
@@ -648,6 +785,7 @@ int main(void) {
 		{
 			switch(decided_mode.sub){
 			case static_cast<uint8_t>(mode::MODE_SENSORLOG::SHOW):
+			{
 				while(1){
 					led->off(LedNumbers::FRONT);
 					HAL_Delay(99);
@@ -656,7 +794,9 @@ int main(void) {
 					compc->printf("[%4d %4d %4d %4d %4d ] %+7d %+7d %+7d : %+7d %+7d %+7d, %f %f [%f %f]\n", wallsensor->getValue(SensorPosition::FLeft), wallsensor->getValue(SensorPosition::Left), wallsensor->getValue(SensorPosition::Front), wallsensor->getValue(SensorPosition::Right), wallsensor->getValue(SensorPosition::FRight), gyro->readGyroX(), gyro->readGyroY(), gyro->readGyroZ(), gyro->readAccelX(), gyro->readAccelY(), gyro->readAccelZ(), encoder->getVelocity(EncoderSide::LEFT), encoder->getVelocity(EncoderSide::RIGHT), wallsensor->getDistance(SensorPosition::Left), wallsensor->getDistance(SensorPosition::Right));
 				}
 				break;
+			}
 			case static_cast<uint8_t>(mode::MODE_SENSORLOG::CALIBRATE_SIDE):
+			{
 				speaker->playMusic(MusicNumber::OIRABOKODAZE1);
 				mode->startcheck(0);
 				speaker->playMusic(MusicNumber::HIRAPA);
@@ -671,6 +811,13 @@ int main(void) {
 				wallsensor->calibrate(SensorPosition::Right, 54.8f, value21, 10.0f, value22);
 				speaker->playMusic(MusicNumber::KIRBY_DYING);
 				break;
+			}
+			case static_cast<uint8_t>(mode::MODE_SENSORLOG::CALIBRATE_REFTHR):
+			{
+				speaker->playMusic(MusicNumber::OIRABOKODAZE1);
+				calibratewallsensor();
+				break;
+			}
 			}
 		}
 		break;
