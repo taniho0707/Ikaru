@@ -3,42 +3,44 @@
 
 using namespace std;
 
+// 壁切れの閾値を10から30にした
+
 /// @todo add wait REDEN flag
 WallSensor::WallSensor() :
 	VAL_REF_FLEFT(190),
 	// VAL_REF_LEFT(630),   // Q
 	// VAL_REF_FRONT(1150), // Q
 	// VAL_REF_RIGHT(780),  // Q
-	// VAL_REF_LEFT(320),  // H_OLD
-	// VAL_REF_FRONT(370), // H_OLD
-	// VAL_REF_RIGHT(210), // H_OLD 	
-	VAL_REF_LEFT(350),  // H
+	// VAL_REF_LEFT(300),  // H_TOHOKU
+	// VAL_REF_FRONT(360), // H_TOHOKU
+	// VAL_REF_RIGHT(245), // H_TOHOKU
+	VAL_REF_LEFT(310),  // H
 	VAL_REF_FRONT(370), // H
-	VAL_REF_RIGHT(180), // H
+	VAL_REF_RIGHT(230), // H
 	VAL_REF_FRIGHT(120),
 	
 	VAL_THR_FLEFT(165),
 	// VAL_THR_LEFT(400),  // Q
 	// VAL_THR_FRONT(250), // Q
 	// VAL_THR_RIGHT(400), // Q
-	// VAL_THR_LEFT(285),  // H_OLD
-	// VAL_THR_FRONT(135), // H_OLD
-	// VAL_THR_RIGHT(155), // H_OLD 	
-	VAL_THR_LEFT(320),  // H
+	// VAL_THR_LEFT(250),  // H_TOHOKU
+	// VAL_THR_FRONT(145), // H_TOHOKU
+	// VAL_THR_RIGHT(170), // H_TOHOKU
+	VAL_THR_LEFT(270),  // H
 	VAL_THR_FRONT(145), // H
-	VAL_THR_RIGHT(150), // H
+	VAL_THR_RIGHT(180), // H
 	VAL_THR_FRIGHT(185),
 	
 	VAL_THR_CONTROL_LEFT(100),
 	VAL_THR_CONTROL_RIGHT(110),
 	
-	// VAL_THR_GAP_FLEFT(120), //old
-	// VAL_THR_GAP_LEFT(260),  //old
-	// VAL_THR_GAP_RIGHT(140), //old
-	// VAL_THR_GAP_FRIGHT(120),//old
+	// VAL_THR_GAP_FLEFT(120), //TOHOKU
+	// VAL_THR_GAP_LEFT(220),  //TOHOKU
+	// VAL_THR_GAP_RIGHT(140), //TOHOKU
+	// VAL_THR_GAP_FRIGHT(120),//TOHOKU
 	VAL_THR_GAP_FLEFT(120),
-	VAL_THR_GAP_LEFT(310),
-	VAL_THR_GAP_RIGHT(150),
+	VAL_THR_GAP_LEFT(260),
+	VAL_THR_GAP_RIGHT(170),
 	VAL_THR_GAP_FRIGHT(185),
 	VAL_THR_GAP_DIAGO_FLEFT(120),
 	VAL_THR_GAP_DIAGO_LEFT(250),
@@ -237,11 +239,11 @@ void WallSensor::calcValue(uint8_t num){
 void WallSensor::setAvgValue(){
 	pair<uint16_t, uint16_t> max;
 	pair<uint16_t, uint16_t> min;
-	for(int i=0; i<4; ++i){
+	for(int i=0; i<5; ++i){
 		max.first = 0;
 		min.first = 1023;
 		last_value.at(i) = current_value.at(i);
-		for(int j=0; j<4; ++j){
+		for(int j=0; j<5; ++j){
 			if(log_value.at(j).at(i) > max.first){
 				max.first = log_value.at(j).at(i);
 				max.second = j;
@@ -254,7 +256,7 @@ void WallSensor::setAvgValue(){
 		current_value.at(i) = [&]{
 			uint16_t ret = 0;
 			uint8_t n = (max.second == min.second ? 3 : 2);
-			for(int k=0; k<4; ++k){
+			for(int k=0; k<5; ++k){
 				if(k != max.second && k != min.second){
 					ret += log_value.at(k).at(i);
 				}
@@ -298,7 +300,7 @@ void WallSensor::interrupt(){
 	tmp[static_cast<uint8_t>(SensorPosition::FLeft)] = HAL_ADC_GetValue(&hadc);
 
 	onLed();
-	for(int i=0; i<5000; ++i);
+	for(int i=0; i<8000; ++i);
 	// 待ち時間を極力減らしたい
 
 	s_config.Channel = ADC_CHANNEL_4;
@@ -328,6 +330,8 @@ void WallSensor::interrupt(){
 	current_value[static_cast<uint8_t>(SensorPosition::FLeft)] = HAL_ADC_GetValue(&hadc) - tmp[static_cast<uint8_t>(SensorPosition::FLeft)];
 
 	offLed();
+
+	// setAvgValue();
 	
 	checkGap();
 }
