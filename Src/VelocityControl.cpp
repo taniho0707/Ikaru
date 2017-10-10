@@ -17,6 +17,7 @@ VelocityControl::VelocityControl() :
 	has_done_slalom = true;
 	is_started = false;
 	enabled_wallgap = true;
+	is_expr_wallgap = true;
 	is_left_gap = true;
 
 	target_linvel = 0.0f;
@@ -40,6 +41,21 @@ void VelocityControl::enableWallgap(){
 void VelocityControl::disableWallgap(){
 	enabled_wallgap = false;
 }
+
+void VelocityControl::setExprGap(){
+	is_expr_wallgap = true;
+}
+
+void VelocityControl::setShrtGap(){
+	is_expr_wallgap = false;
+}
+
+void VelocityControl::setPosition(int8_t x, int8_t y, MazeAngle angle){
+	pos_x = x;
+	pos_y = y;
+	pos_angle = angle;
+}
+
 
 void VelocityControl::startTrapAccel(
 	float start_vel,
@@ -88,6 +104,10 @@ void VelocityControl::runTrapAccel(
 	reg_end_vel = end_vel;
 	reg_distance = distance;
 
+	if (enabled_wallgap && (!is_expr_wallgap)) {
+		gapcounter->startShrtTrapezoid(pos_x, pos_y, pos_angle, distance/0.09f);
+	}
+
 	float pi = 3.141592659f;
 	float x_ad = pi/2.0f/reg_accel*(reg_max_vel*reg_max_vel-reg_end_vel*reg_end_vel/2.0f-reg_start_vel*reg_start_vel/2.0f);
 	if(x_ad > abs(reg_distance)){
@@ -125,6 +145,7 @@ void VelocityControl::calcTrapAccel(int32_t t){
 
 	if(
 		enabled_wallgap
+		&& is_expr_wallgap
 		&& mc->getDistanceFromGap() < 0.001f && mc->getDistanceFromGap() > -0.001f
 		&& reg_max_vel < 0.31f
 		&& x0 > 0.001f
@@ -146,6 +167,13 @@ void VelocityControl::calcTrapAccel(int32_t t){
 		} else {
 			speaker->playSound(880, 50, false);
 		}
+	}
+
+	if (enabled_wallgap
+		&& is_expr_wallgap
+		){
+		x0 = gapcounter->getDistance();
+		mc->setIntegralEncoder(x0);
 	}
 
 	/// @todo 壁制御をかけるタイミングを新作にあわせる

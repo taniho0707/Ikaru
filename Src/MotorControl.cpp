@@ -236,11 +236,12 @@ void MotorControl::controlVel(){
 	log->writeFloat(cur_lin_x);
 	log->writeFloat(gyro->getGyroYaw());
 	log->writeFloat(tar_rad_vel);
-	// log->writeFloat(wall->getValue(SensorPosition::Left));
-	// log->writeFloat(wall->getValue(SensorPosition::Right));
-	log->writeFloat(wall->getValue(SensorPosition::FLeft));
-	log->writeFloat(wall->getValue(SensorPosition::FRight));
-	log->writeFloat(current_wall_correction);
+	log->writeFloat(wall->getValue(SensorPosition::Left));
+	log->writeFloat(wall->getValue(SensorPosition::Right));
+	log->writeFloat(wall->getValue(SensorPosition::Front));
+	// log->writeFloat(wall->getValue(SensorPosition::FLeft));
+	// log->writeFloat(wall->getValue(SensorPosition::FRight));
+	// log->writeFloat(current_wall_correction);
 	// log->writeFloat(tar_motor_l_power);
 	// log->writeFloat(tar_motor_r_power);
 	// log->writeFloat(getDistanceFromGap());

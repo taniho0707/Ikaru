@@ -16,6 +16,8 @@
 /* #include "Map.h" */
 #include "Timer.h"
 
+#include "GapCounter.h"
+
 /* #include "ComPc.h" */
 
 class VelocityControl{
@@ -26,6 +28,7 @@ private:
 	Led* led = Led::getInstance();
 	Speaker* speaker = Speaker::getInstance();
 	/* Map map; */
+	GapCounter* gapcounter = GapCounter::getInstance();
 
 	const float DIST_GAP_FROM_R;
 	const float DIST_GAP_FROM_L;
@@ -36,6 +39,7 @@ private:
 	bool has_done_slalom;
 
 	bool enabled_wallgap;
+	bool is_expr_wallgap;
 	bool is_left_gap;
 
 	enum slalomparams::RunType reg_type;
@@ -64,6 +68,10 @@ private:
 	float x1, x2, x3, v, r;
 	int32_t t1, t2, t3, t4;
 
+	int8_t pos_x;
+	int8_t pos_y;
+	MazeAngle pos_angle;
+
 	VelocityControl();
 
 public:
@@ -75,6 +83,10 @@ public:
 
 	void enableWallgap();
 	void disableWallgap();
+
+	void setExprGap();
+	void setShrtGap();
+	void setPosition(int8_t x, int8_t y, MazeAngle angle);
 
 	// 加速もしくは等速のみ
 	// 指定距離が来た場合走り続けるため，オーバーランの可能性あり

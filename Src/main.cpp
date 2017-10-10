@@ -63,6 +63,7 @@ void calibratewallsensor(){
 	WallSensor* wallsensor = WallSensor::getInstance();
 	ModeSelect* mode = ModeSelect::getInstance();
 	Speaker* speaker = Speaker::getInstance();
+	Datalog* log = Datalog::getInstance();
 
 	array<uint16_t, 100> tmp_avg1;
 	array<uint16_t, 100> tmp_avg2;
@@ -77,16 +78,46 @@ void calibratewallsensor(){
 	for (int i=0; i<100; ++i) {
 		tmp_avg1.at(i) = wallsensor->getValue(SensorPosition::Left);
 		tmp_avg2.at(i) = wallsensor->getValue(SensorPosition::Right);
+		// log->writeFloat(tmp_avg1.at(i));
+		// log->writeFloat(tmp_avg2.at(i));
+		// log->writeFloat(0.0f);
+		// log->writeFloat(0.0f);
+		// log->writeFloat(0.0f);
+		// log->writeFloat(0.0f);
+		// log->writeFloat(0.0f);
+		// log->writeFloat(0.0f);
+		// log->writeFloat(0.0f);
+		// log->writeFloat(0.0f);
 		HAL_Delay(1);
 	}
 	tmp_sum = 0;
 	for (auto el : tmp_avg1)
 		tmp_sum += el;
 	ref_left = tmp_sum / 100;
+	// log->writeFloat(0.0f);
+	// log->writeFloat(0.0f);
+	// log->writeFloat(0.0f);
+	// log->writeFloat(0.0f);
+	// log->writeFloat(0.0f);
+	// log->writeFloat(0.0f);
+	// log->writeFloat(0.0f);
+	// log->writeFloat(0.0f);
+	// log->writeFloat(ref_left);
+	// log->writeFloat(tmp_sum);
 	tmp_sum = 0;
 	for (auto el : tmp_avg2)
 		tmp_sum += el;
 	ref_right = tmp_sum / 100;
+	// log->writeFloat(0.0f);
+	// log->writeFloat(0.0f);
+	// log->writeFloat(0.0f);
+	// log->writeFloat(0.0f);
+	// log->writeFloat(0.0f);
+	// log->writeFloat(0.0f);
+	// log->writeFloat(0.0f);
+	// log->writeFloat(0.0f);
+	// log->writeFloat(ref_right);
+	// log->writeFloat(tmp_sum);
 	speaker->playMusic(MusicNumber::KIRBY_DYING);
 
 	// 2. 前壁制御用
@@ -222,8 +253,8 @@ int main(void) {
 	WallSensor* wallsensor = WallSensor::getInstance();
 	wallsensor->start();
 
-	if (wallsensor->isLatestFram()) compc->printf("FRAM ");
-	else compc->printf("FLASH ");
+	if (wallsensor->isLatestFram()) compc->printf("[ FRAM] ");
+	else compc->printf("[FLASH] ");
 	compc->printf("parameters hash: [%8X]\n", fram->readUInt32(1880));
 	wallsensor->loadParams();
 
@@ -294,10 +325,10 @@ int main(void) {
 			default:
 				break;
 			}
-			float gvel = 0.25f;
-			float gaccel = 3.0f;
-			float section = 0.09f;
-			float turn_coefficient = 1.0f;
+			float gvel = 0.10f;
+			float gaccel = 1.5f;
+			float section = 0.045f;
+			float turn_coefficient = 0.4f;
 			// ここから左手法で走る
 			mode->startcheck(0);
 			led->initPort(LedNumbers::TOP1);
@@ -476,6 +507,7 @@ int main(void) {
 							while(vc->isRunning());
 							vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
 							mc->disableWallControl();
+							// vc->disableWallgap();
 							while(vc->isRunning());
 						} else if (!wallsensor->isExistWall(SensorPosition::Left)) {
 							runtype = slalomparams::RunType::SLALOM90SML_LEFT;
@@ -484,6 +516,7 @@ int main(void) {
 							while(vc->isRunning());
 							vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
 							mc->disableWallControl();
+							// vc->disableWallgap();
 							while(vc->isRunning());
 						} else {
 							runtype = slalomparams::RunType::PIVOTTURN;
@@ -491,9 +524,11 @@ int main(void) {
 							while(vc->isRunning());
 							vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
 							mc->disableWallControl();
+							// vc->disableWallgap();
 							while(vc->isRunning());
 						}
 					}
+					vc->enableWallgap();
 				} else if(runtype == slalomparams::RunType::PIVOTTURN){
 					fram->saveMap(map, savenumber);
 					vc->runTrapAccel(0.25f, 0.25f, 0.0f, 0.045f, 3.0f);
@@ -635,6 +670,10 @@ int main(void) {
 				mc->setShrtGap();
 			}
 
+			if (type == PathType::DIAGO) {
+				vc->setShrtGap();
+			}
+
 			struct Motion motion;
 			int i=0;
 			vc->enableWallgap();
@@ -654,6 +693,8 @@ int main(void) {
 					}
 			
 					if(motion.type == RunType::TRAPACCEL){
+						pair<int8_t, int8_t> cur_pos = path.getPositionCoordinate(i);
+						vc->setPosition(cur_pos.first, cur_pos.second, path.getAngleCoordinate(i));
 						led->on(LedNumbers::FRONT);
 						if(path.getMotion(i+1).type == RunType::SLALOM90SML_RIGHT || path.getMotion(i+1).type == RunType::SLALOM90SML_LEFT)
 							vc->runTrapAccel(param_max_turn, param_max_straight, 0.3f, 0.045f*motion.length, param_accel);

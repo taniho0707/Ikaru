@@ -12,6 +12,7 @@
 #include "Gyro.h"
 #include "WallSensor.h"
 #include "ModeSelect.h"
+#include "GapCounter.h"
 
 __IO int32_t Timer::total = 0;
 
@@ -31,6 +32,7 @@ void Timer::interrupt(){
 	static WallSensor* ws = WallSensor::getInstance();
 	static VelocityControl* vc = VelocityControl::getInstance();
 	static ModeSelect* mode = ModeSelect::getInstance();
+	static GapCounter* gap = GapCounter::getInstance();
 	led->interrupt();
 	battery->interrupt();
 	speaker->interrupt();
@@ -41,4 +43,5 @@ void Timer::interrupt(){
 	ws->interrupt();
 	vc->interrupt();
 	mode->interrupt();
+	gap->interrupt();
 }
