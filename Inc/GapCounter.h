@@ -10,6 +10,8 @@
 #include "WallSensor.h"
 #include "Speaker.h"
 
+#include "Datalog.h"
+
 enum class GAPSTATUS : uint8_t {
 	NOTHING,    // 壁切れ無し
 	CONCURRENT, // 進行方向に並行    ｜
@@ -33,14 +35,19 @@ private:
 	Map map;
 	float passed_distance;
 	float target_distance;
+
+public:
 	std::array<GAPSTATUS, 30> gap_left;
 	std::array<GAPSTATUS, 30> gap_right;
+private:
 
 	WallSensor* wallsensor = WallSensor::getInstance();
 	Encoder* encoder = Encoder::getInstance();
 	Speaker* speaker = Speaker::getInstance();
 
 public:
+	bool isRunning();
+
 	void setMap(Map& map_p);
 
 	float getDistance();

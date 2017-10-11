@@ -455,7 +455,9 @@ int main(void) {
 			led->on(LedNumbers::FRONT);
 			VelocityControl* vc = VelocityControl::getInstance();
 			vc->enableWallgap();
+			vc->setExprGap();
 			mc->enableWallControl();
+			mc->setExprGap();
 			MotorCollection* motorcollection = MotorCollection::getInstance();
 
 			mc->stay();
@@ -633,14 +635,7 @@ int main(void) {
 			led->initPort(LedNumbers::TOP1);
 			led->flickAsync(LedNumbers::TOP1, 4.0f, 2000);
 			speaker->playMusic(MusicNumber::KIRBY64_BEGINNER_2);
-			HAL_Delay(1000);
-
-			MotorControl* mc = MotorControl::getInstance();
-			mc->stay();
-			led->on(LedNumbers::FRONT);
-			VelocityControl* vc = VelocityControl::getInstance();
-			vc->enableWallgap();
-			mc->enableWallControl();
+			// HAL_Delay(1000);
 
 			Walldata walldata;
 			Map map;
@@ -660,7 +655,18 @@ int main(void) {
 			}
 
 			led->flickSync(LedNumbers::FRONT, 3.0f, 1000);
+
+			MotorControl* mc = MotorControl::getInstance();
+			mc->stay();
+			led->on(LedNumbers::FRONT);
+			VelocityControl* vc = VelocityControl::getInstance();
+			vc->enableWallgap();
+			mc->enableWallControl();
 			mc->setShrtWallControl();
+
+			GapCounter* gapcounter = GapCounter::getInstance();
+			gapcounter->setMap(map);
+			path.updatePositions();
 
 			// type == PathType::SMALL の場合のみ横センサを使い，
 			// そうでなければ前横センサで壁切れを読めるようにする
@@ -684,6 +690,8 @@ int main(void) {
 			while(true){
 				motion = path.getMotion(i);
 				if(i == 0){
+					pair<int8_t, int8_t> cur_pos = path.getPositionCoordinate(i);
+					vc->setPosition(cur_pos.first, cur_pos.second, path.getAngleCoordinate(i));
 					vc->runTrapAccel(0.0f, param_max_straight, param_max_turn, 0.045f*(motion.length-1) +0.02f, param_accel);
 				} else {
 					if(path.getMotion(i+1).type == RunType::PIVOTTURN){

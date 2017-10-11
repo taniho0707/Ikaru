@@ -96,6 +96,10 @@ void VelocityControl::runTrapAccel(
 		
 		reg_accel = accel;
 		reg_start_vel = start_vel;
+	} else {
+		if (enabled_wallgap && (!is_expr_wallgap)) {
+			gapcounter->startShrtTrapezoid(pos_x, pos_y, pos_angle, distance/0.09f);
+		}
 	}
 	is_started = false;
 	end_flag = false;
@@ -103,10 +107,6 @@ void VelocityControl::runTrapAccel(
 	reg_max_vel = max_vel;
 	reg_end_vel = end_vel;
 	reg_distance = distance;
-
-	if (enabled_wallgap && (!is_expr_wallgap)) {
-		gapcounter->startShrtTrapezoid(pos_x, pos_y, pos_angle, distance/0.09f);
-	}
 
 	float pi = 3.141592659f;
 	float x_ad = pi/2.0f/reg_accel*(reg_max_vel*reg_max_vel-reg_end_vel*reg_end_vel/2.0f-reg_start_vel*reg_start_vel/2.0f);
@@ -170,7 +170,8 @@ void VelocityControl::calcTrapAccel(int32_t t){
 	}
 
 	if (enabled_wallgap
-		&& is_expr_wallgap
+		&& (!is_expr_wallgap)
+		&& gapcounter->isRunning()
 		){
 		x0 = gapcounter->getDistance();
 		mc->setIntegralEncoder(x0);
@@ -193,6 +194,13 @@ void VelocityControl::calcTrapAccel(int32_t t){
 				mc->enableWallControl();
 			}
 		}
+	}
+
+	if (x0 >= reg_distance) {
+		v = reg_end_vel;
+		end_flag = true;
+		target_linvel = (reg_distance>0?1:-1) * v;
+		return;
 	}
 
 	// 三角
@@ -342,12 +350,20 @@ void VelocityControl::calcSlalom(int32_t t){
 				  || static_cast<uint8_t>(reg_type) == static_cast<uint8_t>(RunType::SLALOM90OBL_LEFT)
 				  || static_cast<uint8_t>(reg_type) == static_cast<uint8_t>(RunType::SLALOM90OBL_RIGHT)
 			){
-			if(mc->getDistanceFromGapDiago() > reg_d_before && mc->getDistanceFromGapDiago() < reg_d_before + 0.01f){
+			// if(mc->getDistanceFromGapDiago() > reg_d_before && mc->getDistanceFromGapDiago() < reg_d_before + 0.01f){
+			// 	reg_slalom_pos = 2;
+			// 	time = Timer::getTime();
+			// }
+			if(x0 >= reg_d_before){
 				reg_slalom_pos = 2;
 				time = Timer::getTime();
 			}
 		} else {
-			if(mc->getDistanceFromGap() > reg_d_before && mc->getDistanceFromGap() < reg_d_before + 0.02f){
+			// if(mc->getDistanceFromGap() > reg_d_before && mc->getDistanceFromGap() < reg_d_before + 0.02f){
+			// 	reg_slalom_pos = 2;
+			// 	time = Timer::getTime();
+			// }
+			if (x0 >= reg_d_before) {
 				reg_slalom_pos = 2;
 				time = Timer::getTime();
 			}

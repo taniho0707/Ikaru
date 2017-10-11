@@ -14,9 +14,9 @@ WallSensor::WallSensor() :
 	// VAL_REF_LEFT(300),  // H_TOHOKU
 	// VAL_REF_FRONT(360), // H_TOHOKU
 	// VAL_REF_RIGHT(245), // H_TOHOKU
-	VAL_REF_LEFT(310),  // H
+	VAL_REF_LEFT(340),  // H
 	VAL_REF_FRONT(370), // H
-	VAL_REF_RIGHT(230), // H
+	VAL_REF_RIGHT(180), // H
 	VAL_REF_FRIGHT(120),
 	
 	VAL_THR_FLEFT(165),
@@ -26,9 +26,9 @@ WallSensor::WallSensor() :
 	// VAL_THR_LEFT(250),  // H_TOHOKU
 	// VAL_THR_FRONT(145), // H_TOHOKU
 	// VAL_THR_RIGHT(170), // H_TOHOKU
-	VAL_THR_LEFT(270),  // H
+	VAL_THR_LEFT(300),  // H
 	VAL_THR_FRONT(145), // H
-	VAL_THR_RIGHT(180), // H
+	VAL_THR_RIGHT(160), // H
 	VAL_THR_FRIGHT(185),
 	
 	VAL_THR_CONTROL_LEFT(100),
@@ -39,8 +39,8 @@ WallSensor::WallSensor() :
 	// VAL_THR_GAP_RIGHT(140), //TOHOKU
 	// VAL_THR_GAP_FRIGHT(120),//TOHOKU
 	VAL_THR_GAP_FLEFT(120),
-	VAL_THR_GAP_LEFT(260),
-	VAL_THR_GAP_RIGHT(170),
+	VAL_THR_GAP_LEFT(290),
+	VAL_THR_GAP_RIGHT(130),
 	VAL_THR_GAP_FRIGHT(185),
 	VAL_THR_GAP_DIAGO_FLEFT(120),
 	VAL_THR_GAP_DIAGO_LEFT(250),
@@ -300,7 +300,7 @@ void WallSensor::interrupt(){
 	tmp[static_cast<uint8_t>(SensorPosition::FLeft)] = HAL_ADC_GetValue(&hadc);
 
 	onLed();
-	for(int i=0; i<8000; ++i);
+	for(int i=0; i<5000; ++i);
 	// 待ち時間を極力減らしたい
 
 	s_config.Channel = ADC_CHANNEL_4;
@@ -721,7 +721,9 @@ void WallSensor::loadParamsFromFlash(){
 
 void WallSensor::loadParams(){
 	if (isLatestFram()) {
-		loadParamsFromFram();
+		// loadParamsFromFram();
+		loadParamsFromFlash();
+		/// @todo 元に戻す
 	} else {
 		loadParamsFromFlash();
 		Fram* fram = Fram::getInstance();

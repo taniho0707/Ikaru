@@ -15,6 +15,7 @@
 #include "Speaker.h"
 
 #include "Datalog.h"
+#include "GapCounter.h"
 
 class MotorControl{
 private:

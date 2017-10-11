@@ -18,6 +18,8 @@
 
 #include "GapCounter.h"
 
+#include "Datalog.h"
+
 /* #include "ComPc.h" */
 
 class VelocityControl{
@@ -67,11 +69,11 @@ private:
 
 	float x1, x2, x3, v, r;
 	int32_t t1, t2, t3, t4;
-
+public:
 	int8_t pos_x;
 	int8_t pos_y;
 	MazeAngle pos_angle;
-
+private:
 	VelocityControl();
 
 public:

@@ -233,7 +233,9 @@ void MotorControl::controlVel(){
 	log->writeFloat(encoder->getVelocity(EncoderSide::LEFT));
 	log->writeFloat(encoder->getVelocity(EncoderSide::RIGHT));
 	log->writeFloat((encoder->getVelocity(EncoderSide::LEFT)+encoder->getVelocity(EncoderSide::RIGHT))/2);
-	log->writeFloat(cur_lin_x);
+	// log->writeFloat(cur_lin_x);
+	static GapCounter* gapcounter = GapCounter::getInstance();
+	log->writeFloat(gapcounter->getDistance());
 	log->writeFloat(gyro->getGyroYaw());
 	log->writeFloat(tar_rad_vel);
 	log->writeFloat(wall->getValue(SensorPosition::Left));
