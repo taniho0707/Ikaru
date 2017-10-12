@@ -35,6 +35,8 @@
 #include "Path.h"
 #include "libpathbasic1.hpp"
 
+#include "Graph.h"
+
 using namespace slalomparams;
 using namespace std;
 
@@ -883,6 +885,7 @@ int main(void) {
 
 			switch(decided_mode.sub){
 			case static_cast<uint8_t>(mode::MODE_RUNLOG::MAZE1):
+			{
 				Map map;
 				fram->loadMap(map, 0);
 				compc->printf("* 0");
@@ -920,6 +923,22 @@ int main(void) {
 					}
 					compc->printf("+\n");
 				}
+
+				Graph graph;
+				compc->printf("GRAPH\n");
+				graph.connectWithMap(map);
+				compc->printf("CONNECTED WITH MAP\n");
+				vector<uint16_t> result = graph.dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(6, 6, MazeAngle::NORTH));
+				compc->printf("DIJKSTRA COMPLETED\n");
+				compc->printf("%d\n", result.size());
+				int16_t result_x, result_y;
+				MazeAngle result_angle;
+				for (auto ite : result) {
+					Graph::cnvNumToCoordinate(ite, result_x, result_y, result_angle);
+					compc->printf("%4d (%2d,%2d : %1d)\n", ite, result_x, result_y, result_angle);
+				}
+				compc->printf("END\n");
+
 				fram->loadMap(map, 2);
 				compc->printf("* 2");
 				for(int i=0; i<32; ++i) compc->printf("+----");
@@ -939,11 +958,14 @@ int main(void) {
 					compc->printf("+\n");
 				}
 				break;
+			}
 			case static_cast<uint8_t>(mode::MODE_RUNLOG::ERASE):
+			{
 				Datalog* log = Datalog::getInstance();
 				log->cleanFlash();
 				speaker->playMusic(MusicNumber::KIRBY_DYING);
 				break;
+			}
 			}
 			break;
 		}

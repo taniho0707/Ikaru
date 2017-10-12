@@ -1,0 +1,6 @@
+[submodule "libmouse"]
+	path = libmouse
+	url = git@github.com:taniho0707/libmouse.git
+[submodule "libpath"]
+	path = libpath
+	url = git@github.com:taniho0707/libpath.git
