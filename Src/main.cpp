@@ -648,6 +648,15 @@ int main(void) {
 			fram->loadMap(map, decided_mode.number);
 			padachi.setGoal(GOAL_X, GOAL_Y);
 			padachi.setMap(map);
+
+			if (type == PathType::DIAGO) {
+				Graph graph;
+				compc->printf("GRAPH\n");
+				graph.connectWithMap(map);
+				compc->printf("CONNECTED WITH MAP\n");
+				vector<uint16_t> result = graph.dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(6, 6, MazeAngle::NORTH));
+				padachi.setFootmap(graph.cnvGraphToFootmap(result));
+			}
 			
 			Path path = padachi.getPath(type);
 			if(path.getMotion(0).type == RunType::PIVOTTURN){
