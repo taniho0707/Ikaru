@@ -507,6 +507,8 @@ int main(void) {
 						if (!wallsensor->isExistWall(SensorPosition::Right)) {
 							runtype = slalomparams::RunType::SLALOM90SML_RIGHT;
 							frontcorrection();
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
 							vc->runPivotTurn(500, -90, 1000);
 							while(vc->isRunning());
 							vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
@@ -516,6 +518,8 @@ int main(void) {
 						} else if (!wallsensor->isExistWall(SensorPosition::Left)) {
 							runtype = slalomparams::RunType::SLALOM90SML_LEFT;
 							frontcorrection();
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
 							vc->runPivotTurn(500, 90, 1000);
 							while(vc->isRunning());
 							vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
@@ -524,6 +528,8 @@ int main(void) {
 							while(vc->isRunning());
 						} else {
 							runtype = slalomparams::RunType::PIVOTTURN;
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
 							vc->runPivotTurn(500, 180, 1000);
 							while(vc->isRunning());
 							vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
@@ -541,14 +547,20 @@ int main(void) {
 						frontcorrection();
 					}
 					if(walldata.isExistWall(MouseAngle::LEFT)){
+						mc->resetRadIntegral();
+						mc->resetLinIntegral();
 						vc->runPivotTurn(500, 90, 1000);
 						while(vc->isRunning());
 						frontcorrection();
+						mc->resetRadIntegral();
+						mc->resetLinIntegral();
 						vc->runPivotTurn(500, 90, 1000);
 						while(vc->isRunning());
 						mc->resetRadIntegral();
 						mc->resetLinIntegral();
 					} else {
+						mc->resetRadIntegral();
+						mc->resetLinIntegral();
 						vc->runPivotTurn(500, 180, 1000);
 						/// @todo -180にする
 						while(vc->isRunning());
