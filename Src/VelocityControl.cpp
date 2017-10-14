@@ -5,8 +5,8 @@
 using namespace slalomparams;
 
 VelocityControl::VelocityControl() :
-	DIST_GAP_FROM_R(0.012),
-	DIST_GAP_FROM_L(0.012)
+	DIST_GAP_FROM_R(0.016),
+	DIST_GAP_FROM_L(0.016)
 {
 	// mc = MotorControl::getInstance();
 	// sens = WallSensor::getInstance();
@@ -50,10 +50,15 @@ void VelocityControl::setShrtGap(){
 	is_expr_wallgap = false;
 }
 
-void VelocityControl::setPosition(int8_t x, int8_t y, MazeAngle angle){
+void VelocityControl::setPosition(int8_t x, int8_t y, MouseDirection angle, MousePosition side){
 	pos_x = x;
 	pos_y = y;
 	pos_angle = angle;
+	pos_side = side;
+}
+
+void VelocityControl::setDiagoInout(DiagoInout inout){
+	pos_diagoinout = inout;
 }
 
 
@@ -93,12 +98,17 @@ void VelocityControl::runTrapAccel(
 		mc->setIntegralEncoder(0.0f);
 		// mc->resetDistanceFromGap();
 		// mc->resetDistanceFromGapDiago();
-		
+		mc->clearGap();
 		reg_accel = accel;
 		reg_start_vel = start_vel;
 	} else {
 		if (enabled_wallgap && (!is_expr_wallgap)) {
-			gapcounter->startShrtTrapezoid(pos_x, pos_y, pos_angle, distance/0.09f);
+			if (reg_type == RunType::TRAPDIAGO) {
+				// gapcounter->startShrtTrapezoidDiago(pos_x, pos_y, pos_side, pos_angle, pos_diagoinout, (distance+0.001f)/63.639610307f);
+				// 製作途中
+			} else {
+				gapcounter->startShrtTrapezoid(pos_x, pos_y, pos_angle, (distance+0.001f)/0.09f);
+			}
 		}
 	}
 	is_started = false;
@@ -189,7 +199,8 @@ void VelocityControl::calcTrapAccel(int32_t t){
 				mc->setCombWallControl();
 			} else if((reg_max_vel < 0.31f && x0 > (kabekire - 0.045) && x0 < (kabekire - 0.015))
 					  || (fmod(x0, 0.09f) > fmod(kabekire - 0.045f, 0.09f) && fmod(x0, 0.09f) < fmod(kabekire - 0.015, 0.09f))){
-				mc->disableWallControl();
+//				mc->disableWallControl();
+				/// @todo だいじょうぶかなあ
 			} else {
 				mc->enableWallControl();
 			}

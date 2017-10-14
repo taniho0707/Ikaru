@@ -629,17 +629,24 @@ int main(void) {
 			switch(decided_mode.sub){
 			case static_cast<uint8_t>(mode::MODE_SHRT::SMALL1):
 				type = PathType::SMALL;
+				param_max_straight = 0.25f;
+				param_max_turn = 0.25f;
+				param_accel = 3.0f;
 				break;
 			case static_cast<uint8_t>(mode::MODE_SHRT::SMALL2):
 				type = PathType::SMALL;
 				param_max_straight = 0.5f;
+				param_max_diago = 0.3f;
 				param_accel = 5.0f;
 				break;
-			case static_cast<uint8_t>(mode::MODE_SHRT::BIG):
-				type = PathType::BIG;
-				break;
-			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO):
+			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO1):
 				type = PathType::DIAGO;
+				break;
+			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO2):
+				type = PathType::DIAGO;
+				param_max_straight = 0.5f;
+				param_max_diago = 0.5f;
+				param_accel = 5.0f;
 				break;
 			default:
 				break;
@@ -715,7 +722,7 @@ int main(void) {
 				if(i == 0){
 					pair<int8_t, int8_t> cur_pos = path.getPositionCoordinate(i);
 					vc->setPosition(cur_pos.first, cur_pos.second, path.getAngleCoordinate(i));
-					vc->runTrapAccel(0.0f, param_max_straight, param_max_turn, 0.045f*(motion.length-1) +0.02f, param_accel);
+					vc->runTrapAccel(0.0f, param_max_straight, param_max_turn, 0.045f*(motion.length-1) +0.00f, param_accel);
 				} else {
 					if(path.getMotion(i+1).type == RunType::PIVOTTURN){
 						vc->runTrapAccel(param_max_turn, param_max_straight, 0.0f, 0.045f*(motion.length+1), param_accel);
@@ -727,10 +734,11 @@ int main(void) {
 						pair<int8_t, int8_t> cur_pos = path.getPositionCoordinate(i);
 						vc->setPosition(cur_pos.first, cur_pos.second, path.getAngleCoordinate(i));
 						led->on(LedNumbers::FRONT);
-						if(path.getMotion(i+1).type == RunType::SLALOM90SML_RIGHT || path.getMotion(i+1).type == RunType::SLALOM90SML_LEFT)
+						if(path.getMotion(i+1).type == RunType::SLALOM90SML_RIGHT || path.getMotion(i+1).type == RunType::SLALOM90SML_LEFT) {
 							vc->runTrapAccel(param_max_turn, param_max_straight, 0.3f, 0.045f*motion.length, param_accel);
-						else
+						} else {
 							vc->runTrapAccel(param_max_turn, param_max_straight, param_max_turn, 0.045f*motion.length, param_accel);
+						}
 						led->off(LedNumbers::FRONT);
 					} else if(motion.type == RunType::TRAPDIAGO){
 						vc->runTrapDiago(param_max_turn, param_max_diago, param_max_turn, 0.06364f*motion.length, param_accel);
@@ -847,6 +855,288 @@ int main(void) {
 				while(vc->isRunning());
 				mc->stay();
 				while(true);
+				break;
+			}
+			case static_cast<uint8_t>(mode::MODE_TURNADJUST::OVERALL_LEFT):
+			{
+				led->off(LedNumbers::FRONT);
+				MotorControl* mc = MotorControl::getInstance();
+				VelocityControl* vc = VelocityControl::getInstance();
+
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
+				mc->stay();
+				led->on(LedNumbers::FRONT);
+				vc->disableWallgap();
+				mc->enableWallControl();
+				mc->stay();
+				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
+				while(vc->isRunning());
+				vc->runSlalom(RunType::SLALOM90_LEFT, 0.3f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.09f, 3.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				HAL_Delay(500);
+				led->off(LedNumbers::FRONT);
+				Motor::getInstance()->disable();
+
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
+				mc->stay();
+				led->on(LedNumbers::FRONT);
+				vc->disableWallgap();
+				mc->enableWallControl();
+				mc->stay();
+				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
+				while(vc->isRunning());
+				vc->runSlalom(RunType::SLALOM180_LEFT, 0.3f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.09f, 3.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				HAL_Delay(500);
+				led->off(LedNumbers::FRONT);
+				Motor::getInstance()->disable();
+
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
+				mc->stay();
+				led->on(LedNumbers::FRONT);
+				vc->disableWallgap();
+				mc->enableWallControl();
+				mc->stay();
+				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
+				while(vc->isRunning());
+				vc->runSlalom(RunType::SLALOM45IN_LEFT, 0.3f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.06364f, 3.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				HAL_Delay(500);
+				led->off(LedNumbers::FRONT);
+				Motor::getInstance()->disable();
+
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
+				mc->stay();
+				led->on(LedNumbers::FRONT);
+				vc->disableWallgap();
+				mc->enableWallControl();
+				mc->stay();
+				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
+				while(vc->isRunning());
+				vc->runSlalom(RunType::SLALOM135IN_LEFT, 0.3f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.06364f, 3.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				HAL_Delay(500);
+				led->off(LedNumbers::FRONT);
+				Motor::getInstance()->disable();
+
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
+				mc->stay();
+				led->on(LedNumbers::FRONT);
+				vc->disableWallgap();
+				mc->disableWallControl();
+				mc->stay();
+				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.06364f, 3.0f);
+				while(vc->isRunning());
+				vc->runSlalom(RunType::SLALOM45OUT_LEFT, 0.3f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.09f, 3.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				HAL_Delay(500);
+				led->off(LedNumbers::FRONT);
+				Motor::getInstance()->disable();
+
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
+				mc->stay();
+				led->on(LedNumbers::FRONT);
+				vc->disableWallgap();
+				mc->disableWallControl();
+				mc->stay();
+				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.06364f, 3.0f);
+				while(vc->isRunning());
+				vc->runSlalom(RunType::SLALOM135OUT_LEFT, 0.3f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.09f, 3.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				HAL_Delay(500);
+				led->off(LedNumbers::FRONT);
+				Motor::getInstance()->disable();
+
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
+				mc->stay();
+				led->on(LedNumbers::FRONT);
+				vc->disableWallgap();
+				mc->disableWallControl();
+				mc->stay();
+				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.06364f, 3.0f);
+				while(vc->isRunning());
+				vc->runSlalom(RunType::SLALOM90OBL_LEFT, 0.3f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.06364f, 3.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				HAL_Delay(500);
+				led->off(LedNumbers::FRONT);
+				Motor::getInstance()->disable();
+				while(1);
+				break;
+			}
+			case static_cast<uint8_t>(mode::MODE_TURNADJUST::OVERALL_RIGHT):
+			{
+				led->off(LedNumbers::FRONT);
+				MotorControl* mc = MotorControl::getInstance();
+				VelocityControl* vc = VelocityControl::getInstance();
+
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
+				mc->stay();
+				led->on(LedNumbers::FRONT);
+				vc->disableWallgap();
+				mc->enableWallControl();
+				mc->stay();
+				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
+				while(vc->isRunning());
+				vc->runSlalom(RunType::SLALOM90_RIGHT, 0.3f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.09f, 3.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				HAL_Delay(500);
+				led->off(LedNumbers::FRONT);
+				Motor::getInstance()->disable();
+
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
+				mc->stay();
+				led->on(LedNumbers::FRONT);
+				vc->disableWallgap();
+				mc->enableWallControl();
+				mc->stay();
+				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
+				while(vc->isRunning());
+				vc->runSlalom(RunType::SLALOM180_RIGHT, 0.3f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.09f, 3.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				HAL_Delay(500);
+				led->off(LedNumbers::FRONT);
+				Motor::getInstance()->disable();
+
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
+				mc->stay();
+				led->on(LedNumbers::FRONT);
+				vc->disableWallgap();
+				mc->enableWallControl();
+				mc->stay();
+				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
+				while(vc->isRunning());
+				vc->runSlalom(RunType::SLALOM45IN_RIGHT, 0.3f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.06364f, 3.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				HAL_Delay(500);
+				led->off(LedNumbers::FRONT);
+				Motor::getInstance()->disable();
+
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
+				mc->stay();
+				led->on(LedNumbers::FRONT);
+				vc->disableWallgap();
+				mc->enableWallControl();
+				mc->stay();
+				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
+				while(vc->isRunning());
+				vc->runSlalom(RunType::SLALOM135IN_RIGHT, 0.3f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.06364f, 3.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				HAL_Delay(500);
+				led->off(LedNumbers::FRONT);
+				Motor::getInstance()->disable();
+
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
+				mc->stay();
+				led->on(LedNumbers::FRONT);
+				vc->disableWallgap();
+				mc->disableWallControl();
+				mc->stay();
+				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.06364f, 3.0f);
+				while(vc->isRunning());
+				vc->runSlalom(RunType::SLALOM45OUT_RIGHT, 0.3f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.09f, 3.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				HAL_Delay(500);
+				led->off(LedNumbers::FRONT);
+				Motor::getInstance()->disable();
+
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
+				mc->stay();
+				led->on(LedNumbers::FRONT);
+				vc->disableWallgap();
+				mc->disableWallControl();
+				mc->stay();
+				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.06364f, 3.0f);
+				while(vc->isRunning());
+				vc->runSlalom(RunType::SLALOM135OUT_RIGHT, 0.3f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.09f, 3.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				HAL_Delay(500);
+				led->off(LedNumbers::FRONT);
+				Motor::getInstance()->disable();
+
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
+				mc->stay();
+				led->on(LedNumbers::FRONT);
+				vc->disableWallgap();
+				mc->disableWallControl();
+				mc->stay();
+				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.06364f, 3.0f);
+				while(vc->isRunning());
+				vc->runSlalom(RunType::SLALOM90OBL_RIGHT, 0.3f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.06364f, 3.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				HAL_Delay(500);
+				led->off(LedNumbers::FRONT);
+				Motor::getInstance()->disable();
+				while(1);
 				break;
 			}
 			default:

@@ -11,7 +11,7 @@ MotorControl::MotorControl() :
 	GAIN_RAD_P(-0.2f),//0.5
 	GAIN_RAD_I(-0.03f),//0.05
 	GAIN_RAD_D(0.0f),
-	GAIN_WALL_P(-0.8f),
+	GAIN_WALL_P(-1.0f),
 	GAIN_WALL_SHRT_P(-1.5f),
 	GAIN_WALL_I(0.0f),
 	GAIN_WALL_D(0.0f),
@@ -130,6 +130,13 @@ void MotorControl::resetCombWallControl(){
 	is_comb_wall_control = false;
 }
 
+void MotorControl::clearGap(){
+	wall->hadGap(SensorPosition::Left);
+	wall->hadGap(SensorPosition::Right);
+	wall->hadGap(SensorPosition::FLeft);
+	wall->hadGap(SensorPosition::FRight);
+}
+
 void MotorControl::controlVel(){
 	static float tar_motor_lin_power = 0;
 	static float tar_motor_rad_power = 0;
@@ -161,6 +168,7 @@ void MotorControl::controlVel(){
 
 	if(enabled_wall_control){
 		if(is_comb_wall_control){
+			// current_wall_correction = wall->getCorrectionComb(10);
 			current_wall_correction = wall->getCorrectionComb(500);
 		} else {
 			current_wall_correction = wall->getCorrection(100);

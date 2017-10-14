@@ -72,7 +72,9 @@ private:
 public:
 	int8_t pos_x;
 	int8_t pos_y;
-	MazeAngle pos_angle;
+	MouseDirection pos_angle;
+	MousePosition pos_side;
+	DiagoInout pos_diagoinout;
 private:
 	VelocityControl();
 
@@ -88,7 +90,10 @@ public:
 
 	void setExprGap();
 	void setShrtGap();
-	void setPosition(int8_t x, int8_t y, MazeAngle angle);
+	void setPosition(int8_t x, int8_t y, MouseDirection angle, MousePosition side = MousePosition::CENTER);
+	// この関数はクソ
+	void setDiagoInout(DiagoInout inout);
+	// setPosition, setDiagoInoutを両方設定する
 
 	// 加速もしくは等速のみ
 	// 指定距離が来た場合走り続けるため，オーバーランの可能性あり

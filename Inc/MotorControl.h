@@ -101,6 +101,8 @@ public:
 	void setCombWallControl();
 	void resetCombWallControl();
 
+	void clearGap();
+
 	void stay();
 
 	void interrupt();

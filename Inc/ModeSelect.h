@@ -30,6 +30,8 @@ namespace mode {
 		SLALOM90SML_LEFT2,
 		SLALOM90SML_RIGHT1,
 		SLALOM90SML_RIGHT2,
+		OVERALL_LEFT,
+		OVERALL_RIGHT,
 		LAST // コレより下に定義しない
 	};
 
@@ -55,8 +57,8 @@ namespace mode {
 	enum class MODE_SHRT : uint8_t {
 		SMALL1,
 		SMALL2,
-		BIG,
-		DIAGO,
+		DIAGO1,
+		DIAGO2,
 		LAST // コレより下に定義しない
 	};
 	// 迷路番号0〜2を任意に呼び出せるように
