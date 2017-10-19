@@ -15,7 +15,7 @@ private:
 	explicit Encoder();
 
 	// BUFFER SIZE of history of velocity
-	constexpr static uint16_t BUFSIZE = 10;
+	constexpr static uint16_t BUFSIZE = 1;
 
 	float hist_l[BUFSIZE];
 	float hist_r[BUFSIZE];

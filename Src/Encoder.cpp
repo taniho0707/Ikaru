@@ -6,8 +6,10 @@
 
 
 const uint16_t Encoder::MEDIAN = 30000;
-const float Encoder::PULSE_L = 0.0079992;
-const float Encoder::PULSE_R = 0.0079992;
+const float Encoder::PULSE_L = 0.00811;
+const float Encoder::PULSE_R = 0.00811;
+// const float Encoder::PULSE_L = 0.0079992;
+// const float Encoder::PULSE_R = 0.0079992;
 
 Encoder::Encoder(){
 	velocity_l = 0.0;
