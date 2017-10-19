@@ -5,13 +5,15 @@
 #include "MotorControl.h"
 
 MotorControl::MotorControl() : 
-	GAIN_LIN_P(1400),//1800
-	GAIN_LIN_I(3.2f),//2.8
-	GAIN_LIN_D(0.01f), //要パラメータ調整
-	GAIN_RAD_P(-0.2f),//0.5
-	GAIN_RAD_I(-0.03f),//0.05
+	GAIN_LIN_P(1300),
+	GAIN_LIN_I(3.6f),
+	GAIN_LIN_D(0.00f), //要パラメータ調整
+	GAIN_RAD_P(-0.18f),
+	GAIN_RAD_I(-0.026f),
+	// GAIN_RAD_P(-0.2f),
+	// GAIN_RAD_I(-0.03f),
 	GAIN_RAD_D(0.0f),
-	GAIN_WALL_P(-1.0f),
+	GAIN_WALL_P(-1.5f),
 	GAIN_WALL_SHRT_P(-1.5f),
 	GAIN_WALL_I(0.0f),
 	GAIN_WALL_D(0.0f),
@@ -241,23 +243,22 @@ void MotorControl::controlVel(){
 	log->writeFloat(encoder->getVelocity(EncoderSide::LEFT));
 	log->writeFloat(encoder->getVelocity(EncoderSide::RIGHT));
 	log->writeFloat((encoder->getVelocity(EncoderSide::LEFT)+encoder->getVelocity(EncoderSide::RIGHT))/2);
-	// log->writeFloat(cur_lin_x);
-	static GapCounter* gapcounter = GapCounter::getInstance();
-	log->writeFloat(gapcounter->getDistance());
+	// static GapCounter* gapcounter = GapCounter::getInstance();
+	// log->writeFloat(gapcounter->getDistance());
+	log->writeFloat(getIntegralEncoder());
 	log->writeFloat(gyro->getGyroYaw());
 	log->writeFloat(tar_rad_vel);
 	log->writeFloat(wall->getValue(SensorPosition::Left));
 	log->writeFloat(wall->getValue(SensorPosition::Right));
-	log->writeFloat(wall->getValue(SensorPosition::Front));
+	// log->writeFloat(wall->getValue(SensorPosition::Front));
 	// log->writeFloat(wall->getValue(SensorPosition::FLeft));
 	// log->writeFloat(wall->getValue(SensorPosition::FRight));
 	// log->writeFloat(current_wall_correction);
+	log->writeFloat(getDistanceFromGap());
+	// log->writeFloat(getDistanceFromGapDiago());
+	// log->writeFloat(0.0f);
 	// log->writeFloat(tar_motor_l_power);
 	// log->writeFloat(tar_motor_r_power);
-	// log->writeFloat(getDistanceFromGap());
-	// log->writeFloat(getDistanceFromGapDiago());
-	// log->writeFloat(getIntegralEncoder());
-	// log->writeFloat(0.0f);
 
 	// lastwall = wall->getCorrection(10000);
 

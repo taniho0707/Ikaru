@@ -463,6 +463,7 @@ int main(void) {
 			MotorCollection* motorcollection = MotorCollection::getInstance();
 
 			mc->stay();
+			mc->clearGap();
 			vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 5.0f);
 			while(vc->isRunning());
 			vc->startTrapAccel(0.25f, 0.25f, 0.09f, 5.0f);
@@ -477,9 +478,10 @@ int main(void) {
 			Datalog* log = Datalog::getInstance();
 
 			while(true){
+				// speaker->playSound(261, 50, false);
 				led->off(LedNumbers::FRONT);
 				walldata = wallsensor->getWall();
-				map.addWall(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata);
+				map.setWall(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata); //setにした
 				map.setReached(pos.getPositionX(), pos.getPositionY());
 				adachi.setCurrent(pos.getPositionX(), pos.getPositionY());
 				adachi.setMap(map);
@@ -490,15 +492,16 @@ int main(void) {
 		
 				if(runtype == slalomparams::RunType::TRAPACCEL){
 					bool flag_can_straight = true;
-					vc->runTrapAccel(0.25f, 0.25f, 0.25f, 0.025f, 3.0f);
-					mc->enableWallControl();
-					while(vc->isRunning()) {
-						if (wallsensor->getValue(SensorPosition::Front) > (160)) { // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-							flag_can_straight = false;
-						}
-					}
+					// vc->runTrapAccel(0.25f, 0.25f, 0.25f, 0.025f, 3.0f);
+					// mc->enableWallControl();
+					// while(vc->isRunning()) {
+					// 	if (wallsensor->getValue(SensorPosition::Front) > (160)) { // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+					// 		flag_can_straight = false;
+					// 	}
+					// }
 					if (flag_can_straight) {
-						vc->runTrapAccel(0.25f, 0.25f, 0.25f, 0.065f, 3.0f);
+						vc->runTrapAccel(0.25f, 0.25f, 0.25f, 0.09f, 3.0f);
+						// vc->runTrapAccel(0.25f, 0.25f, 0.25f, 0.065f, 3.0f);
 						while(vc->isRunning());
 					} else {
 						vc->runTrapAccel(0.25f, 0.25f, 0.0f, 0.02f, 3.0f);
@@ -540,43 +543,58 @@ int main(void) {
 					}
 					vc->enableWallgap();
 				} else if(runtype == slalomparams::RunType::PIVOTTURN){
-					fram->saveMap(map, savenumber);
 					vc->runTrapAccel(0.25f, 0.25f, 0.0f, 0.045f, 3.0f);
+					mc->disableWallControl();
 					while(vc->isRunning());
-					if(walldata.isExistWall(MouseAngle::FRONT)){
-						frontcorrection();
-					}
-					if(walldata.isExistWall(MouseAngle::LEFT)){
-						mc->resetRadIntegral();
-						mc->resetLinIntegral();
-						vc->runPivotTurn(500, 90, 1000);
+					fram->saveMap(map, savenumber);
+
+					if (walldata.isExistWall(MouseAngle::FRONT) && (!wallsensor->isExistFrontWall())) {
+						vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
 						while(vc->isRunning());
-						frontcorrection();
-						mc->resetRadIntegral();
-						mc->resetLinIntegral();
-						vc->runPivotTurn(500, 90, 1000);
-						while(vc->isRunning());
-						mc->resetRadIntegral();
-						mc->resetLinIntegral();
+						walldata.removeWall(MouseAngle::FRONT);
+						map.setWall(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata);
+						adachi.setMap(map);
+						runtype = slalomparams::RunType::TRAPACCEL;
+
 					} else {
-						mc->resetRadIntegral();
-						mc->resetLinIntegral();
-						vc->runPivotTurn(500, 180, 1000);
-						/// @todo -180にする
+						if(walldata.isExistWall(MouseAngle::FRONT)){
+							frontcorrection();
+						}
+						if(walldata.isExistWall(MouseAngle::LEFT)){
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
+							vc->runPivotTurn(500, 90, 1000);
+							while(vc->isRunning());
+							frontcorrection();
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
+							vc->runPivotTurn(500, 90, 1000);
+							while(vc->isRunning());
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
+						} else {
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
+							vc->runPivotTurn(500, 180, 1000);
+							/// @todo -180にする
+							while(vc->isRunning());
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
+						}
+
+						vc->runTrapAccel(0.0f, 0.25f, 0.0f, -0.03f, 5.0f);
+						mc->disableWallControl();
 						while(vc->isRunning());
 						mc->resetRadIntegral();
 						mc->resetLinIntegral();
+
+						mc->resetDistanceFromGap();
+						mc->resetDistanceFromGapDiago();
+						// vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
+						vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.075f, 3.0f);
+						mc->enableWallControl();
+						while(vc->isRunning());
 					}
-
-					vc->runTrapAccel(0.0f, 0.25f, 0.0f, -0.03f, 3.0f);
-					mc->enableWallControl();
-					while(vc->isRunning());
-
-					mc->resetDistanceFromGap();
-					mc->resetDistanceFromGapDiago();
-					vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.075f, 3.0f);
-					mc->enableWallControl();
-					while(vc->isRunning());
 				} else if(runtype == slalomparams::RunType::SLALOM90SML_RIGHT){
 					vc->runSlalom(RunType::SLALOM90SML_RIGHT, 0.25f);
 					while(vc->isRunning());
@@ -688,6 +706,7 @@ int main(void) {
 
 			MotorControl* mc = MotorControl::getInstance();
 			mc->stay();
+			mc->clearGap();
 			led->on(LedNumbers::FRONT);
 			VelocityControl* vc = VelocityControl::getInstance();
 			vc->enableWallgap();
@@ -743,7 +762,7 @@ int main(void) {
 					} else if(motion.type == RunType::TRAPDIAGO){
 						vc->runTrapDiago(param_max_turn, param_max_diago, param_max_turn, 0.06364f*motion.length, param_accel);
 					} else if(motion.type == RunType::SLALOM90SML_RIGHT || motion.type == RunType::SLALOM90SML_LEFT){
-						vc->runSlalom(motion.type, 0.3f);
+						vc->runSlalom(motion.type, param_max_turn);
 					} else {
 						vc->runSlalom(motion.type, param_max_turn);
 					}
@@ -774,10 +793,13 @@ int main(void) {
 			case static_cast<uint8_t>(mode::MODE_TURNADJUST::STRAIGHT_6):
 			{
 				vc->disableWallgap();
-				mc->disableWallControl();
+				mc->enableWallControl();
 				mc->stay();
-				vc->runTrapAccel(0.0f, 0.25f, 0.0f, 0.72f, 3.0f);
+				vc->runTrapAccel(0.0f, 0.25f, 0.0f, 0.54f, 3.0f);
 				while(vc->isRunning());
+				mc->stay();
+				mc->resetLinIntegral();
+				mc->resetRadIntegral();
 				while(1);
 				break;
 			}
