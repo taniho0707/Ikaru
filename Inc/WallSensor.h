@@ -51,6 +51,7 @@ private:
 	const uint16_t VAL_THR_SLALOM_LEFT;
 	const uint16_t VAL_THR_SLALOM_RIGHT;
 	const uint16_t VAL_THR_SLALOM_FRIGHT;
+	const uint16_t VAL_THR_FRONT_SUB;
 
 	ADC_HandleTypeDef hadc;
 	ADC_ChannelConfTypeDef s_config;
@@ -88,6 +89,7 @@ public:
 	uint16_t valid_val_thr_slalom_left;
 	uint16_t valid_val_thr_slalom_right;
 	uint16_t valid_val_thr_slalom_fright;
+	uint16_t valid_val_thr_front_sub;
 
 private:
 	// 値<->距離の変換式用パラメータ y=a/ln(x)+b
@@ -135,6 +137,8 @@ public:
 	int16_t getDiffValue(SensorPosition);
 	uint16_t getLastValue(SensorPosition);
 	bool isExistWall(SensorPosition);
+
+	bool isExistFrontWall();
 
 	float getDistance(SensorPosition);
 

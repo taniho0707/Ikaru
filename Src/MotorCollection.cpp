@@ -5,7 +5,7 @@
 
 MotorCollection::MotorCollection() :
 	TIMEOUT(10000),
-	GAIN_LIN(0.001f),
+	GAIN_LIN(0.002f),
 	GAIN_RAD(0.6f)
 {
 	
@@ -26,7 +26,7 @@ bool MotorCollection::collectionByFrontDuringStop(float lin_limit){
 		tmp = (dif_lin > 0) ? dif_lin*GAIN_LIN : -1*dif_lin*GAIN_LIN;
 		tmp2 = ((dif_lin > 0) ? -1.0f : 1.0f) * tmp;
 		if(tmp2 > 0.1f) tmp2 = 0.1f;
-		else if(tmp2 < -0.1f) tmp2 = -0.1f;
+		else if(tmp2 < -0.05f) tmp2 = -0.05f;
 		mc->setVelocity(tmp2);
 		mc->setRadVelocity(0.0f);
 		if(abs(GAIN_LIN * dif_lin) < 0.01f) break;

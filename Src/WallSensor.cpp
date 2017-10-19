@@ -14,9 +14,9 @@ WallSensor::WallSensor() :
 	// VAL_REF_LEFT(300),  // H_TOHOKU
 	// VAL_REF_FRONT(360), // H_TOHOKU
 	// VAL_REF_RIGHT(245), // H_TOHOKU
-	VAL_REF_LEFT(330),  // H
-	VAL_REF_FRONT(370), // H
-	VAL_REF_RIGHT(190), // H
+	VAL_REF_LEFT(200),  // H
+	VAL_REF_FRONT(360), // H
+	VAL_REF_RIGHT(230), // H
 	VAL_REF_FRIGHT(120),
 	
 	VAL_THR_FLEFT(165),
@@ -26,10 +26,11 @@ WallSensor::WallSensor() :
 	// VAL_THR_LEFT(250),  // H_TOHOKU
 	// VAL_THR_FRONT(145), // H_TOHOKU
 	// VAL_THR_RIGHT(170), // H_TOHOKU
-	VAL_THR_LEFT(280),  // H
-	VAL_THR_FRONT(150), // H
-	VAL_THR_RIGHT(160), // H
+	VAL_THR_LEFT(160),  // H
+	VAL_THR_FRONT(110), // H
+	VAL_THR_RIGHT(190), // H
 	VAL_THR_FRIGHT(185),
+	VAL_THR_FRONT_SUB(200),
 	
 	VAL_THR_CONTROL_LEFT(100),
 	VAL_THR_CONTROL_RIGHT(110),
@@ -39,8 +40,8 @@ WallSensor::WallSensor() :
 	// VAL_THR_GAP_RIGHT(140), //TOHOKU
 	// VAL_THR_GAP_FRIGHT(120),//TOHOKU
 	VAL_THR_GAP_FLEFT(120),
-	VAL_THR_GAP_LEFT(270),
-	VAL_THR_GAP_RIGHT(150),
+	VAL_THR_GAP_LEFT(145),
+	VAL_THR_GAP_RIGHT(175),
 	VAL_THR_GAP_FRIGHT(185),
 	VAL_THR_GAP_DIAGO_FLEFT(120),
 	VAL_THR_GAP_DIAGO_LEFT(250),
@@ -352,6 +353,11 @@ bool WallSensor::isExistWall(SensorPosition pos){
 	else return false;
 }
 
+bool WallSensor::isExistFrontWall() {
+	if(current_value[static_cast<uint8_t>(SensorPosition::Front)] > valid_val_thr_front_sub) return true;
+	else return false;
+}
+
 
 float WallSensor::getDistance(SensorPosition pos){
 	return param_a.at(static_cast<uint8_t>(pos))/log(getValue(pos))+param_b.at(static_cast<uint8_t>(pos));
@@ -597,6 +603,7 @@ uint32_t WallSensor::getParamsHash(){
 	parameters += to_string(VAL_THR_SLALOM_LEFT);
 	parameters += to_string(VAL_THR_SLALOM_RIGHT);
 	parameters += to_string(VAL_THR_SLALOM_FRIGHT);
+	parameters += to_string(VAL_THR_FRONT_SUB);
 	uint32_t hash = static_cast<uint32_t>(hash_fn(parameters));
 	return hash;
 }
@@ -637,6 +644,7 @@ void WallSensor::saveParamsToFram(){
 	fram->writeUInt16(valid_val_thr_slalom_left, addr); addr+=2;
 	fram->writeUInt16(valid_val_thr_slalom_right, addr); addr+=2;
 	fram->writeUInt16(valid_val_thr_slalom_fright, addr); addr+=2;
+	fram->writeUInt16(valid_val_thr_front_sub, addr); addr+=2;
 }
 
 void WallSensor::loadParamsFromFram(){
@@ -667,7 +675,8 @@ void WallSensor::loadParamsFromFram(){
 	valid_val_thr_slalom_left = fram->readUInt16(addr); addr+=2;
 	valid_val_thr_slalom_right = fram->readUInt16(addr); addr+=2;
 	valid_val_thr_slalom_fright = fram->readUInt16(addr); addr+=2;
-
+	valid_val_thr_front_sub = fram->readUInt16(addr); addr+=2;
+	
 	thr_straight_value[0] = valid_val_thr_fleft;
 	thr_straight_value[1] = valid_val_thr_left;
 	thr_straight_value[2] = valid_val_thr_front;
@@ -717,6 +726,7 @@ void WallSensor::loadParamsFromFlash(){
 	valid_val_thr_slalom_left      = VAL_THR_SLALOM_LEFT;
 	valid_val_thr_slalom_right     = VAL_THR_SLALOM_RIGHT;
 	valid_val_thr_slalom_fright    = VAL_THR_SLALOM_FRIGHT;
+	valid_val_thr_front_sub        = VAL_THR_FRONT_SUB;
 }
 
 void WallSensor::loadParams(){
@@ -752,13 +762,13 @@ WallSensor *WallSensor::getInstance(){
 }
 
 
-// void TIM1_BRK_TIM9_IRQHandler(void){
+// void TIM7_IRQHandler() {
 // 	static WallSensor* s = WallSensor::getInstance();
 // 	static uint8_t c = 0;
 // 	static uint8_t d = 0;
 
-// 	if(TIM_GetITStatus(TIM9, TIM_IT_Update) != RESET){
-// 		TIM_ClearITPendingBit(TIM9, TIM_IT_Update);
+// 	if(TIM_GetITStatus(TIM7, TIM_IT_Update) != RESET){
+// 		TIM_ClearITPendingBit(TIM7, TIM_IT_Update);
 		
 // 		if(s->isWorking()){
 // 			/// @todo check enable

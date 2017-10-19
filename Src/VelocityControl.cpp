@@ -5,8 +5,8 @@
 using namespace slalomparams;
 
 VelocityControl::VelocityControl() :
-	DIST_GAP_FROM_R(0.016),
-	DIST_GAP_FROM_L(0.016)
+	DIST_GAP_FROM_R(0.014),
+	DIST_GAP_FROM_L(0.011)
 {
 	// mc = MotorControl::getInstance();
 	// sens = WallSensor::getInstance();
@@ -98,7 +98,7 @@ void VelocityControl::runTrapAccel(
 		mc->setIntegralEncoder(0.0f);
 		// mc->resetDistanceFromGap();
 		// mc->resetDistanceFromGapDiago();
-		mc->clearGap();
+		// mc->clearGap();
 		reg_accel = accel;
 		reg_start_vel = start_vel;
 	} else {
@@ -155,13 +155,14 @@ void VelocityControl::calcTrapAccel(int32_t t){
 
 	if(
 		enabled_wallgap
+		&& reg_distance > 0.0f
 		&& is_expr_wallgap
 		&& mc->getDistanceFromGap() < 0.001f && mc->getDistanceFromGap() > -0.001f
 		&& reg_max_vel < 0.31f
 		&& x0 > 0.001f
 		&& ((reg_distance < 0.091f && reg_distance > 0.089f)
-			|| (reg_distance < 0.046f && reg_distance > 0.044f && reg_end_vel > 0.01f)
-			|| (reg_distance < 0.056f && reg_distance > 0.054f)
+			// || (reg_distance < 0.046f && reg_distance > 0.044f && reg_end_vel > 0.01f)
+			// || (reg_distance < 0.056f && reg_distance > 0.054f)
 			|| reg_distance < 0.091f
 			|| (abs(x0 - reg_distance) < 0.04f)) /// @todo ここの条件なんか編
 		){
@@ -180,6 +181,7 @@ void VelocityControl::calcTrapAccel(int32_t t){
 	}
 
 	if (enabled_wallgap
+		&& reg_distance > 0.0f
 		&& (!is_expr_wallgap)
 		&& gapcounter->isRunning()
 		){
@@ -188,7 +190,7 @@ void VelocityControl::calcTrapAccel(int32_t t){
 	}
 
 	/// @todo 壁制御をかけるタイミングを新作にあわせる
-	if(enabled_wallgap){
+	if(enabled_wallgap && reg_distance > 0.0f){
 		auto kabekire = reg_distance - (mc->isLeftGap() ? DIST_GAP_FROM_L : DIST_GAP_FROM_R);
 		if(reg_type == RunType::TRAPDIAGO){
 			mc->enableWallControl();
@@ -207,7 +209,7 @@ void VelocityControl::calcTrapAccel(int32_t t){
 		}
 	}
 
-	if (x0 >= reg_distance) {
+	if (abs(x0) >= abs(reg_distance) && reg_distance > 0.0f) {
 		v = reg_end_vel;
 		end_flag = true;
 		target_linvel = (reg_distance>0?1:-1) * v;
@@ -216,18 +218,20 @@ void VelocityControl::calcTrapAccel(int32_t t){
 
 	// 三角
 	if(t0 < t1){
-		 v += reg_accel*arm_sin_f32(2.0f*reg_accel/(reg_max_vel-reg_start_vel)*t0/1000.0f)/1000.0f;
+		v += (reg_accel*arm_sin_f32(2.0f*reg_accel/(reg_max_vel-reg_start_vel)*t0/1000.0f)/1000.0f);
 	} else if(t0 < t1+t2){
-		v = reg_max_vel;
+		v = (reg_max_vel);
 	} else if(t0 < t1+t2+t3){
-		v -= reg_accel*arm_sin_f32(2.0f*reg_accel/(reg_max_vel-reg_end_vel)*(t0-t2-t1)/1000.0f)/1000.0f;
-	} else if(x0 < reg_distance){
+		v -= (reg_accel*arm_sin_f32(2.0f*reg_accel/(reg_max_vel-reg_end_vel)*(t0-t2-t1)/1000.0f)/1000.0f);
+	} else if(abs(x0) < abs(reg_distance)){
 		v = (reg_end_vel<0.02f ? 0.02f : reg_end_vel);
 	} else {
 		v = reg_end_vel;
 		end_flag = true;
 		if(reg_type == RunType::TRAPDIAGO)
 			mc->resetDistanceFromGapDiago();
+		if (reg_distance < 0.0f)
+			mc->resetDistanceFromGap();
 	}
 	target_linvel = (reg_distance>0?1:-1) * v;
 
@@ -382,6 +386,25 @@ void VelocityControl::calcSlalom(int32_t t){
 	} else if(reg_slalom_pos == 5){
 		// 後オフセット
 		r = 0.0f;
+
+		if(
+			enabled_wallgap
+			&& is_expr_wallgap
+			&& mc->getDistanceFromGap() < 0.001f && mc->getDistanceFromGap() > -0.001f
+			&& reg_max_vel < 0.31f
+			){
+			if(mc->isLeftGap()){
+				mc->setIntegralEncoder(reg_d_after - DIST_GAP_FROM_L);
+			} else {
+				mc->setIntegralEncoder(reg_d_after - DIST_GAP_FROM_R);
+			}
+			if(mc->isLeftGap()){
+				speaker->playSound(440, 50, false);
+			} else {
+				speaker->playSound(880, 50, false);
+			}
+		}
+	
 		if(x0 >= reg_d_after){
 			reg_slalom_pos = 0;
 			end_flag = true;
@@ -399,6 +422,25 @@ void VelocityControl::calcSlalom(int32_t t){
 		// 減速
 		r -= is_positive * reg_accel * 0.001;
 		reg_slalom_pos = 4;
+
+		if(
+			enabled_wallgap
+			&& is_expr_wallgap
+			&& mc->getDistanceFromGap() < 0.001f && mc->getDistanceFromGap() > -0.001f
+			&& reg_max_vel < 0.31f
+			){
+			if(mc->isLeftGap()){
+				mc->setIntegralEncoder(reg_d_after - DIST_GAP_FROM_L);
+			} else {
+				mc->setIntegralEncoder(reg_d_after - DIST_GAP_FROM_R);
+			}
+			if(mc->isLeftGap()){
+				speaker->playSound(440, 50, false);
+			} else {
+				speaker->playSound(880, 50, false);
+			}
+		}
+
 	} else {
 		mc->setIntegralEncoder(0.0f);
 		reg_slalom_pos = 5;
