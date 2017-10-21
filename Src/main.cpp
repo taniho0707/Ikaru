@@ -61,6 +61,39 @@ void frontcorrection(){
 	HAL_Delay(300);
 }
 
+void printMap(Map& map) {
+	ComPc* compc = ComPc::getInstance();
+	MethodAdachi adachi;
+	adachi.setCurrent(0, 0);
+	adachi.setMap(map);
+	adachi.renewFootmap();
+	Footmap footmap;
+	footmap = adachi.getFootmap();
+	compc->printf("    ");
+	for (int i=0; i<32; ++i) compc->printf(" \033[36;40m%4d\033[37;40m", i);
+	compc->printf("\n    ");
+	for (int i=0; i<32; ++i) compc->printf("+----");
+	compc->printf("+\n");
+	for (int j=0; j<32; ++j){
+		compc->printf("\033[36;40m%4d\033[37;40m", 31-j);
+		for(int i=0; i<32; ++i){
+			if(map.isExistWall(i, 31-j, MazeAngle::WEST)) compc->printf("|");
+			else compc->printf(" ");
+			if(map.hasReached(i, 31-j)) compc->printf("\033[31;40m%4d\033[37;40m", footmap.getFootmap(i, 31-j, 0));
+			else compc->printf("%4d", footmap.getFootmap(i, 31-j, 0));
+		}
+		compc->printf("|\n    ");
+		for(int i=0; i<32; ++i){
+			if(map.isExistWall(i, 31-j, MazeAngle::SOUTH)) compc->printf("+----");
+			else compc->printf("+    ");
+		}
+		compc->printf("+\n");
+	}
+	compc->printf("    ");
+	for (int i=0; i<32; ++i) compc->printf(" \033[36;40m%4d\033[37;40m", i);
+	compc->printf("\n\n");
+}
+
 void calibratewallsensor(){
 	WallSensor* wallsensor = WallSensor::getInstance();
 	ModeSelect* mode = ModeSelect::getInstance();
@@ -245,11 +278,6 @@ int main(void) {
 	fram->writeEnable();
 	HAL_Delay(1);
 
-	HAL_Delay(1000);
-	led->flickSync(LedNumbers::FRONT, 10, 1000);
-	led->flickAsync(LedNumbers::FRONT, 4, 2000);
-	gyro->resetCalibration();
-
 	Encoder* encoder = Encoder::getInstance();
 
 	WallSensor* wallsensor = WallSensor::getInstance();
@@ -334,9 +362,11 @@ int main(void) {
 			// ここから左手法で走る
 			mode->startcheck(0);
 			led->initPort(LedNumbers::TOP1);
-			led->flickAsync(LedNumbers::TOP1, 4.0f, 2000);
+			led->flickSync(LedNumbers::TOP1, 4.0f, 2000);
+			led->flickSync(LedNumbers::FRONT, 10, 1000);
 			speaker->playMusic(MusicNumber::HIRAPA);
-			HAL_Delay(1000);
+			led->flickAsync(LedNumbers::FRONT, 4, 2000);
+			gyro->resetCalibration();
 			Map map;
 			Position pos;
 			Walldata walldata;
@@ -433,13 +463,25 @@ int main(void) {
 		case static_cast<uint8_t>(mode::MODE_PRIME::EXPR):
 		{
 			Map map;
+			bool enabled_graph = false;
 
 			switch(decided_mode.sub){
-			case static_cast<uint8_t>(mode::MODE_EXPR::NEW):
+			case static_cast<uint8_t>(mode::MODE_EXPR::NEW_GRAPH):
 				enabled_mae = true;
+				enabled_graph = true;
 				break;
-			case static_cast<uint8_t>(mode::MODE_EXPR::LOAD):
+			case static_cast<uint8_t>(mode::MODE_EXPR::LOAD_GRAPH):
 				enabled_mae = true;
+				enabled_graph = true;
+				fram->loadMap(map, decided_mode.number);
+				break;
+			case static_cast<uint8_t>(mode::MODE_EXPR::NEW_ADACHI):
+				enabled_mae = true;
+				enabled_graph = false;
+				break;
+			case static_cast<uint8_t>(mode::MODE_EXPR::LOAD_ADACHI):
+				enabled_mae = true;
+				enabled_graph = false;
 				fram->loadMap(map, decided_mode.number);
 				break;
 			default:
@@ -449,8 +491,10 @@ int main(void) {
 			mode->startcheck(0);
 			led->initPort(LedNumbers::TOP1);
 			led->flickAsync(LedNumbers::TOP1, 4.0f, 2000);
+			led->flickAsync(LedNumbers::FRONT, 10, 1000);
 			speaker->playMusic(MusicNumber::KIRBY64_BEGINNER_1);
-			HAL_Delay(1000);
+			led->flickAsync(LedNumbers::FRONT, 4, 2000);
+			gyro->resetCalibration();
 
 			MotorControl* mc = MotorControl::getInstance();
 			mc->stay();
@@ -472,7 +516,10 @@ int main(void) {
 			Position pos;
 			MethodAdachi adachi;
 			map.setReached(0, 0);
-			adachi.setGoal(GOAL_X, GOAL_Y);
+			map.goals.add(GOAL_X, GOAL_Y);
+			map.goals.add(GOAL_X-1, GOAL_Y);
+			map.goals.add(GOAL_X, GOAL_Y-1);
+			map.goals.add(GOAL_X-1, GOAL_Y-1);
 			uint16_t savenumber = 0;
 
 			Datalog* log = Datalog::getInstance();
@@ -582,7 +629,7 @@ int main(void) {
 							mc->resetLinIntegral();
 						}
 
-						vc->runTrapAccel(0.0f, 0.25f, 0.0f, -0.03f, 5.0f);
+						vc->runTrapAccel(0.0f, 0.25f, 0.0f, -0.025f, 5.0f);
 						mc->disableWallControl();
 						while(vc->isRunning());
 						mc->resetRadIntegral();
@@ -591,7 +638,7 @@ int main(void) {
 						mc->resetDistanceFromGap();
 						mc->resetDistanceFromGapDiago();
 						// vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
-						vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.075f, 3.0f);
+						vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.070f, 3.0f);
 						mc->enableWallControl();
 						while(vc->isRunning());
 					}
@@ -609,22 +656,90 @@ int main(void) {
 				}
 		
 				pos.setNextPosition(runtype);
-				vc->startTrapAccel(0.25f, 0.25f, 0.09f, 5.0f);
+				vc->startTrapAccel(0.25f, 0.25f, 0.09f, 3.0f);
 		
 				static bool is_first_goal = true; // = has_goal
 				if(pos.getPositionX() == GOAL_X && pos.getPositionY() == GOAL_Y && is_first_goal){
 					is_first_goal = false;
 					led->on(LedNumbers::TOP1);
-					speaker->playSound(1200, 500, false);
 					walldata = wallsensor->getWall();
 					map.setWall(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata);
 					map.setReached(pos.getPositionX(), pos.getPositionY());
-					led->off(LedNumbers::TOP1);
-
-					led->on(LedNumbers::TOP1);
-					adachi.setGoal(0, 0);
+					// led->off(LedNumbers::TOP1);
 					fram->saveMap(map, 1);
-				} else if(pos.getPositionX() == 0 && pos.getPositionY() == 0){
+
+					map.goals.clear();
+					
+					if (enabled_graph == false) {
+						map.goals.add(0, 0);
+					} else {
+						vc->runTrapAccel(0.25f, 0.25f, 0.0f, 0.045f, 3.0f);
+						while(vc->isRunning());
+						speaker->playSound(1200, 500, true);
+
+						// auto count_time = Timer::getTime();
+						{
+							// dialog led を表示する
+							Graph* graph = new Graph;
+							Footmap fm;
+							graph->connectWithMap(map, true);
+							speaker->playSound(1000, 500, true);
+							vector<uint16_t> result = graph->dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(6, 6, MazeAngle::NORTH));
+							speaker->playSound(800, 500, true);
+							fm = graph->cnvGraphToFootmap(result);
+							for (int i=0; i<31; ++i) {
+								for (int j=0; j<31; ++j) {
+									if (fm.getFootmap(i, j, 1024) != 1024 && map.hasReached(i, j) == false) {
+										map.goals.add(i, j);
+									}
+								}
+							}
+							delete graph;
+						}
+						led->off(LedNumbers::FRONT);
+						adachi.setCurrent(pos.getPositionX(), pos.getPositionY());
+						adachi.setMap(map);
+						adachi.renewFootmap();
+						RunType runtype_tmp = adachi.getNextMotion(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata);
+						led->on(LedNumbers::FRONT);
+						// auto count_dif_time = Timer::getTime() - count_time;
+						// Datalog::getInstance()->writeFloat(static_cast<float>(count_dif_time));
+						// Datalog::getInstance()->writeFloat(0.0f);
+						// Datalog::getInstance()->writeFloat(0.0f);
+						// Datalog::getInstance()->writeFloat(0.0f);
+						// Datalog::getInstance()->writeFloat(0.0f);
+						// Datalog::getInstance()->writeFloat(0.0f);
+						// Datalog::getInstance()->writeFloat(0.0f);
+						// Datalog::getInstance()->writeFloat(0.0f);
+						// Datalog::getInstance()->writeFloat(0.0f);
+						// Datalog::getInstance()->writeFloat(0.0f);
+
+						if(runtype_tmp == slalomparams::RunType::TRAPACCEL){
+							vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
+							while(vc->isRunning());
+						} else if(runtype_tmp == slalomparams::RunType::PIVOTTURN){
+							vc->runPivotTurn(500, -180, 1000);
+							while(vc->isRunning());
+							vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
+							while(vc->isRunning());
+						} else if(runtype_tmp == slalomparams::RunType::SLALOM90SML_LEFT){
+							vc->runPivotTurn(500, 90, 1000);
+							while(vc->isRunning());
+							vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
+							while(vc->isRunning());
+						} else if(runtype_tmp == slalomparams::RunType::SLALOM90SML_RIGHT){
+							vc->runPivotTurn(500, -90, 1000);
+							while(vc->isRunning());
+							vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
+							while(vc->isRunning());
+						}
+						pos.setNextPosition(runtype_tmp);
+						vc->startTrapAccel(0.25f, 0.25f, 0.09f, 3.0f);
+					}
+				} else if(map.goals.size() == 0) {
+					map.goals.clear();
+					map.goals.add(0, 0);
+				} else if(pos.getPositionX() == 0 && pos.getPositionY() == 0) {
 					vc->runTrapAccel(0.25f, 0.25f, 0.0f, 0.045f, 5.0f);
 					while(vc->isRunning());
 					mc->disableWallControl();
@@ -632,12 +747,15 @@ int main(void) {
 					fram->saveMap(map, 2);
 
 					break;
+				} else if(map.goals.isInclude(pos.getPosition())) {
+					map.goals.remove(pos.getPositionX(), pos.getPositionY());
 				}
 			}
 		}
 		case static_cast<uint8_t>(mode::MODE_PRIME::SHRT):
 		{
 			PathType type;
+			bool enabled_graph = true;
 
 			float param_max_straight = 0.3f;
 			float param_max_diago = 0.3f;
@@ -647,21 +765,34 @@ int main(void) {
 			switch(decided_mode.sub){
 			case static_cast<uint8_t>(mode::MODE_SHRT::SMALL1):
 				type = PathType::SMALL;
-				param_max_straight = 0.25f;
+				param_max_straight = 0.3f;
 				param_max_turn = 0.25f;
 				param_accel = 3.0f;
 				break;
 			case static_cast<uint8_t>(mode::MODE_SHRT::SMALL2):
 				type = PathType::SMALL;
-				param_max_straight = 0.5f;
-				param_max_diago = 0.3f;
+				param_max_straight = 0.5f; /// @todo このパラメータでは壁切れできない
+				param_max_turn = 0.25f;
 				param_accel = 5.0f;
 				break;
-			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO1):
+			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO1_GRAPH):
 				type = PathType::DIAGO;
+				enabled_graph = true;
 				break;
-			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO2):
+			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO2_GRAPH):
 				type = PathType::DIAGO;
+				enabled_graph = true;
+				param_max_straight = 0.5f;
+				param_max_diago = 0.5f;
+				param_accel = 5.0f;
+				break;
+			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO1_ADACHI):
+				type = PathType::DIAGO;
+				enabled_graph = false;
+				break;
+			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO2_ADACHI):
+				type = PathType::DIAGO;
+				enabled_graph = false;
 				param_max_straight = 0.5f;
 				param_max_diago = 0.5f;
 				param_accel = 5.0f;
@@ -669,13 +800,9 @@ int main(void) {
 			default:
 				break;
 			}
-			
-			mode->startcheck(0);
-			led->initPort(LedNumbers::TOP1);
-			led->flickAsync(LedNumbers::TOP1, 4.0f, 2000);
-			speaker->playMusic(MusicNumber::KIRBY64_BEGINNER_2);
-			// HAL_Delay(1000);
 
+			led->off(LedNumbers::FRONT);
+			
 			Walldata walldata;
 			Map map;
 			Footmap footmap;
@@ -686,7 +813,7 @@ int main(void) {
 			padachi.setGoal(GOAL_X, GOAL_Y);
 			padachi.setMap(map);
 
-			if (type == PathType::DIAGO) {
+			if (type == PathType::DIAGO && enabled_graph) {
 				Graph graph;
 				compc->printf("GRAPH\n");
 				graph.connectWithMap(map);
@@ -702,7 +829,16 @@ int main(void) {
 				while(true);
 			}
 
-			led->flickSync(LedNumbers::FRONT, 3.0f, 1000);
+			speaker->playMusic(MusicNumber::KIRBY_1UP);
+			led->on(LedNumbers::FRONT);
+
+			mode->startcheck(0);
+			led->initPort(LedNumbers::TOP1);
+			led->flickAsync(LedNumbers::TOP1, 4.0f, 2000);
+			led->flickAsync(LedNumbers::FRONT, 10, 1000);
+			speaker->playMusic(MusicNumber::KIRBY64_BEGINNER_2);
+			led->flickAsync(LedNumbers::FRONT, 4, 2000);
+			gyro->resetCalibration();
 
 			MotorControl* mc = MotorControl::getInstance();
 			mc->stay();
@@ -1220,76 +1356,100 @@ int main(void) {
 			case static_cast<uint8_t>(mode::MODE_RUNLOG::MAZE1):
 			{
 				Map map;
-				fram->loadMap(map, 0);
-				compc->printf("* 0");
-				for(int i=0; i<32; ++i) compc->printf("+----");
-				compc->printf("+\n");
-				for(int j=0; j<32; ++j){
-					for(int i=0; i<32; ++i){
-						if(map.isExistWall(i, 31-j, MazeAngle::WEST)) compc->printf("|");
-						else compc->printf(" ");
-						if(map.hasReached(i, 31-j)) compc->printf(" () ");
-						else compc->printf("    ");
-					}
-					compc->printf("|\n");
-					for(int i=0; i<32; ++i){
-						if(map.isExistWall(i, 31-j, MazeAngle::SOUTH)) compc->printf("+----");
-						else compc->printf("+    ");
-					}
-					compc->printf("+\n");
-				}
-				fram->loadMap(map, 1);
-				compc->printf("* 1");
-				for(int i=0; i<32; ++i) compc->printf("+----");
-				compc->printf("+\n");
-				for(int j=0; j<32; ++j){
-					for(int i=0; i<32; ++i){
-						if(map.isExistWall(i, 31-j, MazeAngle::WEST)) compc->printf("|");
-						else compc->printf(" ");
-						if(map.hasReached(i, 31-j)) compc->printf(" () ");
-						else compc->printf("    ");
-					}
-					compc->printf("|\n");
-					for(int i=0; i<32; ++i){
-						if(map.isExistWall(i, 31-j, MazeAngle::SOUTH)) compc->printf("+----");
-						else compc->printf("+    ");
-					}
-					compc->printf("+\n");
-				}
+				// for (int i=0; i<32; ++i) {
+				// 	map.addSingleWall(i, 7, MazeAngle::NORTH);
+				// }
+				// map.goals.add(GOAL_X, GOAL_Y);
+				// map.goals.add(GOAL_X-1, GOAL_Y);
+				// map.goals.add(GOAL_X, GOAL_Y-1);
+				// map.goals.add(GOAL_X-1, GOAL_Y-1);
+				// printMap(map);
+				// {
+				// 	Graph graph;
+				// 	compc->printf("GRAPH\n");
+				// 	graph.connectWithMap(map, true);
+				// 	compc->printf("CONNECTED WITH MAP\n");
+				// 	vector<uint16_t> result = graph.dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(6, 6, MazeAngle::NORTH));
+				// 	compc->printf("DIJKSTRA COMPLETED\n");
+				// 	compc->printf("%d\n", result.size());
+				// 	int16_t result_x, result_y;
+				// 	MazeAngle result_angle;
+				// 	for (auto ite : result) {
+				// 		Graph::cnvNumToCoordinate(ite, result_x, result_y, result_angle);
+				// 		compc->printf("%4d (%2d,%2d : %1d)\n", ite, result_x, result_y, result_angle);
+				// 	}
+				// 	compc->printf("END\n");
+				// }
 
-				Graph graph;
-				compc->printf("GRAPH\n");
-				graph.connectWithMap(map);
-				compc->printf("CONNECTED WITH MAP\n");
-				vector<uint16_t> result = graph.dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(6, 6, MazeAngle::NORTH));
-				compc->printf("DIJKSTRA COMPLETED\n");
-				compc->printf("%d\n", result.size());
-				int16_t result_x, result_y;
-				MazeAngle result_angle;
-				for (auto ite : result) {
-					Graph::cnvNumToCoordinate(ite, result_x, result_y, result_angle);
-					compc->printf("%4d (%2d,%2d : %1d)\n", ite, result_x, result_y, result_angle);
+				fram->loadMap(map, 0);
+				map.goals.add(GOAL_X, GOAL_Y);
+				map.goals.add(GOAL_X-1, GOAL_Y);
+				map.goals.add(GOAL_X, GOAL_Y-1);
+				map.goals.add(GOAL_X-1, GOAL_Y-1);
+				printMap(map);
+				// {
+				// 	Graph graph;
+				// 	compc->printf("GRAPH\n");
+				// 	graph.connectWithMap(map, true);
+				// 	compc->printf("CONNECTED WITH MAP\n");
+				// 	vector<uint16_t> result = graph.dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(6, 6, MazeAngle::NORTH));
+				// 	compc->printf("DIJKSTRA COMPLETED\n");
+				// 	compc->printf("%d\n", result.size());
+				// 	int16_t result_x, result_y;
+				// 	MazeAngle result_angle;
+				// 	for (auto ite : result) {
+				// 		Graph::cnvNumToCoordinate(ite, result_x, result_y, result_angle);
+				// 		compc->printf("%4d (%2d,%2d : %1d)\n", ite, result_x, result_y, result_angle);
+				// 	}
+				// 	compc->printf("END\n");
+				// }
+
+				fram->loadMap(map, 1);
+				map.goals.add(GOAL_X, GOAL_Y);
+				map.goals.add(GOAL_X-1, GOAL_Y);
+				map.goals.add(GOAL_X, GOAL_Y-1);
+				map.goals.add(GOAL_X-1, GOAL_Y-1);
+				printMap(map);
+				{
+					Graph graph;
+					compc->printf("GRAPH\n");
+					graph.connectWithMap(map, true);
+					compc->printf("CONNECTED WITH MAP\n");
+					vector<uint16_t> result = graph.dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(6, 6, MazeAngle::NORTH));
+					compc->printf("DIJKSTRA COMPLETED\n");
+					compc->printf("%d\n", result.size());
+					int16_t result_x, result_y;
+					MazeAngle result_angle;
+					for (auto ite : result) {
+						Graph::cnvNumToCoordinate(ite, result_x, result_y, result_angle);
+						compc->printf("%4d (%2d,%2d : %1d)\n", ite, result_x, result_y, result_angle);
+					}
+					compc->printf("END\n");
 				}
-				compc->printf("END\n");
 
 				fram->loadMap(map, 2);
-				compc->printf("* 2");
-				for(int i=0; i<32; ++i) compc->printf("+----");
-				compc->printf("+\n");
-				for(int j=0; j<32; ++j){
-					for(int i=0; i<32; ++i){
-						if(map.isExistWall(i, 31-j, MazeAngle::WEST)) compc->printf("|");
-						else compc->printf(" ");
-						if(map.hasReached(i, 31-j)) compc->printf(" () ");
-						else compc->printf("    ");
+				map.goals.add(GOAL_X, GOAL_Y);
+				map.goals.add(GOAL_X-1, GOAL_Y);
+				map.goals.add(GOAL_X, GOAL_Y-1);
+				map.goals.add(GOAL_X-1, GOAL_Y-1);
+				printMap(map);
+				{
+					Graph graph;
+					compc->printf("GRAPH\n");
+					graph.connectWithMap(map);
+					compc->printf("CONNECTED WITH MAP\n");
+					vector<uint16_t> result = graph.dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(6, 6, MazeAngle::NORTH));
+					compc->printf("DIJKSTRA COMPLETED\n");
+					compc->printf("%d\n", result.size());
+					int16_t result_x, result_y;
+					MazeAngle result_angle;
+					for (auto ite : result) {
+						Graph::cnvNumToCoordinate(ite, result_x, result_y, result_angle);
+						compc->printf("%4d (%2d,%2d : %1d)\n", ite, result_x, result_y, result_angle);
 					}
-					compc->printf("|\n");
-					for(int i=0; i<32; ++i){
-						if(map.isExistWall(i, 31-j, MazeAngle::SOUTH)) compc->printf("+----");
-						else compc->printf("+    ");
-					}
-					compc->printf("+\n");
+					compc->printf("END\n");
 				}
+
 				break;
 			}
 			case static_cast<uint8_t>(mode::MODE_RUNLOG::ERASE):
