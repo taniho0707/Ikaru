@@ -11,13 +11,13 @@ const static MODE_PRIME      first_mode_prime      = MODE_PRIME::EXPR;
 const static MODE_TURNADJUST first_mode_turnadjust = MODE_TURNADJUST::STRAIGHT_6;
 const static MODE_SENSORLOG  first_mode_sensorlog  = MODE_SENSORLOG::SHOW;
 const static MODE_RUNLOG     first_mode_runlog     = MODE_RUNLOG::MAZE1;
-const static MODE_EXPR       first_mode_expr       = MODE_EXPR::NEW;
+const static MODE_EXPR       first_mode_expr       = MODE_EXPR::NEW_GRAPH;
 const static MODE_SHRT       first_mode_shrt       = MODE_SHRT::SMALL1;
 const static MODE_HIDARITE   first_mode_hidarite   = MODE_HIDARITE::WITHOUT_MAE;
 
 
 ModeSelect::ModeSelect() :
-	WAITTIME_GYRO(100),
+	WAITTIME_GYRO(50),
 	WAITTIME_ACCEL(100),
 	WAITTIME_WALL(500),
 	THR_UNDER_GYRO_X(500),
@@ -79,17 +79,13 @@ mode::StructMode ModeSelect::select(){
 	mode_prime = static_cast<uint8_t>(first_mode_prime);
 	mode_sub = 0; /// @todo 初期値代入する
 	mode_number = 0; /// @todo 初期値代入する
+	count_gyro_x = 0;
+	count_gyro_y = 0;
+	count_gyro_z = 0;
 	while(true){
-		ax = gyro->readAccelX();
-		ay = gyro->readAccelY();
-		az = gyro->readAccelZ();
-		gx = gyro->readGyroX();
-		gy = gyro->readGyroY();
-		gz = gyro->readGyroZ();
-
-		if(abs(gy) > THR_OVER_GYRO_Y){
+		if(abs(count_gyro_y) > WAITTIME_GYRO){
 			int16_t ad = 0;
-			if(gy > 0){
+			if(count_gyro_y > 0){
 				ad = -1;
 			} else {
 				ad = 1;
@@ -106,11 +102,12 @@ mode::StructMode ModeSelect::select(){
 				speaker->playMusic(MusicNumber::KIRBY_DYING);
 			}
 			HAL_Delay(300);
+			count_gyro_y = 0;
 		}
 
-		if(abs(gx) > THR_OVER_GYRO_X){
+		if(abs(count_gyro_x) > WAITTIME_GYRO){
 			int16_t ad = 0;
-			if(gx > 0){
+			if(count_gyro_x > 0){
 				ad = 1;
 			} else {
 				ad = -1;
@@ -125,11 +122,12 @@ mode::StructMode ModeSelect::select(){
 				speaker->playMusic(MusicNumber::KIRBY_DYING);
 			}
 			HAL_Delay(300);
+			count_gyro_x = 0;
 		}
 
-		if(abs(gz) > THR_OVER_GYRO_Z){
+		if(abs(count_gyro_z) > WAITTIME_GYRO){
 			int16_t ad = 0;
-			if(gy > 0){
+			if(count_gyro_z > 0){
 				ad = -1;
 			} else {
 				ad = 1;
@@ -144,8 +142,9 @@ mode::StructMode ModeSelect::select(){
 				speaker->playMusic(MusicNumber::KIRBY_DYING);
 			}
 			HAL_Delay(300);
+			count_gyro_z = 0;
 		}
-
+		
 		if(abs(gx) < THR_UNDER_GYRO_X && abs(gy) < THR_UNDER_GYRO_Y && abs(gz) < THR_UNDER_GYRO_Z){
 			led->on(LedNumbers::FRONT);
 		} else {
@@ -193,6 +192,28 @@ void ModeSelect::interrupt(){
 		++ count_wall_fright;
 	} else {
 		count_wall_fright = 0;
+	}
+	static int16_t gx, gy, gz;
+	gx = gyro->readGyroX();
+	gy = gyro->readGyroY();
+	gz = gyro->readGyroZ();
+	if (abs(gx) > THR_OVER_GYRO_X) {
+		if (gx > 0) ++ count_gyro_x;
+		else -- count_gyro_x;
+	} else {
+		count_gyro_x = 0;
+	}
+	if (abs(gy) > THR_OVER_GYRO_Y) {
+		if (gy > 0) ++ count_gyro_y;
+		else -- count_gyro_y;
+	} else {
+		count_gyro_y = 0;
+	}
+	if (abs(gz) > THR_OVER_GYRO_Z) {
+		if (gz > 0) ++ count_gyro_z;
+		else -- count_gyro_z;
+	} else {
+		count_gyro_z = 0;
 	}
 }
 

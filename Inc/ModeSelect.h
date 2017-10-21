@@ -49,16 +49,20 @@ namespace mode {
 	};
 
 	enum class MODE_EXPR : uint8_t {
-		NEW,
-		LOAD,
+		NEW_GRAPH,
+		LOAD_GRAPH,
+		NEW_ADACHI,
+		LOAD_ADACHI,
 		LAST // コレより下に定義しない
 	};
 
 	enum class MODE_SHRT : uint8_t {
 		SMALL1,
 		SMALL2,
-		DIAGO1,
-		DIAGO2,
+		DIAGO1_GRAPH,
+		DIAGO2_GRAPH,
+		DIAGO1_ADACHI,
+		DIAGO2_ADACHI,
 		LAST // コレより下に定義しない
 	};
 	// 迷路番号0〜2を任意に呼び出せるように
@@ -99,9 +103,9 @@ private:
 	const float THR_WALL_FLEFT;
 	const float THR_WALL_FRIGHT;
 
-	uint16_t count_gyro_x;
-	uint16_t count_gyro_y;
-	uint16_t count_gyro_z;
+	int16_t count_gyro_x;
+	int16_t count_gyro_y;
+	int16_t count_gyro_z;
 	uint16_t count_accel_x;
 	uint16_t count_accel_y;
 	uint16_t count_accel_z;
