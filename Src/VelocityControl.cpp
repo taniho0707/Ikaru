@@ -157,6 +157,7 @@ void VelocityControl::calcTrapAccel(int32_t t){
 		enabled_wallgap
 		&& reg_distance > 0.0f
 		&& is_expr_wallgap
+		&& reg_type == RunType::TRAPACCEL
 		&& mc->getDistanceFromGap() < 0.001f && mc->getDistanceFromGap() > -0.001f
 		&& reg_max_vel < 0.31f
 		&& x0 > 0.001f
@@ -181,6 +182,7 @@ void VelocityControl::calcTrapAccel(int32_t t){
 	}
 
 	if (enabled_wallgap
+		&& reg_type == RunType::TRAPACCEL
 		&& reg_distance > 0.0f
 		&& (!is_expr_wallgap)
 		&& gapcounter->isRunning()

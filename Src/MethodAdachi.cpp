@@ -9,10 +9,10 @@ MethodAdachi::MethodAdachi(){
 	// renewFootmap();
 }
 
-void MethodAdachi::setGoal(int8_t x, int8_t y){
-	goal_x = x;
-	goal_y = y;
-}
+// void MethodAdachi::setGoal(int8_t x, int8_t y){
+// 	goal_x = x;
+// 	goal_y = y;
+// }
 
 void MethodAdachi::setCurrent(int8_t x, int8_t y){
 	cur_x = x;
@@ -31,11 +31,14 @@ void MethodAdachi::renewFootmap(){
 	bool is_end = false;
 
 	fm.resetFootmap();
-	tmp.first = goal_x;
-	tmp.second = goal_y;
 	std::queue< std::pair<int8_t, int8_t> >().swap(que);
-	que.push(tmp);
-	fm.setFootmap(goal_x, goal_y, 0);
+
+	for (auto ite : map.goals.curs) {
+		tmp.first = ite.first;
+		tmp.second = ite.second;
+		que.push(tmp);
+		fm.setFootmap(ite.first, ite.second, 0);
+	}
 
 	while(!que.empty()){
 		buf = que.front();

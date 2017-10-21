@@ -6,10 +6,10 @@
 
 MotorControl::MotorControl() : 
 	GAIN_LIN_P(1300),
-	GAIN_LIN_I(3.6f),
+	GAIN_LIN_I(3.4f), //3.6f
 	GAIN_LIN_D(0.00f), //要パラメータ調整
 	GAIN_RAD_P(-0.18f),
-	GAIN_RAD_I(-0.026f),
+	GAIN_RAD_I(-0.022f),
 	// GAIN_RAD_P(-0.2f),
 	// GAIN_RAD_I(-0.03f),
 	GAIN_RAD_D(0.0f),
