@@ -148,7 +148,7 @@ std::string ComPc::dec(const float val){
 
 
 void ComPc::sendDecimal(const uint32_t val, const bool isPlus){
-	char tmp[11 + 1];
+	char tmp[12 + 1];
 	uint16_t pos = 12;
 	uint32_t v = val;
 	tmp[pos] = 0;

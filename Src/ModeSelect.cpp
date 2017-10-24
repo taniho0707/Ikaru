@@ -82,7 +82,11 @@ mode::StructMode ModeSelect::select(){
 	count_gyro_x = 0;
 	count_gyro_y = 0;
 	count_gyro_z = 0;
+	enabled = true;
 	while(true){
+		gx = gyro->readGyroX();
+		gy = gyro->readGyroY();
+		gz = gyro->readGyroZ();
 		if(abs(count_gyro_y) > WAITTIME_GYRO){
 			int16_t ad = 0;
 			if(count_gyro_y > 0){
@@ -157,6 +161,7 @@ mode::StructMode ModeSelect::select(){
 		HAL_Delay(10);
 	}
 
+	enabled = false;
 	StructMode ret_mode;
 	ret_mode.prime = mode_prime;
 	ret_mode.sub = mode_sub;
