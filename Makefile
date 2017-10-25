@@ -241,7 +241,7 @@ flash:
 	@sleep 0.1
 	@echo u > /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0
 	@sleep 0.3
-	~/git/stm32flash-code/stm32flash -b 230400 -w build/Ikaru.hex /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO02-if00-port0 -e 64
+	-~/git/stm32flash-code/stm32flash -b 230400 -w build/Ikaru.hex /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO02-if00-port0 -e 64
 	@echo d > /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0
 	@echo r > /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0
 
