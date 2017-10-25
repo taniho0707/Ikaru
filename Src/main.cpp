@@ -43,8 +43,8 @@ using namespace std;
 void SystemClock_Config(void);
 static void MX_NVIC_Init(void);
 
-const uint16_t GOAL_X = 6;
-const uint16_t GOAL_Y = 7;
+const uint16_t GOAL_X = 5;
+const uint16_t GOAL_Y = 5;
 
 
 void frontcorrection(){
@@ -559,7 +559,7 @@ int main(void) {
 							frontcorrection();
 							mc->resetRadIntegral();
 							mc->resetLinIntegral();
-							vc->runPivotTurn(500, -90, 1000);
+							vc->runPivotTurn(500, -92, 1000);
 							while(vc->isRunning());
 							vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
 							mc->disableWallControl();
@@ -570,7 +570,7 @@ int main(void) {
 							frontcorrection();
 							mc->resetRadIntegral();
 							mc->resetLinIntegral();
-							vc->runPivotTurn(500, 90, 1000);
+							vc->runPivotTurn(500, 92, 1000);
 							while(vc->isRunning());
 							vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
 							mc->disableWallControl();
@@ -580,7 +580,7 @@ int main(void) {
 							runtype = slalomparams::RunType::PIVOTTURN;
 							mc->resetRadIntegral();
 							mc->resetLinIntegral();
-							vc->runPivotTurn(500, 180, 1000);
+							vc->runPivotTurn(500, 184, 1000);
 							while(vc->isRunning());
 							vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
 							mc->disableWallControl();
@@ -610,19 +610,19 @@ int main(void) {
 						if(walldata.isExistWall(MouseAngle::LEFT)){
 							mc->resetRadIntegral();
 							mc->resetLinIntegral();
-							vc->runPivotTurn(500, 90, 1000);
+							vc->runPivotTurn(500, 92, 1000);
 							while(vc->isRunning());
 							frontcorrection();
 							mc->resetRadIntegral();
 							mc->resetLinIntegral();
-							vc->runPivotTurn(500, 90, 1000);
+							vc->runPivotTurn(500, 92, 1000);
 							while(vc->isRunning());
 							mc->resetRadIntegral();
 							mc->resetLinIntegral();
 						} else {
 							mc->resetRadIntegral();
 							mc->resetLinIntegral();
-							vc->runPivotTurn(500, 180, 1000);
+							vc->runPivotTurn(500, 184, 1000);
 							/// @todo -180にする
 							while(vc->isRunning());
 							mc->resetRadIntegral();
@@ -668,10 +668,11 @@ int main(void) {
 					// led->off(LedNumbers::TOP1);
 					fram->saveMap(map, 1);
 
-					map.goals.clear();
+					// map.goals.clear();
+					map.goals.add(0, 0);
 					
 					if (enabled_graph == false) {
-						map.goals.add(0, 0);
+						map.goals.remove(pos.getPositionX(), pos.getPositionY());
 					} else {
 						vc->runTrapAccel(0.25f, 0.25f, 0.0f, 0.045f, 3.0f);
 						while(vc->isRunning());
@@ -684,7 +685,7 @@ int main(void) {
 							Footmap fm;
 							graph->connectWithMap(map, true);
 							speaker->playSound(1000, 500, true);
-							vector<uint16_t> result = graph->dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(6, 6, MazeAngle::NORTH));
+							vector<uint16_t> result = graph->dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(5, 4, MazeAngle::NORTH));
 							speaker->playSound(800, 500, true);
 							fm = graph->cnvGraphToFootmap(result);
 							for (int i=0; i<31; ++i) {
@@ -718,17 +719,23 @@ int main(void) {
 							vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
 							while(vc->isRunning());
 						} else if(runtype_tmp == slalomparams::RunType::PIVOTTURN){
-							vc->runPivotTurn(500, -180, 1000);
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
+							vc->runPivotTurn(500, -184, 1000);
 							while(vc->isRunning());
 							vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
 							while(vc->isRunning());
 						} else if(runtype_tmp == slalomparams::RunType::SLALOM90SML_LEFT){
-							vc->runPivotTurn(500, 90, 1000);
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
+							vc->runPivotTurn(500, 92, 1000);
 							while(vc->isRunning());
 							vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
 							while(vc->isRunning());
 						} else if(runtype_tmp == slalomparams::RunType::SLALOM90SML_RIGHT){
-							vc->runPivotTurn(500, -90, 1000);
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
+							vc->runPivotTurn(500, -92, 1000);
 							while(vc->isRunning());
 							vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
 							while(vc->isRunning());
@@ -744,6 +751,7 @@ int main(void) {
 					while(vc->isRunning());
 					mc->disableWallControl();
 
+					fram->saveMap(map, 0);
 					fram->saveMap(map, 2);
 
 					break;
@@ -818,7 +826,7 @@ int main(void) {
 				compc->printf("GRAPH\n");
 				graph.connectWithMap(map);
 				compc->printf("CONNECTED WITH MAP\n");
-				vector<uint16_t> result = graph.dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(6, 6, MazeAngle::NORTH));
+				vector<uint16_t> result = graph.dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(5, 4, MazeAngle::NORTH));
 				padachi.setFootmap(graph.cnvGraphToFootmap(result));
 			}
 			
@@ -1415,7 +1423,7 @@ int main(void) {
 					compc->printf("GRAPH\n");
 					graph.connectWithMap(map, true);
 					compc->printf("CONNECTED WITH MAP\n");
-					vector<uint16_t> result = graph.dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(6, 6, MazeAngle::NORTH));
+					vector<uint16_t> result = graph.dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(5, 4, MazeAngle::NORTH));
 					compc->printf("DIJKSTRA COMPLETED\n");
 					compc->printf("%d\n", result.size());
 					int16_t result_x, result_y;
@@ -1436,9 +1444,9 @@ int main(void) {
 				{
 					Graph graph;
 					compc->printf("GRAPH\n");
-					graph.connectWithMap(map);
+					graph.connectWithMap(map, true);
 					compc->printf("CONNECTED WITH MAP\n");
-					vector<uint16_t> result = graph.dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(6, 6, MazeAngle::NORTH));
+					vector<uint16_t> result = graph.dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(5, 4, MazeAngle::NORTH));
 					compc->printf("DIJKSTRA COMPLETED\n");
 					compc->printf("%d\n", result.size());
 					int16_t result_x, result_y;
