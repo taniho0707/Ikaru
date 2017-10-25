@@ -17,14 +17,14 @@ M4lf_FLAGS  := -mthumb -mcpu=cortex-m4 -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -DAR
 DSPLIB      := DSP_Lib/Source
 DSPDIRS     := BasicMathFunctions          \
                CommonTables                \
-               ComplexMathFunctions        \
-               ControllerFunctions         \
-               FastMathFunctions           \
-               FilteringFunctions          \
-               MatrixFunctions             \
-               StatisticsFunctions         \
-               SupportFunctions            \
-               TransformFunctions
+               FastMathFunctions           
+               # ControllerFunctions         \
+               # ComplexMathFunctions        \
+               # FilteringFunctions          \
+               # MatrixFunctions             \
+               # StatisticsFunctions         \
+               # SupportFunctions            \
+               # TransformFunctions
 
 # Build Paths
 BUILD_PATH  := DSP_Lib_Build
@@ -33,7 +33,11 @@ BUILDDIRS   += $(foreach dir,$(DSPDIRS),$(BUILD_PATH)/$(DSPLIB)/$(dir))
 
 # Targets to build
 LIBS        := $(foreach tgt,$(ARCHS),Lib/libarm_cortex$(tgt)lfsp_math.a)
-SRCS        := $(wildcard $(DSPLIB)/*/*.c)
+# SRCS        := $(wildcard $(DSPLIB)/*/*.c)
+SRCS        := \
+$(wildcard $(DSPLIB)/CommonTables/*.c) \
+$(wildcard $(DSPLIB)/FastMathFunctions/*.c)
+# $(wildcard $(DSPLIB)/BasicMathFunctions/*.c) \
 OBJS        := $(patsubst %.c, %.o, $(SRCS))
 OBJS        := $(foreach obj,$(OBJS),$(BUILD_PATH)/$(obj))
 
@@ -49,7 +53,7 @@ SIZE:= /usr/bin/arm-none-eabi-size
 
 # Flags
 INCLUDES    := -I./Include
-CFLAGS      := -c -fno-common -g3 -Os -ffunction-sections $(M4lf_FLAGS)
+CFLAGS      := -c -fno-common -g3 -Os -ffunction-sections $(M4lf_FLAGS) -Wl,--gc-sections
 CXXFLAGS    := $(CFLAGS) -fno-exceptions
 CPFLAGS     := -Obinary -v
 ODFLAGS     := -S -t
@@ -59,6 +63,7 @@ ARFLAGS     :=
 all: $(BUILDDIRS) $(OBJS) $(LIB)
 clean:
 	rm -rf $(BUILD_PATH)
+	rm -f $(LIB)
 
 $(BUILD_PATH)/%.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDES) $($(ARCH)_FLAGS) -o $@ $<
