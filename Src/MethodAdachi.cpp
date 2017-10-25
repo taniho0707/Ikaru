@@ -77,7 +77,10 @@ void MethodAdachi::renewFootmap(){
 			fm.setFootmap(buf.first - 1, buf.second, fm.getMinNextTo(buf.first - 1, buf.second, map.getWalldata(buf.first - 1, buf.second)) + 1);
 		}
 
-		if(buf.first == cur_x && buf.second == cur_y) is_end = true;
+		if(buf.first == cur_x && buf.second == cur_y) {
+			is_end = true;
+			return;
+		}
 	}
 }
 
