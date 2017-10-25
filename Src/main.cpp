@@ -522,6 +522,8 @@ int main(void) {
 			map.goals.add(GOAL_X-1, GOAL_Y-1);
 			uint16_t savenumber = 0;
 
+			bool is_first_goal = true; // = has_goal
+
 			Datalog* log = Datalog::getInstance();
 
 			while(true){
@@ -532,11 +534,22 @@ int main(void) {
 				map.setReached(pos.getPositionX(), pos.getPositionY());
 				adachi.setCurrent(pos.getPositionX(), pos.getPositionY());
 				adachi.setMap(map);
+						auto count_time = Timer::getTime();
 				adachi.renewFootmap();
+						Datalog::getInstance()->writeFloat(Timer::getTime() - count_time);
+						Datalog::getInstance()->writeFloat(0.0f);
+						Datalog::getInstance()->writeFloat(0.0f);
+						Datalog::getInstance()->writeFloat(0.0f);
+						Datalog::getInstance()->writeFloat(0.0f);
+						Datalog::getInstance()->writeFloat(0.0f);
+						Datalog::getInstance()->writeFloat(0.0f);
+						Datalog::getInstance()->writeFloat(0.0f);
+						Datalog::getInstance()->writeFloat(0.0f);
+						Datalog::getInstance()->writeFloat(0.0f);
 				RunType runtype = adachi.getNextMotion(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata);
 
 				led->on(LedNumbers::FRONT);
-		
+
 				if(runtype == slalomparams::RunType::TRAPACCEL){
 					bool flag_can_straight = true;
 					// vc->runTrapAccel(0.25f, 0.25f, 0.25f, 0.025f, 3.0f);
@@ -594,6 +607,26 @@ int main(void) {
 					mc->disableWallControl();
 					while(vc->isRunning());
 					fram->saveMap(map, savenumber);
+
+					if (is_first_goal == false) {
+						Graph* graph = new Graph;
+						Footmap fm;
+						map.goals.clear();
+						map.goals.add(0, 0);
+						graph->connectWithMap(map, true);
+						speaker->playSound(1000, 500, false);
+						vector<uint16_t> result = graph->dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(5, 4, MazeAngle::NORTH));
+						speaker->playSound(800, 100, true);
+						fm = graph->cnvGraphToFootmap(result);
+						for (int i=0; i<31; ++i) {
+							for (int j=0; j<31; ++j) {
+								if (fm.getFootmap(i, j, 1024) != 1024 && map.hasReached(i, j) == false) {
+									map.goals.add(i, j);
+								}
+							}
+						}
+						delete graph;
+					}
 
 					if (walldata.isExistWall(MouseAngle::FRONT) && (!wallsensor->isExistFrontWall())) {
 						vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
@@ -658,7 +691,6 @@ int main(void) {
 				pos.setNextPosition(runtype);
 				vc->startTrapAccel(0.25f, 0.25f, 0.09f, 3.0f);
 		
-				static bool is_first_goal = true; // = has_goal
 				if(pos.getPositionX() == GOAL_X && pos.getPositionY() == GOAL_Y && is_first_goal){
 					is_first_goal = false;
 					led->on(LedNumbers::TOP1);
@@ -670,9 +702,10 @@ int main(void) {
 
 					// map.goals.clear();
 					map.goals.add(0, 0);
+					map.goals.remove(pos.getPositionX(), pos.getPositionY());
 					
 					if (enabled_graph == false) {
-						map.goals.remove(pos.getPositionX(), pos.getPositionY());
+						// なにもしない
 					} else {
 						vc->runTrapAccel(0.25f, 0.25f, 0.0f, 0.045f, 3.0f);
 						while(vc->isRunning());
@@ -885,7 +918,7 @@ int main(void) {
 				if(i == 0){
 					pair<int8_t, int8_t> cur_pos = path.getPositionCoordinate(i);
 					vc->setPosition(cur_pos.first, cur_pos.second, path.getAngleCoordinate(i));
-					vc->runTrapAccel(0.0f, param_max_straight, param_max_turn, 0.045f*(motion.length-1) +0.00f, param_accel);
+					vc->runTrapAccel(0.0f, param_max_straight, param_max_turn, 0.045f*(motion.length-1) +0.03f, param_accel);
 				} else {
 					if(path.getMotion(i+1).type == RunType::PIVOTTURN){
 						vc->runTrapAccel(param_max_turn, param_max_straight, 0.0f, 0.045f*(motion.length+1), param_accel);
