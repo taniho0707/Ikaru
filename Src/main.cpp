@@ -47,18 +47,24 @@ const uint16_t GOAL_X = 5;
 const uint16_t GOAL_Y = 5;
 
 
-void frontcorrection(){
+void frontcorrectionStart() {
 	Led* led = Led::getInstance();
 	MotorControl* mc = MotorControl::getInstance();
 	MotorCollection* motorcollection = MotorCollection::getInstance();
 	led->flickAsync(LedNumbers::FRONT, 5.0f, 1500);
 	mc->disableWallControl();
 	motorcollection->collectionByFrontDuringStop(0.02f);
+}
+void frontcorrectionEnd() {
+	Led* led = Led::getInstance();
+	MotorControl* mc = MotorControl::getInstance();
+	MotorCollection* motorcollection = MotorCollection::getInstance();
+	while(motorcollection->isRunning());
 	mc->stay();
 	mc->resetRadIntegral();
 	mc->resetLinIntegral();
 	led->flickStop(LedNumbers::FRONT);
-	HAL_Delay(300);
+	HAL_Delay(10);
 }
 
 void printMap(Map& map) {
@@ -420,24 +426,13 @@ int main(void) {
 					pos.setNextPosition(RunType::PIVOTTURN);
 
 					if(enabled_mae){
-						led->flickAsync(LedNumbers::FRONT, 5.0f, 1500);
-						mc->disableWallControl();
-						motorcollection->collectionByFrontDuringStop(0.02f);
-						mc->stay();
-						mc->resetRadIntegral();
-						mc->resetLinIntegral();
-						led->flickStop(LedNumbers::FRONT);
-						HAL_Delay(300);
+						frontcorrectionStart();
+						frontcorrectionEnd();
 						vc->runPivotTurn(500, 90, 1000);
 						mc->disableWallControl();
 						while(vc->isRunning());
-						led->flickAsync(LedNumbers::FRONT, 5.0f, 1500);
-						mc->disableWallControl();
-						motorcollection->collectionByFrontDuringStop(0.02f);
-						mc->stay();
-						mc->resetRadIntegral();
-						mc->resetLinIntegral();
-						led->flickStop(LedNumbers::FRONT);
+						frontcorrectionStart();
+						frontcorrectionEnd();
 						led->on(LedNumbers::FRONT);
 						HAL_Delay(300);
 						vc->runPivotTurn(500, 90, 1000);
@@ -495,6 +490,7 @@ int main(void) {
 			speaker->playMusic(MusicNumber::KIRBY64_BEGINNER_1);
 			led->flickAsync(LedNumbers::FRONT, 4, 2000);
 			gyro->resetCalibration();
+			/// @todo 意味なさそうな気がする
 
 			MotorControl* mc = MotorControl::getInstance();
 			mc->stay();
@@ -505,6 +501,8 @@ int main(void) {
 			mc->enableWallControl();
 			mc->setExprGap();
 			MotorCollection* motorcollection = MotorCollection::getInstance();
+
+			gyro->resetTotalAngle();
 
 			mc->stay();
 			mc->clearGap();
@@ -534,18 +532,7 @@ int main(void) {
 				map.setReached(pos.getPositionX(), pos.getPositionY());
 				adachi.setCurrent(pos.getPositionX(), pos.getPositionY());
 				adachi.setMap(map);
-						auto count_time = Timer::getTime();
 				adachi.renewFootmap();
-						Datalog::getInstance()->writeFloat(Timer::getTime() - count_time);
-						Datalog::getInstance()->writeFloat(0.0f);
-						Datalog::getInstance()->writeFloat(0.0f);
-						Datalog::getInstance()->writeFloat(0.0f);
-						Datalog::getInstance()->writeFloat(0.0f);
-						Datalog::getInstance()->writeFloat(0.0f);
-						Datalog::getInstance()->writeFloat(0.0f);
-						Datalog::getInstance()->writeFloat(0.0f);
-						Datalog::getInstance()->writeFloat(0.0f);
-						Datalog::getInstance()->writeFloat(0.0f);
 				RunType runtype = adachi.getNextMotion(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata);
 
 				led->on(LedNumbers::FRONT);
@@ -569,7 +556,8 @@ int main(void) {
 						/// @todo ここ修正
 						if (!wallsensor->isExistWall(SensorPosition::Right)) {
 							runtype = slalomparams::RunType::SLALOM90SML_RIGHT;
-							frontcorrection();
+							frontcorrectionStart();
+							frontcorrectionEnd();
 							mc->resetRadIntegral();
 							mc->resetLinIntegral();
 							vc->runPivotTurn(500, -92, 1000);
@@ -580,7 +568,8 @@ int main(void) {
 							while(vc->isRunning());
 						} else if (!wallsensor->isExistWall(SensorPosition::Left)) {
 							runtype = slalomparams::RunType::SLALOM90SML_LEFT;
-							frontcorrection();
+							frontcorrectionStart();
+							frontcorrectionEnd();
 							mc->resetRadIntegral();
 							mc->resetLinIntegral();
 							vc->runPivotTurn(500, 92, 1000);
@@ -608,26 +597,6 @@ int main(void) {
 					while(vc->isRunning());
 					fram->saveMap(map, savenumber);
 
-					if (is_first_goal == false) {
-						Graph* graph = new Graph;
-						Footmap fm;
-						map.goals.clear();
-						map.goals.add(0, 0);
-						graph->connectWithMap(map, true);
-						speaker->playSound(1000, 500, false);
-						vector<uint16_t> result = graph->dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(5, 4, MazeAngle::NORTH));
-						speaker->playSound(800, 100, true);
-						fm = graph->cnvGraphToFootmap(result);
-						for (int i=0; i<31; ++i) {
-							for (int j=0; j<31; ++j) {
-								if (fm.getFootmap(i, j, 1024) != 1024 && map.hasReached(i, j) == false) {
-									map.goals.add(i, j);
-								}
-							}
-						}
-						delete graph;
-					}
-
 					if (walldata.isExistWall(MouseAngle::FRONT) && (!wallsensor->isExistFrontWall())) {
 						vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.045f, 3.0f);
 						while(vc->isRunning());
@@ -638,14 +607,36 @@ int main(void) {
 
 					} else {
 						if(walldata.isExistWall(MouseAngle::FRONT)){
-							frontcorrection();
+							frontcorrectionStart();
+							if (is_first_goal == false) {
+								Graph* graph = new Graph;
+								Footmap fm;
+								map.goals.clear();
+								map.goals.add(0, 0);
+								graph->connectWithMap(map, true);
+								speaker->playSound(1000, 500, false);
+								vector<uint16_t> result = graph->dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(5, 4, MazeAngle::NORTH));
+								speaker->playSound(800, 100, false);
+								fm = graph->cnvGraphToFootmap(result);
+
+								for (int i=0; i<31; ++i) {
+									for (int j=0; j<31; ++j) {
+										if (fm.getFootmap(i, j, 1024) != 1024 && map.hasReached(i, j) == false) {
+											map.goals.add(i, j);
+										}
+									}
+								}
+								delete graph;
+							}
+							frontcorrectionEnd();
 						}
 						if(walldata.isExistWall(MouseAngle::LEFT)){
 							mc->resetRadIntegral();
 							mc->resetLinIntegral();
 							vc->runPivotTurn(500, 92, 1000);
 							while(vc->isRunning());
-							frontcorrection();
+							frontcorrectionStart();
+							frontcorrectionEnd();
 							mc->resetRadIntegral();
 							mc->resetLinIntegral();
 							vc->runPivotTurn(500, 92, 1000);
@@ -801,31 +792,32 @@ int main(void) {
 			float param_max_straight = 0.3f;
 			float param_max_diago = 0.3f;
 			float param_max_turn = 0.3f;
-			float param_accel = 3.0f;
+			float param_accel = 2.5f;
 			
 			switch(decided_mode.sub){
 			case static_cast<uint8_t>(mode::MODE_SHRT::SMALL1):
 				type = PathType::SMALL;
 				param_max_straight = 0.3f;
 				param_max_turn = 0.25f;
-				param_accel = 3.0f;
+				param_accel = 2.5f;
 				break;
 			case static_cast<uint8_t>(mode::MODE_SHRT::SMALL2):
 				type = PathType::SMALL;
 				param_max_straight = 0.5f; /// @todo このパラメータでは壁切れできない
 				param_max_turn = 0.25f;
-				param_accel = 5.0f;
+				param_accel = 2.5f;
 				break;
 			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO1_GRAPH):
 				type = PathType::DIAGO;
 				enabled_graph = true;
+				param_accel = 2.5f;
 				break;
 			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO2_GRAPH):
 				type = PathType::DIAGO;
 				enabled_graph = true;
-				param_max_straight = 0.5f;
+				param_max_straight = 1.0f;
 				param_max_diago = 0.5f;
-				param_accel = 5.0f;
+				param_accel = 2.5f;
 				break;
 			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO1_ADACHI):
 				type = PathType::DIAGO;
@@ -834,9 +826,9 @@ int main(void) {
 			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO2_ADACHI):
 				type = PathType::DIAGO;
 				enabled_graph = false;
-				param_max_straight = 0.5f;
+				param_max_straight = 1.0f;
 				param_max_diago = 0.5f;
-				param_accel = 5.0f;
+				param_accel = 2.5f;
 				break;
 			default:
 				break;
@@ -911,14 +903,17 @@ int main(void) {
 			vc->enableWallgap();
 			mc->resetDistanceFromGap();
 			mc->resetDistanceFromGapDiago();
-			vc->startTrapAccel(0.0f, param_max_turn, 0.09f, param_accel);
+			vc->startTrapAccel(0.0f, param_max_turn, 0.03f, param_accel);
+
+			vc->runTrapAccel(0.0f, param_max_turn, param_max_turn, 0.03f, param_accel);
+			while(vc->isRunning());
 
 			while(true){
 				motion = path.getMotion(i);
 				if(i == 0){
 					pair<int8_t, int8_t> cur_pos = path.getPositionCoordinate(i);
 					vc->setPosition(cur_pos.first, cur_pos.second, path.getAngleCoordinate(i));
-					vc->runTrapAccel(0.0f, param_max_straight, param_max_turn, 0.045f*(motion.length-1) +0.03f, param_accel);
+					vc->runTrapAccel(param_max_turn, param_max_straight, param_max_turn, 0.045f*(motion.length-1), param_accel);
 				} else {
 					if(path.getMotion(i+1).type == RunType::PIVOTTURN){
 						vc->runTrapAccel(param_max_turn, param_max_straight, 0.0f, 0.045f*(motion.length+1), param_accel);
@@ -972,7 +967,7 @@ int main(void) {
 				vc->disableWallgap();
 				mc->enableWallControl();
 				mc->stay();
-				vc->runTrapAccel(0.0f, 0.25f, 0.0f, 0.54f, 3.0f);
+				vc->runTrapAccel(0.0f, 1.0f, 0.0f, 1.35f, 2.5f);
 				while(vc->isRunning());
 				mc->stay();
 				mc->resetLinIntegral();
@@ -989,6 +984,9 @@ int main(void) {
 					while(vc->isRunning());
 					HAL_Delay(800);
 				}
+				mc->resetLinIntegral();
+				mc->resetRadIntegral();
+				mc->stay();
 				while(1);
 				break;
 			}
@@ -1069,6 +1067,8 @@ int main(void) {
 				vc->disableWallgap();
 				mc->enableWallControl();
 				mc->stay();
+				mc->resetRadIntegral();
+				mc->resetLinIntegral();
 				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
 				while(vc->isRunning());
 				vc->runSlalom(RunType::SLALOM90_LEFT, 0.3f);
@@ -1088,6 +1088,8 @@ int main(void) {
 				vc->disableWallgap();
 				mc->enableWallControl();
 				mc->stay();
+				mc->resetRadIntegral();
+				mc->resetLinIntegral();
 				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
 				while(vc->isRunning());
 				vc->runSlalom(RunType::SLALOM180_LEFT, 0.3f);
@@ -1107,6 +1109,8 @@ int main(void) {
 				vc->disableWallgap();
 				mc->enableWallControl();
 				mc->stay();
+				mc->resetRadIntegral();
+				mc->resetLinIntegral();
 				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
 				while(vc->isRunning());
 				vc->runSlalom(RunType::SLALOM45IN_LEFT, 0.3f);
@@ -1126,6 +1130,8 @@ int main(void) {
 				vc->disableWallgap();
 				mc->enableWallControl();
 				mc->stay();
+				mc->resetRadIntegral();
+				mc->resetLinIntegral();
 				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
 				while(vc->isRunning());
 				vc->runSlalom(RunType::SLALOM135IN_LEFT, 0.3f);
@@ -1145,6 +1151,8 @@ int main(void) {
 				vc->disableWallgap();
 				mc->disableWallControl();
 				mc->stay();
+				mc->resetRadIntegral();
+				mc->resetLinIntegral();
 				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.06364f, 3.0f);
 				while(vc->isRunning());
 				vc->runSlalom(RunType::SLALOM45OUT_LEFT, 0.3f);
@@ -1164,6 +1172,8 @@ int main(void) {
 				vc->disableWallgap();
 				mc->disableWallControl();
 				mc->stay();
+				mc->resetRadIntegral();
+				mc->resetLinIntegral();
 				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.06364f, 3.0f);
 				while(vc->isRunning());
 				vc->runSlalom(RunType::SLALOM135OUT_LEFT, 0.3f);
@@ -1183,6 +1193,8 @@ int main(void) {
 				vc->disableWallgap();
 				mc->disableWallControl();
 				mc->stay();
+				mc->resetRadIntegral();
+				mc->resetLinIntegral();
 				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.06364f, 3.0f);
 				while(vc->isRunning());
 				vc->runSlalom(RunType::SLALOM90OBL_LEFT, 0.3f);
@@ -1210,6 +1222,8 @@ int main(void) {
 				vc->disableWallgap();
 				mc->enableWallControl();
 				mc->stay();
+				mc->resetRadIntegral();
+				mc->resetLinIntegral();
 				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
 				while(vc->isRunning());
 				vc->runSlalom(RunType::SLALOM90_RIGHT, 0.3f);
@@ -1229,6 +1243,8 @@ int main(void) {
 				vc->disableWallgap();
 				mc->enableWallControl();
 				mc->stay();
+				mc->resetRadIntegral();
+				mc->resetLinIntegral();
 				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
 				while(vc->isRunning());
 				vc->runSlalom(RunType::SLALOM180_RIGHT, 0.3f);
@@ -1248,6 +1264,8 @@ int main(void) {
 				vc->disableWallgap();
 				mc->enableWallControl();
 				mc->stay();
+				mc->resetRadIntegral();
+				mc->resetLinIntegral();
 				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
 				while(vc->isRunning());
 				vc->runSlalom(RunType::SLALOM45IN_RIGHT, 0.3f);
@@ -1267,6 +1285,8 @@ int main(void) {
 				vc->disableWallgap();
 				mc->enableWallControl();
 				mc->stay();
+				mc->resetRadIntegral();
+				mc->resetLinIntegral();
 				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
 				while(vc->isRunning());
 				vc->runSlalom(RunType::SLALOM135IN_RIGHT, 0.3f);
@@ -1286,6 +1306,8 @@ int main(void) {
 				vc->disableWallgap();
 				mc->disableWallControl();
 				mc->stay();
+				mc->resetRadIntegral();
+				mc->resetLinIntegral();
 				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.06364f, 3.0f);
 				while(vc->isRunning());
 				vc->runSlalom(RunType::SLALOM45OUT_RIGHT, 0.3f);
@@ -1305,6 +1327,8 @@ int main(void) {
 				vc->disableWallgap();
 				mc->disableWallControl();
 				mc->stay();
+				mc->resetRadIntegral();
+				mc->resetLinIntegral();
 				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.06364f, 3.0f);
 				while(vc->isRunning());
 				vc->runSlalom(RunType::SLALOM135OUT_RIGHT, 0.3f);
@@ -1324,6 +1348,8 @@ int main(void) {
 				vc->disableWallgap();
 				mc->disableWallControl();
 				mc->stay();
+				mc->resetRadIntegral();
+				mc->resetLinIntegral();
 				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.06364f, 3.0f);
 				while(vc->isRunning());
 				vc->runSlalom(RunType::SLALOM90OBL_RIGHT, 0.3f);
