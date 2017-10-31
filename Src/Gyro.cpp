@@ -44,6 +44,8 @@ Gyro::Gyro() :
 
 	setTypeDef(port);
 
+	total_angle = 0.0f;
+	
 	//
 	resetChipSelect();
 }
@@ -192,6 +194,21 @@ float Gyro::getAccelFront(){
 
 float Gyro::getGyroYaw(){
 	return cur_gyro_yaw;
+}
+
+
+float Gyro::getTotalAngle() {
+	return total_angle;
+}
+
+void Gyro::resetTotalAngle() {
+	total_angle = 0.0f;
+}
+
+
+void Gyro::interrupt() {
+	readGyroYaw();
+	total_angle += getGyroYaw() / 1000.0f;
 }
 
 

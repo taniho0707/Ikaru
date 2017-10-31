@@ -121,6 +121,8 @@ private:
 	float cur_gyro_yaw;
 	float cur_accel_front;
 
+	float total_angle;
+
 public:
 	static Gyro *getInstance();
 
@@ -143,4 +145,8 @@ public:
 	// returns [degree/sec] in float
 	float getGyroYaw();
 
+	float getTotalAngle();
+	void resetTotalAngle();
+
+	void interrupt();
 };
