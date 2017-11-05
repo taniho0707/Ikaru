@@ -20,7 +20,7 @@ TARGET = Ikaru
 # building variables
 ######################################
 # debug build?
-DEBUG = 1
+DEBUG = 0
 # optimization
 OPT = -Og
 
@@ -281,7 +281,8 @@ run:
 # initialize for writing
 #######################################
 init:
-	sudo stty -F /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0 ospeed 115200
+	-sudo stty -F /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0 ospeed 115200
+	-sudo stty -F /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_MEJIRO01-if00-port0 ospeed 115200
 
 #######################################
 # dependencies
