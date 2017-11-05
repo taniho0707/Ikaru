@@ -14,6 +14,7 @@ bool Flash::eraseSector(const uint32_t sector){
 	EraseInitStruct.Sector = sector;
 	EraseInitStruct.NbSectors = 1;
 	EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
+	__HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP|FLASH_FLAG_PGPERR|FLASH_FLAG_WRPERR);
 	uint32_t PageError = 0;
 	HAL_FLASH_Unlock();
 	HAL_FLASHEx_Erase(&EraseInitStruct, &PageError);
