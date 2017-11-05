@@ -13,7 +13,7 @@ MotorControl::MotorControl() :
 	// GAIN_RAD_P(-0.2f),
 	// GAIN_RAD_I(-0.03f),
 	GAIN_RAD_D(0.0f),
-	GAIN_WALL_P(-1.0f),
+	GAIN_WALL_P(-1.3f),
 	GAIN_WALL_SHRT_P(-1.5f),
 	GAIN_WALL_I(0.0f),
 	GAIN_WALL_D(0.0f),
@@ -153,6 +153,9 @@ void MotorControl::controlVel(){
 
 	static int16_t lastwall = 0;
 	static int16_t current_wall_correction = 0;
+	static int16_t last_current_wall_correction = 0;
+
+	static int16_t dif_wall = 0;
 
 	if(integral_lin_encoder > 100 || integral_rad_gyro > 50000){
 		led->initPort(LedNumbers::TOP1);
@@ -170,7 +173,6 @@ void MotorControl::controlVel(){
 
 	if(enabled_wall_control){
 		if(is_comb_wall_control){
-			// current_wall_correction = wall->getCorrectionComb(10);
 			current_wall_correction = wall->getCorrectionComb(500);
 		} else {
 			current_wall_correction = wall->getCorrection(100);
@@ -178,15 +180,18 @@ void MotorControl::controlVel(){
 	} else {
 		current_wall_correction = 0;
 	}
-	if(tar_lin_vel < 0.025f){
-		current_wall_correction = 0;
-	}
+	// if(tar_lin_vel < 0.025f){
+	// 	current_wall_correction = 0;
+	// }
 
 	// // 壁積分値の計算
 	// integral_wall += wall->getCorrection(10000) * enabled_wall_control;
+	// 壁微分値の計算
+	dif_wall = current_wall_correction - last_current_wall_correction;
+	last_current_wall_correction = current_wall_correction;
 
 	// rotation成分の計算
-	tar_rad_rev = ((tar_rad_vel - (is_shrt_wall_control ? GAIN_WALL_SHRT_P : GAIN_WALL_P) * ((tar_lin_vel < 0.001f) ? 3 : 1) * current_wall_correction) - gyro->getGyroYaw());
+	tar_rad_rev = ((tar_rad_vel - ((is_shrt_wall_control ? GAIN_WALL_SHRT_P : GAIN_WALL_P) * ((tar_lin_vel < 0.001f) ? 3 : 1) * current_wall_correction + GAIN_WALL_D * dif_wall)) - gyro->getGyroYaw());
 	// tar_rad_rev = ((tar_rad_vel - enabled_wall_control * GAIN_WALL_P * wall->getCorrection(10000) - enabled_wall_control * GAIN_WALL_D * (wall->getCorrection(10000)-lastwall)) - gyro->getGyroYaw());
 	// d_rad_gyro = (tar_rad_vel - gyro->getGyroYaw()) - tar_rad_rev;
 	// integral_rad_gyro += (tar_rad_vel - gyro->getGyroYaw());
@@ -239,31 +244,29 @@ void MotorControl::controlVel(){
 	motor->setDuty(MotorSide::LEFT, tar_motor_l_power);
 	motor->setDuty(MotorSide::RIGHT, tar_motor_r_power);
 
-	log->writeFloat(tar_lin_vel);
-	log->writeFloat(encoder->getVelocity(EncoderSide::LEFT));
-	log->writeFloat(encoder->getVelocity(EncoderSide::RIGHT));
-	log->writeFloat((encoder->getVelocity(EncoderSide::LEFT)+encoder->getVelocity(EncoderSide::RIGHT))/2);
-	// static GapCounter* gapcounter = GapCounter::getInstance();
-	// log->writeFloat(gapcounter->getDistance());
-	log->writeFloat(getIntegralEncoder());
-	log->writeFloat(gyro->getGyroYaw());
-	log->writeFloat(tar_rad_vel);
-	log->writeFloat(wall->getValue(SensorPosition::Left));
-	log->writeFloat(wall->getValue(SensorPosition::Right));
+	// log->writeFloat(tar_lin_vel);
+	// log->writeFloat(encoder->getVelocity(EncoderSide::LEFT));
+	// log->writeFloat(encoder->getVelocity(EncoderSide::RIGHT));
+	// log->writeFloat((encoder->getVelocity(EncoderSide::LEFT)+encoder->getVelocity(EncoderSide::RIGHT))/2);
+	// // static GapCounter* gapcounter = GapCounter::getInstance();
+	// // log->writeFloat(gapcounter->getDistance());
+	// log->writeFloat(getIntegralEncoder());
+	// log->writeFloat(gyro->getGyroYaw());
+	// log->writeFloat(tar_rad_vel);
+	// log->writeFloat(wall->getValue(SensorPosition::Left));
+	// log->writeFloat(wall->getValue(SensorPosition::Right));
 	// log->writeFloat(wall->getValue(SensorPosition::Front));
-	// log->writeFloat(wall->getValue(SensorPosition::FLeft));
-	// log->writeFloat(wall->getValue(SensorPosition::FRight));
-	// log->writeFloat(current_wall_correction);
-	log->writeFloat(getDistanceFromGap());
-	// log->writeFloat(getDistanceFromGapDiago());
-	// log->writeFloat(0.0f);
-	// log->writeFloat(tar_motor_l_power);
-	// log->writeFloat(tar_motor_r_power);
+	// // log->writeFloat(wall->getValue(SensorPosition::FLeft));
+	// // log->writeFloat(wall->getValue(SensorPosition::FRight));
+	// // log->writeFloat(current_wall_correction);
+	// // log->writeFloat(getDistanceFromGap());
+	// // log->writeFloat(getDistanceFromGapDiago());
+	// // log->writeFloat(gyro->getTotalAngle());
+	// // log->writeFloat(0.0f);
+	// // log->writeFloat(tar_motor_l_power);
+	// // log->writeFloat(tar_motor_r_power);
 
 	// lastwall = wall->getCorrection(10000);
-
-	if(enabled_wall_control) led->on(LedNumbers::TOP1);
-	else led->off(LedNumbers::TOP1);
 }
 
 

@@ -177,7 +177,19 @@ void Speaker::playMusic(MusicNumber n){
 		playSound(1568, 100, true);
 		break;
 	case MusicNumber::KIRBY_DIE:
-		
+		playSound(1047, 130, true);
+		HAL_Delay(130);
+		playSound(988, 130, true);
+		playSound(932, 130, true);
+		HAL_Delay(130);
+		playSound(880, 130, true);
+		playSound(831, 130, true);
+		HAL_Delay(130);
+		playSound(622, 390, true);
+		playSound(831, 130, true);
+		playSound(784, 130, true);
+		HAL_Delay(650);
+		playSound(1568, 130, true);
 		break;
 	case MusicNumber::KIRBY_GOURMETRACE:
 		

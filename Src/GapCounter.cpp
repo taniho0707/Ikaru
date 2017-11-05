@@ -7,9 +7,9 @@
 
 GapCounter::GapCounter() :
 	GAP_DISTANCE_LEFT(0.012f),
-	GAP_DISTANCE_RIGHT(0.012f),
+	GAP_DISTANCE_RIGHT(0.014f),
 	GAP_DISTANCE_DIAGO_LEFT(0.012f),
-	GAP_DISTANCE_DIAGO_RIGHT(0.012f)
+	GAP_DISTANCE_DIAGO_RIGHT(0.014f)
 {
 	running = false;
 	is_diago = false;
