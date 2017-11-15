@@ -5,8 +5,8 @@
 using namespace slalomparams;
 
 VelocityControl::VelocityControl() :
-	DIST_GAP_FROM_L(0.016),
-	DIST_GAP_FROM_R(0.012)
+	DIST_GAP_FROM_L(0.010),
+	DIST_GAP_FROM_R(0.010)
 {
 	// mc = MotorControl::getInstance();
 	// sens = WallSensor::getInstance();
@@ -163,21 +163,34 @@ void VelocityControl::calcTrapAccel(int32_t t){
 		&& mc->getDistanceFromGap() < 0.001f && mc->getDistanceFromGap() > -0.001f
 		&& reg_max_vel < 0.31f
 		&& x0 > 0.001f
-		&& ((reg_distance < 0.091f && reg_distance > 0.089f)
+		&& (
+			//(reg_distance < 0.091f && reg_distance > 0.089f)
 			// || (reg_distance < 0.046f && reg_distance > 0.044f && reg_end_vel > 0.01f)
 			// || (reg_distance < 0.056f && reg_distance > 0.054f)
-			|| reg_distance < 0.091f
-			|| (abs(x0 - reg_distance) < 0.04f)) /// @todo ここの条件なんか変
-		&& x0 > 0.04f
+			reg_distance < 0.091f
+			)
+		&& reg_end_vel > 0.1f
 		){
-		if(mc->isLeftGap()){
-			mc->setIntegralEncoder(reg_distance - DIST_GAP_FROM_L);
-			time = 1000.0f*(DIST_GAP_FROM_L-x3)/reg_max_vel + (t-t1-t2);
-			speaker->playSound(440, 50, false);
+		if (reg_distance < 0.046f || (reg_distance-x0) < 0.045f) { // 半区間か距離足りてない
+			if(mc->isLeftGap()){
+				mc->setIntegralEncoder(reg_distance - DIST_GAP_FROM_L);
+				time = 1000.0f*(DIST_GAP_FROM_L-x3)/reg_max_vel + (t-t1-t2);
+				speaker->playSound(440, 50, false);
+			} else {
+				mc->setIntegralEncoder(reg_distance - DIST_GAP_FROM_R);
+				time = 1000.0f*(DIST_GAP_FROM_R-x3)/reg_max_vel + (t-t1-t2);
+				speaker->playSound(880, 50, false);
+			}
 		} else {
-			mc->setIntegralEncoder(reg_distance - DIST_GAP_FROM_R);
-			time = 1000.0f*(DIST_GAP_FROM_R-x3)/reg_max_vel + (t-t1-t2);
-			speaker->playSound(880, 50, false);
+			if(mc->isLeftGap()){
+				mc->setIntegralEncoder(reg_distance - DIST_GAP_FROM_L + 0.09f);
+				// time = 1000.0f*(DIST_GAP_FROM_L-x3)/reg_max_vel + (t-t1-t2);
+				speaker->playSound(440, 300, false);
+			} else {
+				mc->setIntegralEncoder(reg_distance - DIST_GAP_FROM_R + 0.09f);
+				// time = 1000.0f*(DIST_GAP_FROM_R-x3)/reg_max_vel + (t-t1-t2);
+				speaker->playSound(880, 300, false);
+			}
 		}
 	}
 
@@ -196,25 +209,27 @@ void VelocityControl::calcTrapAccel(int32_t t){
 		auto kabekire = reg_distance - (mc->isLeftGap() ? DIST_GAP_FROM_L : DIST_GAP_FROM_R);
 		if(reg_type == RunType::TRAPDIAGO){
 			mc->enableWallControl();
-			mc->setCombWallControl();
+			mc->setCombDiagoWallControl();
 		} else if (reg_distance == 0.045f && reg_end_vel == 0.0f) {
 			mc->disableWallControl();
 		} else {
+			mc->resetCombWallControl();
 			if((reg_max_vel < 0.31f && x0 > (kabekire - 0.005) && x0 < (kabekire + 0.005))
 			// if((reg_max_vel < 0.31f && x0 > (kabekire - 0.015) && x0 < (kabekire + 0.015))
-			   // || (fmod(x0, 0.09f) > fmod(kabekire - 0.045f, 0.09f) && fmod(x0, 0.09f) < fmod(kabekire + 0.015f, 0.09f) && reg_type == RunType::TRAPACCEL)
+			//    || (fmod(x0, 0.09f) > fmod(kabekire - 0.045f, 0.09f) && fmod(x0, 0.09f) < fmod(kabekire + 0.015f, 0.09f) && reg_type == RunType::TRAPACCEL)
 				){
 				mc->setCombWallControl();
 			} else if((reg_max_vel < 0.31f && x0 > (kabekire - 0.030) && x0 < (kabekire - 0.005))
 			// } else if((reg_max_vel < 0.31f && x0 > (kabekire - 0.045) && x0 < (kabekire - 0.015))
-					  || (fmod(x0, 0.09f) > fmod(kabekire - 0.045f, 0.09f) && fmod(x0, 0.09f) < fmod(kabekire - 0.015, 0.09f))){
+				      // || (fmod(x0, 0.09f) > fmod(kabekire - 0.045f, 0.09f) && fmod(x0, 0.09f) < fmod(kabekire - 0.015, 0.09f))
+				){
 				mc->disableWallControl();
 				// mc->enableWallControl();
 				/// @todo だいじょうぶかなあ
 			} else {
 				mc->enableWallControl();
 			}
-			mc->enableWallControl();
+			// mc->enableWallControl();
 		}
 		/// @todo 最短時によくない挙動しそう
 	}
@@ -372,21 +387,35 @@ void VelocityControl::calcSlalom(int32_t t){
 				// }
 			}
 		} else if(static_cast<uint8_t>(reg_type) == static_cast<uint8_t>(RunType::SLALOM45OUT_LEFT)
-				  || static_cast<uint8_t>(reg_type) == static_cast<uint8_t>(RunType::SLALOM45OUT_RIGHT)
 				  || static_cast<uint8_t>(reg_type) == static_cast<uint8_t>(RunType::SLALOM135OUT_LEFT)
-				  || static_cast<uint8_t>(reg_type) == static_cast<uint8_t>(RunType::SLALOM135OUT_RIGHT)
 				  || static_cast<uint8_t>(reg_type) == static_cast<uint8_t>(RunType::SLALOM90OBL_LEFT)
-				  || static_cast<uint8_t>(reg_type) == static_cast<uint8_t>(RunType::SLALOM90OBL_RIGHT)
 			){
-			if(mc->getDistanceFromGapDiago() > reg_d_before && mc->getDistanceFromGapDiago() < reg_d_before + 0.01f){
+			if ((!is_expr_wallgap)
+				&& mc->getDistanceFromGapDiagoLeft() < 0.001f && mc->getDistanceFromGapDiagoLeft() > -0.001f
+				) {
+				speaker->playSound(440, 50, false);
+			}
+			if (mc->getDistanceFromGapDiagoLeft() >= reg_d_before) {
 				reg_slalom_pos = 2;
 				time = Timer::getTime();
-				speaker->playSound(1200, 50, false);
 			}
 			// if(x0 >= reg_d_before){
 			// 	reg_slalom_pos = 2;
 			// 	time = Timer::getTime();
 			// }
+		} else if(static_cast<uint8_t>(reg_type) == static_cast<uint8_t>(RunType::SLALOM45OUT_RIGHT)
+				  || static_cast<uint8_t>(reg_type) == static_cast<uint8_t>(RunType::SLALOM135OUT_RIGHT)
+				  || static_cast<uint8_t>(reg_type) == static_cast<uint8_t>(RunType::SLALOM90OBL_RIGHT)
+			){
+			if ((!is_expr_wallgap)
+				&& mc->getDistanceFromGapDiagoRight() < 0.001f && mc->getDistanceFromGapDiagoRight() > -0.001f
+				) {
+				speaker->playSound(880, 50, false);
+			}
+			if (mc->getDistanceFromGapDiagoRight() >= reg_d_before) {
+				reg_slalom_pos = 2;
+				time = Timer::getTime();
+			}
 		} else {
 			// if(mc->getDistanceFromGap() > reg_d_before && mc->getDistanceFromGap() < reg_d_before + 0.02f){
 			// 	reg_slalom_pos = 2;
@@ -437,23 +466,23 @@ void VelocityControl::calcSlalom(int32_t t){
 		r -= is_positive * reg_accel * 0.001;
 		reg_slalom_pos = 4;
 
-		if(
-			enabled_wallgap
-			&& is_expr_wallgap
-			&& mc->getDistanceFromGap() < 0.001f && mc->getDistanceFromGap() > -0.001f
-			&& reg_max_vel < 0.31f
-			){
-			if(mc->isLeftGap()){
-				mc->setIntegralEncoder(reg_d_after - DIST_GAP_FROM_L);
-			} else {
-				mc->setIntegralEncoder(reg_d_after - DIST_GAP_FROM_R);
-			}
-			if(mc->isLeftGap()){
-				speaker->playSound(440, 50, false);
-			} else {
-				speaker->playSound(880, 50, false);
-			}
-		}
+		// if(
+		// 	enabled_wallgap
+		// 	&& is_expr_wallgap
+		// 	&& mc->getDistanceFromGap() < 0.001f && mc->getDistanceFromGap() > -0.001f
+		// 	&& reg_max_vel < 0.31f
+		// 	){
+		// 	if(mc->isLeftGap()){
+		// 		mc->setIntegralEncoder(reg_d_after - DIST_GAP_FROM_L);
+		// 	} else {
+		// 		mc->setIntegralEncoder(reg_d_after - DIST_GAP_FROM_R);
+		// 	}
+		// 	if(mc->isLeftGap()){
+		// 		speaker->playSound(440, 50, false);
+		// 	} else {
+		// 		speaker->playSound(880, 50, false);
+		// 	}
+		// }
 
 	} else {
 		mc->setIntegralEncoder(0.0f);
@@ -461,6 +490,7 @@ void VelocityControl::calcSlalom(int32_t t){
 		
 		mc->resetDistanceFromGap();
 		mc->resetDistanceFromGapDiago();
+		mc->clearGap();
 	}
 	target_linvel = reg_min_vel;
 	target_radvel = r;

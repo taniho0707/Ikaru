@@ -20,22 +20,23 @@ WallSensor::WallSensor() :
 	// VAL_THR_LEFT(400),  // Q
 	// VAL_THR_FRONT(250), // Q
 	// VAL_THR_RIGHT(400), // Q
-	VAL_THR_LEFT(160),  // H
-	VAL_THR_FRONT(110), // H
-	VAL_THR_RIGHT(170), // H
+	VAL_THR_LEFT(155),  // H
+	VAL_THR_FRONT(115), // H // 110
+	VAL_THR_RIGHT(160), // H
 	VAL_THR_FRIGHT(185),
 	VAL_THR_FRONT_SUB(200),
 
-	VAL_THR_CONTROL_LEFT(100),
-	VAL_THR_CONTROL_RIGHT(110),
+	// 斜めの制御をかける閾値
+	VAL_THR_CONTROL_LEFT(230),
+	VAL_THR_CONTROL_RIGHT(250),
 
-	VAL_THR_GAP_FLEFT(120),
+	VAL_THR_GAP_FLEFT(160),
 	VAL_THR_GAP_LEFT(145),
-	VAL_THR_GAP_RIGHT(155),
-	VAL_THR_GAP_FRIGHT(185),
+	VAL_THR_GAP_RIGHT(150),
+	VAL_THR_GAP_FRIGHT(130),
 	VAL_THR_GAP_DIAGO_FLEFT(160),
-	VAL_THR_GAP_DIAGO_LEFT(250),
-	VAL_THR_GAP_DIAGO_RIGHT(130),
+	VAL_THR_GAP_DIAGO_LEFT(165),
+	VAL_THR_GAP_DIAGO_RIGHT(170),
 	VAL_THR_GAP_DIAGO_FRIGHT(140),
 	
 	VAL_THR_SLALOM_FLEFT(500),
@@ -43,7 +44,8 @@ WallSensor::WallSensor() :
 	VAL_THR_SLALOM_RIGHT(500),
 	VAL_THR_SLALOM_FRIGHT(500),
 	
-	THR_WALL_DISAPPEAR(50) // サーキットなら50に，ハーフなら5に
+	THR_WALL_DISAPPEAR(100)
+	// THR_WALL_DISAPPEAR(50)
 {
 	__HAL_RCC_ADC1_CLK_ENABLE();
 	__HAL_RCC_GPIOA_CLK_ENABLE();
@@ -350,6 +352,25 @@ bool WallSensor::isExistFrontWall() {
 }
 
 
+bool WallSensor::isEnableLeft() {
+	if (current_value[static_cast<uint8_t>(SensorPosition::FLeft)] > valid_val_thr_gap_fleft) return true;
+	else return false;
+}
+bool WallSensor::isEnableRight() {
+	if (current_value[static_cast<uint8_t>(SensorPosition::FRight)] > valid_val_thr_gap_fright) return true;
+	else return false;
+}
+
+bool WallSensor::tooCloseLeft() {
+	if (current_value[static_cast<uint8_t>(SensorPosition::Left)] > valid_val_ref_left+40) return true;
+	else return false;
+}
+bool WallSensor::tooCloseRight() {
+	if (current_value[static_cast<uint8_t>(SensorPosition::Right)] > valid_val_ref_left+40) return true;
+	else return false;
+}
+
+
 float WallSensor::getDistance(SensorPosition pos){
 	return param_a.at(static_cast<uint8_t>(pos))/log(getValue(pos))+param_b.at(static_cast<uint8_t>(pos));
 }
@@ -518,13 +539,17 @@ int16_t WallSensor::getCorrection(uint16_t max){
 	int16_t tmpL = valid_val_ref_left - getValue(SensorPosition::Left);
 	bool is_singlewall = false;
 
-	// if(current_value[static_cast<uint8_t>(SensorPosition::Left)] > VAL_THR_CONTROL_LEFT && current_value[static_cast<uint8_t>(SensorPosition::Right)] > VAL_THR_CONTROL_RIGHT) return 0;
-
-	if(!isExistWall(SensorPosition::Left) || ((static_cast<int16_t>(getLastValue(SensorPosition::Left))-static_cast<int16_t>(getValue(SensorPosition::Left))) > valid_thr_wall_disappear)){
+	if(!isExistWall(SensorPosition::Left)
+	   || ((static_cast<int16_t>(getLastValue(SensorPosition::Left))-static_cast<int16_t>(getValue(SensorPosition::Left))) > valid_thr_wall_disappear)
+	   // || (!isEnableLeft())
+		){
 		tmpL = 0;
 		is_singlewall = true;
 	}
-	if(!isExistWall(SensorPosition::Right) || ((static_cast<int16_t>(getLastValue(SensorPosition::Right))-static_cast<int16_t>(getValue(SensorPosition::Right))) > valid_thr_wall_disappear)){
+	if(!isExistWall(SensorPosition::Right)
+	   || ((static_cast<int16_t>(getLastValue(SensorPosition::Right))-static_cast<int16_t>(getValue(SensorPosition::Right))) > valid_thr_wall_disappear)
+	   // || (!isEnableRight())
+		){
 		tmpR = 0;
 		is_singlewall = true;
 	}
@@ -548,6 +573,28 @@ int16_t WallSensor::getCorrectionComb(uint16_t max){
 
 	int16_t tmpR = getValue(SensorPosition::Right) - valid_val_ref_right;
 	int16_t tmpL = valid_val_ref_left - getValue(SensorPosition::Left);
+
+	if(tmpR < 0) tmpR = 0;
+	if(tmpL > 0) tmpL = 0;
+
+	int16_t retval = tmpR + tmpL;
+	
+	if(abs(retval) > max){
+		if(retval > 0){
+			return max;
+		} else {
+			return -1 * max;
+		}
+	}
+	
+	return retval;
+}
+
+int16_t WallSensor::getCorrectionCombDiago(uint16_t max){
+	if(!enabled) return 0;
+
+	int16_t tmpR = getValue(SensorPosition::Right) - valid_val_thr_control_right;
+	int16_t tmpL = valid_val_thr_control_left - getValue(SensorPosition::Left);
 
 	if(tmpR < 0) tmpR = 0;
 	if(tmpL > 0) tmpL = 0;

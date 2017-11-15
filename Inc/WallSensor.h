@@ -138,6 +138,13 @@ public:
 	uint16_t getLastValue(SensorPosition);
 	bool isExistWall(SensorPosition);
 
+	// 斜め左右センサが閾値より低ければ無効化
+	bool isEnableLeft();
+	bool isEnableRight();
+	// 横壁が近すぎるか判定
+	bool tooCloseLeft();
+	bool tooCloseRight();
+
 	bool isExistFrontWall();
 
 	float getDistance(SensorPosition);
@@ -159,6 +166,7 @@ public:
 
 	int16_t getCorrection(uint16_t max);
 	int16_t getCorrectionComb(uint16_t max);
+	int16_t getCorrectionCombDiago(uint16_t max);
 
 	uint32_t getParamsHash();
 	bool isLatestFram();

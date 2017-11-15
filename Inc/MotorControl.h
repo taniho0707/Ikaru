@@ -58,13 +58,15 @@ private:
 
 	float dist_from_gap;
 	bool is_left_gap;
-	float dist_from_gap_diago;
+	float dist_from_gap_diago_left;
+	float dist_from_gap_diago_right;
 	bool is_left_gap_diago;
 	bool is_expr_gap;
 
 	bool enabled_wall_control;
 	bool is_shrt_wall_control;
 	bool is_comb_wall_control;
+	bool is_diago_wall_control;
 
 	bool is_failsafe;
 
@@ -84,7 +86,8 @@ public:
 	float getDistanceFromGap();
 	bool isLeftGap();
 	void resetDistanceFromGapDiago();
-	float getDistanceFromGapDiago();
+	float getDistanceFromGapDiagoLeft();
+	float getDistanceFromGapDiagoRight();
 	bool isLeftGapDiago();
 	void setExprGap();
 	void setShrtGap();
@@ -100,6 +103,7 @@ public:
 
 	void setCombWallControl();
 	void resetCombWallControl();
+	void setCombDiagoWallControl();
 
 	void clearGap();
 
