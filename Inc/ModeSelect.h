@@ -19,7 +19,7 @@ namespace mode {
 		RUNLOG,
 		EXPR,
 		SHRT,
-		HIDARITE,
+		QUARTER,
 		LAST // コレより下に定義しない
 	};
 
@@ -53,6 +53,8 @@ namespace mode {
 		LOAD_GRAPH,
 		NEW_ADACHI,
 		LOAD_ADACHI,
+		NEW_GRAPH_WITHOUT_KABEKIRE,
+		NEW_ADACHI_WITHOUT_KABEKIRE,
 		LAST // コレより下に定義しない
 	};
 
@@ -65,11 +67,11 @@ namespace mode {
 		DIAGO4,
 		LAST // コレより下に定義しない
 	};
-	// 迷路番号0〜2を任意に呼び出せるように
 
-	enum class MODE_HIDARITE : uint8_t {
-		WITH_MAE,
-		WITHOUT_MAE,
+	enum class MODE_QUARTER : uint8_t {
+		EXPR,
+		SHRT_SMALL,
+		SHRT_DIAGO,
 		LAST // コレより下に定義しない
 	};
 

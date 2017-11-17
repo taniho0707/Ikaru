@@ -5,8 +5,8 @@
 using namespace slalomparams;
 
 VelocityControl::VelocityControl() :
-	DIST_GAP_FROM_L(0.010),
-	DIST_GAP_FROM_R(0.011)
+	DIST_GAP_FROM_L(0.012),
+	DIST_GAP_FROM_R(0.012)
 {
 	// mc = MotorControl::getInstance();
 	// sens = WallSensor::getInstance();
@@ -79,6 +79,7 @@ void VelocityControl::runTrapDiago(
 	float distance,
 	float accel
 	){
+	reg_type = RunType::TRAPDIAGO;
 	runTrapAccel(start_vel, max_vel, end_vel, distance, accel);
 	reg_type = RunType::TRAPDIAGO;
 	mc->resetDistanceFromGap();
@@ -192,6 +193,23 @@ void VelocityControl::calcTrapAccel(int32_t t){
 				speaker->playSound(880, 300, false);
 			}
 		}
+	} else if (
+		enabled_wallgap
+		&& is_expr_wallgap
+		&& reg_type == RunType::TRAPACCEL
+		&& mc->getDistanceFromGap() < 0.001f && mc->getDistanceFromGap() > -0.001f
+		&& (reg_distance - x0) < 0.045f
+		&& x0 > 0.001f
+		) {
+		if(mc->isLeftGap()){
+			mc->setIntegralEncoder(reg_distance - DIST_GAP_FROM_L);
+			time = 1000.0f*(DIST_GAP_FROM_L-x3)/reg_max_vel + (t-t1-t2);
+			speaker->playSound(440, 50, false);
+		} else {
+			mc->setIntegralEncoder(reg_distance - DIST_GAP_FROM_R);
+			time = 1000.0f*(DIST_GAP_FROM_R-x3)/reg_max_vel + (t-t1-t2);
+			speaker->playSound(880, 50, false);
+		}
 	}
 
 	if (enabled_wallgap
@@ -215,12 +233,12 @@ void VelocityControl::calcTrapAccel(int32_t t){
 		} else {
 			mc->resetCombWallControl();
 			if((reg_max_vel < 0.31f && x0 > (kabekire - 0.005) && x0 < (kabekire + 0.005))
-			// if((reg_max_vel < 0.31f && x0 > (kabekire - 0.015) && x0 < (kabekire + 0.015))
-			//    || (fmod(x0, 0.09f) > fmod(kabekire - 0.045f, 0.09f) && fmod(x0, 0.09f) < fmod(kabekire + 0.015f, 0.09f) && reg_type == RunType::TRAPACCEL)
+			   // if((reg_max_vel < 0.31f && x0 > (kabekire - 0.015) && x0 < (kabekire + 0.015))
+			   //    || (fmod(x0, 0.09f) > fmod(kabekire - 0.045f, 0.09f) && fmod(x0, 0.09f) < fmod(kabekire + 0.015f, 0.09f) && reg_type == RunType::TRAPACCEL)
 				){
 				mc->setCombWallControl();
 			} else if((reg_max_vel < 0.31f && x0 > (kabekire - 0.020) && x0 < (kabekire - 0.005))
-			// } else if((reg_max_vel < 0.31f && x0 > (kabekire - 0.045) && x0 < (kabekire - 0.015))
+					  // } else if((reg_max_vel < 0.31f && x0 > (kabekire - 0.045) && x0 < (kabekire - 0.015))
 				      // || (fmod(x0, 0.09f) > fmod(kabekire - 0.045f, 0.09f) && fmod(x0, 0.09f) < fmod(kabekire - 0.015, 0.09f))
 				){
 				mc->disableWallControl();

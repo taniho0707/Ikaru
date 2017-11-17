@@ -22,7 +22,7 @@ WallSensor::WallSensor() :
 	// VAL_THR_RIGHT(400), // Q
 	VAL_THR_LEFT(160),  // H
 	VAL_THR_FRONT(115), // H
-	VAL_THR_RIGHT(165), // H
+	VAL_THR_RIGHT(170), // H
 	VAL_THR_FRIGHT(185),
 	VAL_THR_FRONT_SUB(200),
 
@@ -31,16 +31,18 @@ WallSensor::WallSensor() :
 	VAL_THR_CONTROL_RIGHT(270),
 
 	VAL_THR_GAP_FLEFT(160),
-	VAL_THR_GAP_LEFT(160), //ALLJAPAN
-	VAL_THR_GAP_RIGHT(170), //ALLJAPAN
-	// VAL_THR_GAP_LEFT(145),
-	// VAL_THR_GAP_RIGHT(165),
+	// VAL_THR_GAP_LEFT(160), //ALLJAPAN
+	// VAL_THR_GAP_RIGHT(170), //ALLJAPAN
+	VAL_THR_GAP_LEFT(180),
+	VAL_THR_GAP_RIGHT(180),
 	VAL_THR_GAP_FRIGHT(130),
 	VAL_THR_GAP_DIAGO_FLEFT(160),
-	VAL_THR_GAP_DIAGO_LEFT(155), //ALLJAPAN
-	VAL_THR_GAP_DIAGO_RIGHT(170), //ALLJAPAN
-	// VAL_THR_GAP_DIAGO_LEFT(155),
-	// VAL_THR_GAP_DIAGO_RIGHT(170),
+	// VAL_THR_GAP_DIAGO_LEFT(155), //ALLJAPAN
+	// VAL_THR_GAP_DIAGO_RIGHT(170), //ALLJAPAN
+	VAL_THR_GAP_DIAGO_LEFT(180),
+	VAL_THR_GAP_DIAGO_RIGHT(170),
+	// VAL_THR_GAP_DIAGO_LEFT(190),
+	// VAL_THR_GAP_DIAGO_RIGHT(180),
 	VAL_THR_GAP_DIAGO_FRIGHT(140),
 	
 	VAL_THR_SLALOM_FLEFT(500),
@@ -366,11 +368,11 @@ bool WallSensor::isEnableRight() {
 }
 
 bool WallSensor::tooCloseLeft() {
-	if (current_value[static_cast<uint8_t>(SensorPosition::Left)] > valid_val_ref_left+40) return true;
+	if (current_value[static_cast<uint8_t>(SensorPosition::Left)] > valid_val_ref_left+45) return true;
 	else return false;
 }
 bool WallSensor::tooCloseRight() {
-	if (current_value[static_cast<uint8_t>(SensorPosition::Right)] > valid_val_ref_left+40) return true;
+	if (current_value[static_cast<uint8_t>(SensorPosition::Right)] > valid_val_ref_left+45) return true;
 	else return false;
 }
 

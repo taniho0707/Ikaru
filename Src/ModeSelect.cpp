@@ -13,7 +13,7 @@ const static MODE_SENSORLOG  first_mode_sensorlog  = MODE_SENSORLOG::SHOW;
 const static MODE_RUNLOG     first_mode_runlog     = MODE_RUNLOG::MAZE1;
 const static MODE_EXPR       first_mode_expr       = MODE_EXPR::NEW_GRAPH;
 const static MODE_SHRT       first_mode_shrt       = MODE_SHRT::SMALL1;
-const static MODE_HIDARITE   first_mode_hidarite   = MODE_HIDARITE::WITHOUT_MAE;
+const static MODE_QUARTER    first_mode_quarter    = MODE_QUARTER::EXPR;
 
 
 ModeSelect::ModeSelect() :
@@ -67,8 +67,8 @@ uint8_t ModeSelect::getModeSubLast(uint8_t prime){
 	case MODE_PRIME::SHRT:
 		return static_cast<uint8_t>(MODE_SHRT::LAST);
 		break;
-	case MODE_PRIME::HIDARITE:
-		return static_cast<uint8_t>(MODE_HIDARITE::LAST);
+	case MODE_PRIME::QUARTER:
+		return static_cast<uint8_t>(MODE_QUARTER::LAST);
 		break;
 	}
 }

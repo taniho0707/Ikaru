@@ -49,7 +49,12 @@ const uint16_t GOAL_Y = 5;
 
 const bool japanfinal = false;
 
-const float angle90 = 90.8;
+const float angle90 = 91.2f;
+const float angle180 = 184.0f;
+
+// クォーター用
+const uint16_t QUARTER_GOAL_X = 1;
+const uint16_t QUARTER_GOAL_Y = 0;
 
 
 void frontcorrectionStart() {
@@ -381,21 +386,29 @@ int main(void) {
 		bool enabled_mae = false;
 	
 		switch(decided_mode.prime){
-		case static_cast<uint8_t>(mode::MODE_PRIME::HIDARITE):
+		case static_cast<uint8_t>(mode::MODE_PRIME::QUARTER):
 		{
+			bool is_expr;
+			bool is_diago;
 			switch(decided_mode.sub){
-			case static_cast<uint8_t>(mode::MODE_HIDARITE::WITHOUT_MAE):
-				enabled_mae = false;
+			case static_cast<uint8_t>(mode::MODE_QUARTER::EXPR):
+				is_expr = true;
+				is_diago = false;
 				break;
-			case static_cast<uint8_t>(mode::MODE_HIDARITE::WITH_MAE):
-				enabled_mae = true;
+			case static_cast<uint8_t>(mode::MODE_QUARTER::SHRT_SMALL):
+				is_expr = false;
+				is_diago = false;
+				break;
+			case static_cast<uint8_t>(mode::MODE_QUARTER::SHRT_DIAGO):
+				is_expr = false;
+				is_diago = true;
 				break;
 			default:
 				break;
 			}
 			float gvel = 0.10f;
 			float gaccel = 1.5f;
-			float section = 0.045f;
+			float section = 0.0225f;
 			float turn_coefficient = 0.4f;
 			// ここから左手法で走る
 			mode->startcheck(0);
@@ -417,80 +430,107 @@ int main(void) {
 			VelocityControl* vc = VelocityControl::getInstance();
 			vc->disableWallgap();
 
-			MotorCollection* motorcollection = MotorCollection::getInstance();
-			vc->runTrapAccel(0.0f, gvel, gvel, section*0.5f, gaccel);
-			// vc->enableWallgap();
-			mc->enableWallControl();
-			while(vc->isRunning());
-
-			while (1) {
-				walldata = wallsensor->getWall();
-				map.addWall(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata);
-				map.setReached(pos.getPositionX(), pos.getPositionY());
-				// fram->saveMap(map, 0);
-
-				// vc->runTrapAccel(0.25f, 0.25f, 0.25f, 0.09f, 5.0f);
-				// // vc->disableWallgap();
-				// while(vc->isRunning());
-				if(wallsensor->isExistWall(SensorPosition::Left) == false){
-					vc->runSlalom(RunType::SLALOM90SML_LEFT, gvel);
-					// vc->disableWallgap();
-					mc->disableWallControl();
-					while(vc->isRunning());
-					pos.setNextPosition(RunType::SLALOM90SML_LEFT);
-				} else if(wallsensor->isExistWall(SensorPosition::Front) == false){
-					vc->runTrapAccel(gvel, gvel, gvel, section, gaccel);
-					// vc->disableWallgap();
-					mc->enableWallControl();
-					while(vc->isRunning());
-					pos.setNextPosition(RunType::TRAPACCEL);
-				} else if(wallsensor->isExistWall(SensorPosition::Right) == false){
-					vc->runSlalom(RunType::SLALOM90SML_RIGHT, gvel);
-					// vc->disableWallgap();
-					mc->disableWallControl();
-					while(vc->isRunning());
-					pos.setNextPosition(RunType::SLALOM90SML_RIGHT);
-				} else {
-					vc->runTrapAccel(gvel, gvel, 0.0f, section*0.5f, gaccel);
-					// vc->disableWallgap();
-					mc->disableWallControl();
-					while(vc->isRunning());
-					pos.setNextPosition(RunType::PIVOTTURN);
-
-					if(enabled_mae){
-						frontcorrectionStart();
-						frontcorrectionEnd();
-						vc->runPivotTurn(500, angle90, 1000);
-						mc->disableWallControl();
+			if (is_expr) {
+				MotorCollection* motorcollection = MotorCollection::getInstance();
+				MethodAdachi adachi;;
+				vc->runTrapAccel(0.0f, gvel, gvel, section*0.5f, gaccel);
+				mc->enableWallControl();
+				while(vc->isRunning());
+				while(true){
+					walldata = wallsensor->getWall();
+					map.setWall(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata); //setにした
+					map.setReached(pos.getPositionX(), pos.getPositionY());
+					adachi.setCurrent(pos.getPositionX(), pos.getPositionY());
+					adachi.setMap(map);
+					adachi.renewFootmap();
+					RunType runtype = adachi.getNextMotion(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata);
+					if(pos.getPositionX() == QUARTER_GOAL_X && pos.getPositionY() == QUARTER_GOAL_Y){
+						fram->saveMap(map, 1);
+						map.goals.clear();
+						map.goals.add(0, 0);
+						speaker->playSound(1200, 500, false);
+					} else if(pos.getPositionX() == 0 && pos.getPositionY() == 0) {
+						vc->runTrapAccel(gvel, gvel, 0.0f, section, gaccel);
 						while(vc->isRunning());
-						frontcorrectionStart();
-						frontcorrectionEnd();
-						led->on(LedNumbers::FRONT);
-						HAL_Delay(300);
-						vc->runPivotTurn(500, angle90, 1000);
 						mc->disableWallControl();
-						while(vc->isRunning());
-						HAL_Delay(300);
-					} else {
-						vc->runPivotTurn(500*turn_coefficient, angle90*2, 5000*turn_coefficient);
-						mc->disableWallControl();
-						while(vc->isRunning());
+						fram->saveMap(map, 0);
+						fram->saveMap(map, 2);
+						speaker->playMusic(MusicNumber::OIRABOKODAZE1);
+						break;
 					}
-			
-					mc->resetRadIntegral();
-					mc->resetLinIntegral();
-					vc->runTrapAccel(0.0f, gvel, gvel, section*0.5f, gaccel);
-					// vc->disableWallgap();
-					mc->disableWallControl();
-					while(vc->isRunning());
+					if(runtype == slalomparams::RunType::TRAPACCEL) {
+						vc->runTrapAccel(gvel, gvel, gvel, section*2, gaccel);
+						while(vc->isRunning());
+					} else if(runtype == slalomparams::RunType::PIVOTTURN){
+						vc->runTrapAccel(gvel, gvel, 0.0f, section, gaccel);
+						mc->disableWallControl();
+						while(vc->isRunning());
+						fram->saveMap(map, 0);
+						if(walldata.isExistWall(MouseAngle::FRONT)){
+							frontcorrectionStart();
+							frontcorrectionEnd();
+						}
+						if(walldata.isExistWall(MouseAngle::LEFT)){
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
+							vc->runPivotTurn(500, angle90, 1000);
+							while(vc->isRunning());
+							frontcorrectionStart();
+							frontcorrectionEnd();
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
+							vc->runPivotTurn(500, angle90, 1000);
+							while(vc->isRunning());
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
+						} else if (walldata.isExistWall(MouseAngle::RIGHT)) {
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
+							vc->runPivotTurn(500, -angle90, 1000);
+							while(vc->isRunning());
+							frontcorrectionStart();
+							frontcorrectionEnd();
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
+							vc->runPivotTurn(500, -angle90, 1000);
+							while(vc->isRunning());
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
+						} else {
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
+							vc->runPivotTurn(500, angle180, 1000);
+							while(vc->isRunning());
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
+						}
+						backandstraight();
+					} else if(runtype == slalomparams::RunType::SLALOM90SML_RIGHT){
+						vc->runSlalom(RunType::SLALOM90SML_RIGHT, gvel);
+						while(vc->isRunning());
+					} else if(runtype == slalomparams::RunType::SLALOM90SML_LEFT){
+						vc->runSlalom(RunType::SLALOM90SML_LEFT, gvel);
+						while(vc->isRunning());
+					} else {
+						vc->runTrapAccel(gvel, gvel, 0.0f, section, gaccel);
+						while(vc->isRunning());
+						break;
+					}
+					pos.setNextPosition(runtype);
+					vc->startTrapAccel(gvel, gvel, section*2, gaccel);
 				}
+				Motor::getInstance()->disable();
+			} else {
+			
 			}
+
 		}
 		break;
 		case static_cast<uint8_t>(mode::MODE_PRIME::EXPR):
 		{
 			Map map;
 			bool enabled_graph = false;
+			bool enabled_kabekire = true;
 			Graph* graph = new Graph;
 			compc->printf("Graph ");
 			graph->connectWithMap(map, true);
@@ -520,6 +560,16 @@ int main(void) {
 				enabled_graph = false;
 				fram->loadMap(map, decided_mode.number);
 				break;
+			case static_cast<uint8_t>(mode::MODE_EXPR::NEW_GRAPH_WITHOUT_KABEKIRE):
+				enabled_mae = true;
+				enabled_graph = true;
+				enabled_kabekire = false;
+				break;
+			case static_cast<uint8_t>(mode::MODE_EXPR::NEW_ADACHI_WITHOUT_KABEKIRE):
+				enabled_mae = true;
+				enabled_graph = false;
+				enabled_kabekire = false;
+				break;
 			default:
 				break;
 			}
@@ -548,7 +598,7 @@ int main(void) {
 
 			MotorControl* mc = MotorControl::getInstance();
 			mc->stay();
-			{
+			if (enabled_graph) {
 				Footmap fm = graph->cnvGraphToFootmap(graph->dijkstra(Graph::cnvCoordinateToNum(0,0,MazeAngle::SOUTH),Graph::cnvCoordinateToNum(GOAL_X,GOAL_Y-1,MazeAngle::NORTH)));
 				for (int i=0; i<31; ++i) for (int j=0; j<31; ++j) if (fm.getFootmap(i, j, 1024) != 1024 && map.hasReached(i, j) == false) map.goals.add(i, j);
 			}
@@ -556,10 +606,14 @@ int main(void) {
 			mc->disableWallControl();
 			led->on(LedNumbers::FRONT);
 			VelocityControl* vc = VelocityControl::getInstance();
-			vc->enableWallgap();
-			vc->setExprGap();
+			if (enabled_kabekire) {
+				vc->enableWallgap();
+				vc->setExprGap();
+				mc->setExprGap();
+			} else {
+				vc->disableWallgap();
+			}
 			mc->enableWallControl();
-			mc->setExprGap();
 			MotorCollection* motorcollection = MotorCollection::getInstance();
 			gyro->resetTotalAngle();
 
@@ -576,11 +630,8 @@ int main(void) {
 
 			Datalog* log = Datalog::getInstance();
 
-			uint32_t expr_count = 0; // 探索歩数．初めはダイクストラ法が追いつかないから
-
 			while(true){
 				auto count_time_start = Timer::getTime();
-				++ expr_count;
 				// speaker->playSound(261, 50, false);
 				led->off(LedNumbers::FRONT);
 				walldata = wallsensor->getWall();
@@ -597,16 +648,9 @@ int main(void) {
 					graph->disconnectNodesFromWalldata(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata);
 					is_first_goal = false;
 					led->on(LedNumbers::TOP1);
-					// walldata = wallsensor->getWall();
-					// map.setWall(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata);
-					// map.setReached(pos.getPositionX(), pos.getPositionY());
-					// led->off(LedNumbers::TOP1);
 					fram->saveMap(map, 1);
 
-					// map.goals.clear();
-					// if (!enabled_graph) {
 					map.goals.add(0, 0); /// @todo グラフモードの場合，探索が終了した場合に戻ってくるようにしたい
-					// }
 					map.goals.remove(pos.getPositionX(), pos.getPositionY());
 					
 					speaker->playSound(1200, 500, false);
@@ -614,13 +658,10 @@ int main(void) {
 						// なにもしない
 					} else {
 						vc->runTrapAccel(0.25f, 0.25f, 0.0f, 0.045f, 3.0f);
-						mc->disableWallControl(); // fact 1
+						mc->disableWallControl();
 						while(vc->isRunning());
 						{
-							// dialog led を表示する
-							// Graph* graph = new Graph;
 							Footmap fm;
-							// graph->connectWithMap(map, true);
 							speaker->playSound(1000, 500, false);
 							vector<uint16_t> result = graph->dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(GOAL_X, GOAL_Y-1, MazeAngle::NORTH));
 							speaker->playSound(800, 500, false);
@@ -655,7 +696,7 @@ int main(void) {
 						} else if(runtype_tmp == slalomparams::RunType::PIVOTTURN){
 							mc->resetRadIntegral();
 							mc->resetLinIntegral();
-							vc->runPivotTurn(500, -angle90*2, 1000);
+							vc->runPivotTurn(500, -angle180, 1000);
 							while(vc->isRunning());
 							backandstraight();
 						} else if(runtype_tmp == slalomparams::RunType::SLALOM90SML_LEFT){
@@ -691,46 +732,6 @@ int main(void) {
 					map.goals.remove(pos.getPositionX(), pos.getPositionY());
 				}
 
-				// if (enabled_graph && map.goals.size() == 0) { // 再探索
-				// 	graph->disconnectNodesFromWalldata(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata);
-				// 	vc->runTrapAccel(0.25f, 0.25f, 0.0f, 0.045f, 3.0f);
-				// 	// mc->disableWallControl();
-				// 	while(vc->isRunning());
-				// 	fram->saveMap(map, savenumber);
-				// 	{
-				// 		map.goals.clear();
-				// 		Footmap fm = graph->cnvGraphToFootmap(
-				// 			graph->dijkstra(Graph::cnvCoordinateToNum(0,0,MazeAngle::SOUTH),Graph::cnvCoordinateToNum(GOAL_X,GOAL_Y-1,MazeAngle::NORTH)));
-				// 		for (int i=0; i<31; ++i) for (int j=0; j<31; ++j) if (fm.getFootmap(i, j, 1024) != 1024 && map.hasReached(i, j) == false) map.goals.add(i, j);
-				// 	}
-				// 	if (map.goals.size() == 0) {
-				// 		map.goals.add(0, 0);
-				// 		speaker->playSound(660, 1000, false);
-				// 	}
-				// 	adachi.setMap(map);
-				// 	adachi.renewFootmap();
-				// 	if(runtype == slalomparams::RunType::TRAPACCEL){
-				// 		backandstraight();
-				// 	} else if(runtype == slalomparams::RunType::PIVOTTURN){
-				// 		mc->resetRadIntegral();
-				// 		mc->resetLinIntegral();
-				// 		vc->runPivotTurn(500, angle90*2, 1000);
-				// 		while(vc->isRunning());
-				// 		backandstraight();
-				// 	} else if(runtype == slalomparams::RunType::SLALOM90SML_LEFT){
-				// 		mc->resetRadIntegral();
-				// 		mc->resetLinIntegral();
-				// 		vc->runPivotTurn(500, angle90, 1000);
-				// 		while(vc->isRunning());
-				// 		backandstraight();
-				// 	} else if(runtype == slalomparams::RunType::SLALOM90SML_RIGHT){
-				// 		mc->resetRadIntegral();
-				// 		mc->resetLinIntegral();
-				// 		vc->runPivotTurn(500, -angle90, 1000);
-				// 		while(vc->isRunning());
-				// 		backandstraight();
-				// 	}
-				// } else if(runtype == slalomparams::RunType::TRAPACCEL) { // ここから下が通常の探索
 				if(runtype == slalomparams::RunType::TRAPACCEL) { // ここから下が通常の探索
 					graph->disconnectNodesFromWalldata(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata);
 					if (wallsensor->tooCloseLeft()) {
@@ -768,7 +769,9 @@ int main(void) {
 					} else {
 						vc->runTrapAccel(0.25f, 0.25f, 0.25f, 0.09f, 3.0f);
 						while(vc->isRunning());
-						vc->enableWallgap();
+						if (enabled_kabekire) {
+							vc->enableWallgap();
+						}
 					}
 				} else if(runtype == slalomparams::RunType::PIVOTTURN){
 					vc->runTrapAccel(0.25f, 0.25f, 0.0f, 0.045f, 3.0f);
@@ -784,9 +787,6 @@ int main(void) {
 								Footmap fm = graph->cnvGraphToFootmap(
 									graph->dijkstra(Graph::cnvCoordinateToNum(0,0,MazeAngle::SOUTH),Graph::cnvCoordinateToNum(GOAL_X,GOAL_Y-1,MazeAngle::NORTH)));
 								for (int i=0; i<31; ++i) for (int j=0; j<31; ++j) if (fm.getFootmap(i, j, 1024) != 1024 && map.hasReached(i, j) == false) map.goals.add(i, j);
-								// log->writeFloat(3.3f);log->writeFloat(8.8f);log->writeFloat(8.8f);log->writeFloat(8.8f);log->writeFloat(8.8f);
-								// log->writeFloat(8.8f);log->writeFloat(8.8f);log->writeFloat(pos.getPositionX());log->writeFloat(pos.getPositionY());
-								// log->writeFloat((Timer::getTime() - count_time_start));
 								if (!is_first_goal) { map.goals.add(0, 0); }
 								speaker->playSound(1500, 50, true);
 							}
@@ -846,7 +846,7 @@ int main(void) {
 						} else {
 							mc->resetRadIntegral();
 							mc->resetLinIntegral();
-							vc->runPivotTurn(500, angle90*2, 1000);
+							vc->runPivotTurn(500, angle180, 1000);
 							while(vc->isRunning());
 							mc->resetRadIntegral();
 							mc->resetLinIntegral();
@@ -873,7 +873,7 @@ int main(void) {
 						frontcorrectionEnd();
 						mc->resetRadIntegral();
 						mc->resetLinIntegral();
-						vc->runPivotTurn(500, angle90*2, 1000);
+						vc->runPivotTurn(500, angle180, 1000);
 						while(vc->isRunning());
 						mc->resetRadIntegral();
 						mc->resetLinIntegral();
@@ -901,7 +901,7 @@ int main(void) {
 						frontcorrectionEnd();
 						mc->resetRadIntegral();
 						mc->resetLinIntegral();
-						vc->runPivotTurn(500, angle90*2, 1000);
+						vc->runPivotTurn(500, angle180, 1000);
 						while(vc->isRunning());
 						mc->resetRadIntegral();
 						mc->resetLinIntegral();
@@ -982,16 +982,17 @@ int main(void) {
 			DerivingPathBasic1 padachi;
 
 			fram->loadMap(map, decided_mode.number);
+			fram->saveMap(map, 3);
 			padachi.setGoal(GOAL_X, GOAL_Y);
 			padachi.setMap(map);
 
 			// if (type == PathType::DIAGO) {
-				Graph graph;
-				compc->printf("GRAPH\n");
-				graph.connectWithMap(map);
-				compc->printf("CONNECTED WITH MAP\n");
-				vector<uint16_t> result = graph.dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(GOAL_X, GOAL_Y-1, MazeAngle::NORTH));
-				padachi.setFootmap(graph.cnvGraphToFootmap(result));
+			Graph graph;
+			compc->printf("GRAPH\n");
+			graph.connectWithMap(map);
+			compc->printf("CONNECTED WITH MAP\n");
+			vector<uint16_t> result = graph.dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(GOAL_X, GOAL_Y-1, MazeAngle::NORTH));
+			padachi.setFootmap(graph.cnvGraphToFootmap(result));
 			// }
 			
 			Path path = padachi.getPath(type);
@@ -1143,7 +1144,7 @@ int main(void) {
 				vc->disableWallgap();
 				mc->disableWallControl();
 				for (int i=0; i<10; ++i) {
-					vc->runPivotTurn(500, angle90*2, 1000);
+					vc->runPivotTurn(500, angle180, 1000);
 					while(vc->isRunning());
 					HAL_Delay(800);
 				}
