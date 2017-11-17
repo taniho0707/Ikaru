@@ -59,10 +59,10 @@ namespace mode {
 	enum class MODE_SHRT : uint8_t {
 		SMALL1,
 		SMALL2,
-		DIAGO1_GRAPH,
-		DIAGO2_GRAPH,
-		DIAGO1_ADACHI,
-		DIAGO2_ADACHI,
+		DIAGO1,
+		DIAGO2,
+		DIAGO3,
+		DIAGO4,
 		LAST // コレより下に定義しない
 	};
 	// 迷路番号0〜2を任意に呼び出せるように
@@ -100,8 +100,8 @@ private:
 	const float THR_UNDER_ACCEL_Z; //下限値
 	const float THR_OVER_ACCEL_Z;  //上限値
 	const float THR_WALL_FRONT;
-	const float THR_WALL_FLEFT;
-	const float THR_WALL_FRIGHT;
+	const float THR_WALL_LEFT;
+	const float THR_WALL_RIGHT;
 
 	int16_t count_gyro_x;
 	int16_t count_gyro_y;
@@ -110,8 +110,8 @@ private:
 	uint16_t count_accel_y;
 	uint16_t count_accel_z;
 	uint16_t count_wall_front;
-	uint16_t count_wall_fleft;
-	uint16_t count_wall_fright;
+	uint16_t count_wall_left;
+	uint16_t count_wall_right;
 	uint16_t count_timeout;
 
 	bool enabled;

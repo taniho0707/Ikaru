@@ -6,7 +6,7 @@ using namespace slalomparams;
 
 VelocityControl::VelocityControl() :
 	DIST_GAP_FROM_L(0.010),
-	DIST_GAP_FROM_R(0.010)
+	DIST_GAP_FROM_R(0.011)
 {
 	// mc = MotorControl::getInstance();
 	// sens = WallSensor::getInstance();
@@ -219,7 +219,7 @@ void VelocityControl::calcTrapAccel(int32_t t){
 			//    || (fmod(x0, 0.09f) > fmod(kabekire - 0.045f, 0.09f) && fmod(x0, 0.09f) < fmod(kabekire + 0.015f, 0.09f) && reg_type == RunType::TRAPACCEL)
 				){
 				mc->setCombWallControl();
-			} else if((reg_max_vel < 0.31f && x0 > (kabekire - 0.030) && x0 < (kabekire - 0.005))
+			} else if((reg_max_vel < 0.31f && x0 > (kabekire - 0.020) && x0 < (kabekire - 0.005))
 			// } else if((reg_max_vel < 0.31f && x0 > (kabekire - 0.045) && x0 < (kabekire - 0.015))
 				      // || (fmod(x0, 0.09f) > fmod(kabekire - 0.045f, 0.09f) && fmod(x0, 0.09f) < fmod(kabekire - 0.015, 0.09f))
 				){

@@ -33,8 +33,8 @@ ModeSelect::ModeSelect() :
 	THR_UNDER_ACCEL_Z(100),
 	THR_OVER_ACCEL_Z(0), //G
 	THR_WALL_FRONT(500),
-	THR_WALL_FLEFT(500),
-	THR_WALL_FRIGHT(500)
+	THR_WALL_LEFT(500),
+	THR_WALL_RIGHT(500)
 {
 	count_gyro_x = 0;
 	count_gyro_y = 0;
@@ -43,8 +43,8 @@ ModeSelect::ModeSelect() :
 	count_accel_y = 0;
 	count_accel_z = 0;
 	count_wall_front = 0;
-	count_wall_fleft = 0;
-	count_wall_fright = 0;
+	count_wall_left = 0;
+	count_wall_right = 0;
 
 	enabled = false;
 }
@@ -139,7 +139,7 @@ mode::StructMode ModeSelect::select(){
 			if(ad == -1 && mode_number != 0){
 				speaker->playMusic(MusicNumber::KIRBY3_ORIG_DESELECT3);
 				-- mode_number;
-			} else if(ad == 1 && mode_number != 2){ /// @todo fix max number
+			} else if(ad == 1 && mode_number != 10){ /// @todo fix max number
 				speaker->playMusic(MusicNumber::KIRBY3_SELECT3);
 				++ mode_number;
 			} else {
@@ -171,11 +171,11 @@ mode::StructMode ModeSelect::select(){
 
 bool ModeSelect::startcheck(uint16_t timeout){
 	count_timeout = 0;
-	count_wall_fleft = 0;
-	count_wall_fright = 0;
+	count_wall_left = 0;
+	count_wall_right = 0;
 	enabled = true;
 	while(1){
-		if(count_wall_fleft > WAITTIME_WALL && count_wall_fright > WAITTIME_WALL) {
+		if(count_wall_left > WAITTIME_WALL && count_wall_right > WAITTIME_WALL) {
 			enabled = false;
 			return true;
 		} else if(timeout != 0 && count_timeout > timeout){
@@ -188,15 +188,15 @@ bool ModeSelect::startcheck(uint16_t timeout){
 
 void ModeSelect::interrupt(){
 	if (!enabled) return;
-	if (wallsensor->getValue(SensorPosition::FLeft) > THR_WALL_FLEFT) {
-		++ count_wall_fleft;
+	if (wallsensor->getValue(SensorPosition::Left) > THR_WALL_LEFT) {
+		++ count_wall_left;
 	} else {
-		count_wall_fleft = 0;
+		count_wall_left = 0;
 	}
-	if (wallsensor->getValue(SensorPosition::FRight) > THR_WALL_FRIGHT) {
-		++ count_wall_fright;
+	if (wallsensor->getValue(SensorPosition::Right) > THR_WALL_RIGHT) {
+		++ count_wall_right;
 	} else {
-		count_wall_fright = 0;
+		count_wall_right = 0;
 	}
 	static int16_t gx, gy, gz;
 	gx = gyro->readGyroX();

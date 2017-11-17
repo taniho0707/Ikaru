@@ -13,8 +13,9 @@ MotorControl::MotorControl() :
 	// GAIN_RAD_P(-0.2f),
 	// GAIN_RAD_I(-0.03f),
 	GAIN_RAD_D(0.0f),
+	// GAIN_WALL_P(-0.8f),
 	GAIN_WALL_P(-1.8f),
-	GAIN_WALL_SHRT_P(-4.0f),
+	GAIN_WALL_SHRT_P(-1.0f),
 	GAIN_WALL_I(0.0f),
 	GAIN_WALL_D(0.0f),
 	TREAD(380.0f)
@@ -187,7 +188,7 @@ void MotorControl::controlVel(){
 	if(enabled_wall_control){
 		if(is_comb_wall_control) {
 			if (is_diago_wall_control) {
-				current_wall_correction = wall->getCorrectionCombDiago(300);
+				current_wall_correction = wall->getCorrectionCombDiago(50);
 			} else {
 				current_wall_correction = wall->getCorrectionComb(500);
 			}
@@ -210,12 +211,18 @@ void MotorControl::controlVel(){
 
 	// rotation成分の計算
 	tar_rad_rev = ((tar_rad_vel - ((is_shrt_wall_control ? GAIN_WALL_SHRT_P : GAIN_WALL_P) * ((tar_lin_vel < 0.001f) ? 3 : 1) * current_wall_correction + GAIN_WALL_D * dif_wall)) - gyro->getGyroYaw());
+	// tar_rad_rev = (tar_rad_vel - gyro->getGyroYaw());
 	// tar_rad_rev = ((tar_rad_vel - enabled_wall_control * GAIN_WALL_P * wall->getCorrection(10000) - enabled_wall_control * GAIN_WALL_D * (wall->getCorrection(10000)-lastwall)) - gyro->getGyroYaw());
 	// d_rad_gyro = (tar_rad_vel - gyro->getGyroYaw()) - tar_rad_rev;
 	// integral_rad_gyro += (tar_rad_vel - gyro->getGyroYaw());
 	// if(wall->isExistWall(SensorPosition::Left) || wall->isExistWall(SensorPosition::Right)) integral_rad_gyro = 0.0f;
-	integral_rad_gyro += tar_rad_rev;
-	tar_motor_rad_power = GAIN_RAD_P * tar_rad_rev + GAIN_RAD_I * integral_rad_gyro;
+	// if (current_wall_correction != 0) {
+	// 	integral_rad_gyro = 0;
+	// 	tar_motor_rad_power = GAIN_RAD_P * tar_rad_rev + (is_shrt_wall_control ? GAIN_WALL_SHRT_P : GAIN_WALL_P) * current_wall_correction;
+	// } else {
+		integral_rad_gyro += tar_rad_rev;
+		tar_motor_rad_power = GAIN_RAD_P * tar_rad_rev + GAIN_RAD_I * integral_rad_gyro;
+	// }
 
 	// linear成分の計算
 	tar_vel_rev = (tar_lin_vel) - ((encoder->getVelocity(EncoderSide::RIGHT)+encoder->getVelocity(EncoderSide::LEFT))/2/* + gyro->getAccelFront() * 0.0005*/);

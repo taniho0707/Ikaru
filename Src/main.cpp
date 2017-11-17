@@ -44,12 +44,12 @@ void SystemClock_Config(void);
 static void MX_NVIC_Init(void);
 
 // 右上座標を指定する
-const uint16_t GOAL_X = 6;
-const uint16_t GOAL_Y = 7;
+const uint16_t GOAL_X = 5;
+const uint16_t GOAL_Y = 5;
 
 const bool japanfinal = false;
 
-const float angle90 = 91;
+const float angle90 = 90.8;
 
 
 void frontcorrectionStart() {
@@ -86,14 +86,14 @@ void backandstraight() {
 		mc->resetLinIntegral();
 		while(vc->isRunning());
 	} else {
-		vc->runTrapAccel(0.0f, 0.50f, 0.0f, -0.025f, 2.5f);
+		vc->runTrapAccel(0.0f, 0.50f, 0.0f, -0.032f, 2.5f);
 		mc->disableWallControl();
 		while(vc->isRunning());
 		mc->resetRadIntegral();
 		mc->resetLinIntegral();
 		mc->resetDistanceFromGap();
 		mc->resetDistanceFromGapDiago();
-		vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.070f, 2.5f);
+		vc->runTrapAccel(0.0f, 0.25f, 0.25f, 0.077f, 2.5f);
 		mc->enableWallControl();
 		while(vc->isRunning());
 	}
@@ -604,9 +604,9 @@ int main(void) {
 					fram->saveMap(map, 1);
 
 					// map.goals.clear();
-					if (!enabled_graph) {
-						map.goals.add(0, 0);
-					}
+					// if (!enabled_graph) {
+					map.goals.add(0, 0); /// @todo グラフモードの場合，探索が終了した場合に戻ってくるようにしたい
+					// }
 					map.goals.remove(pos.getPositionX(), pos.getPositionY());
 					
 					speaker->playSound(1200, 500, false);
@@ -691,46 +691,47 @@ int main(void) {
 					map.goals.remove(pos.getPositionX(), pos.getPositionY());
 				}
 
-				if (enabled_graph && map.goals.size() == 0) { // 再探索
-					graph->disconnectNodesFromWalldata(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata);
-					vc->runTrapAccel(0.25f, 0.25f, 0.0f, 0.045f, 3.0f);
-					// mc->disableWallControl();
-					while(vc->isRunning());
-					fram->saveMap(map, savenumber);
-					{
-						map.goals.clear();
-						Footmap fm = graph->cnvGraphToFootmap(
-							graph->dijkstra(Graph::cnvCoordinateToNum(0,0,MazeAngle::SOUTH),Graph::cnvCoordinateToNum(GOAL_X,GOAL_Y-1,MazeAngle::NORTH)));
-						for (int i=0; i<31; ++i) for (int j=0; j<31; ++j) if (fm.getFootmap(i, j, 1024) != 1024 && map.hasReached(i, j) == false) map.goals.add(i, j);
-					}
-					if (map.goals.size() == 0) {
-						map.goals.add(0, 0);
-						speaker->playSound(660, 1000, false);
-					}
-					adachi.setMap(map);
-					adachi.renewFootmap();
-					if(runtype == slalomparams::RunType::TRAPACCEL){
-						backandstraight();
-					} else if(runtype == slalomparams::RunType::PIVOTTURN){
-						mc->resetRadIntegral();
-						mc->resetLinIntegral();
-						vc->runPivotTurn(500, -angle90*2, 1000);
-						while(vc->isRunning());
-						backandstraight();
-					} else if(runtype == slalomparams::RunType::SLALOM90SML_LEFT){
-						mc->resetRadIntegral();
-						mc->resetLinIntegral();
-						vc->runPivotTurn(500, angle90, 1000);
-						while(vc->isRunning());
-						backandstraight();
-					} else if(runtype == slalomparams::RunType::SLALOM90SML_RIGHT){
-						mc->resetRadIntegral();
-						mc->resetLinIntegral();
-						vc->runPivotTurn(500, -angle90, 1000);
-						while(vc->isRunning());
-						backandstraight();
-					}
-				} else if(runtype == slalomparams::RunType::TRAPACCEL) { // ここから下が通常の探索
+				// if (enabled_graph && map.goals.size() == 0) { // 再探索
+				// 	graph->disconnectNodesFromWalldata(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata);
+				// 	vc->runTrapAccel(0.25f, 0.25f, 0.0f, 0.045f, 3.0f);
+				// 	// mc->disableWallControl();
+				// 	while(vc->isRunning());
+				// 	fram->saveMap(map, savenumber);
+				// 	{
+				// 		map.goals.clear();
+				// 		Footmap fm = graph->cnvGraphToFootmap(
+				// 			graph->dijkstra(Graph::cnvCoordinateToNum(0,0,MazeAngle::SOUTH),Graph::cnvCoordinateToNum(GOAL_X,GOAL_Y-1,MazeAngle::NORTH)));
+				// 		for (int i=0; i<31; ++i) for (int j=0; j<31; ++j) if (fm.getFootmap(i, j, 1024) != 1024 && map.hasReached(i, j) == false) map.goals.add(i, j);
+				// 	}
+				// 	if (map.goals.size() == 0) {
+				// 		map.goals.add(0, 0);
+				// 		speaker->playSound(660, 1000, false);
+				// 	}
+				// 	adachi.setMap(map);
+				// 	adachi.renewFootmap();
+				// 	if(runtype == slalomparams::RunType::TRAPACCEL){
+				// 		backandstraight();
+				// 	} else if(runtype == slalomparams::RunType::PIVOTTURN){
+				// 		mc->resetRadIntegral();
+				// 		mc->resetLinIntegral();
+				// 		vc->runPivotTurn(500, angle90*2, 1000);
+				// 		while(vc->isRunning());
+				// 		backandstraight();
+				// 	} else if(runtype == slalomparams::RunType::SLALOM90SML_LEFT){
+				// 		mc->resetRadIntegral();
+				// 		mc->resetLinIntegral();
+				// 		vc->runPivotTurn(500, angle90, 1000);
+				// 		while(vc->isRunning());
+				// 		backandstraight();
+				// 	} else if(runtype == slalomparams::RunType::SLALOM90SML_RIGHT){
+				// 		mc->resetRadIntegral();
+				// 		mc->resetLinIntegral();
+				// 		vc->runPivotTurn(500, -angle90, 1000);
+				// 		while(vc->isRunning());
+				// 		backandstraight();
+				// 	}
+				// } else if(runtype == slalomparams::RunType::TRAPACCEL) { // ここから下が通常の探索
+				if(runtype == slalomparams::RunType::TRAPACCEL) { // ここから下が通常の探索
 					graph->disconnectNodesFromWalldata(pos.getPositionX(), pos.getPositionY(), pos.getAngle(), walldata);
 					if (wallsensor->tooCloseLeft()) {
 						vc->runTrapAccel(0.25f, 0.25f, 0.0f, 0.045f, 3.0f);
@@ -786,6 +787,7 @@ int main(void) {
 								// log->writeFloat(3.3f);log->writeFloat(8.8f);log->writeFloat(8.8f);log->writeFloat(8.8f);log->writeFloat(8.8f);
 								// log->writeFloat(8.8f);log->writeFloat(8.8f);log->writeFloat(pos.getPositionX());log->writeFloat(pos.getPositionY());
 								// log->writeFloat((Timer::getTime() - count_time_start));
+								if (!is_first_goal) { map.goals.add(0, 0); }
 								speaker->playSound(1500, 50, true);
 							}
 						}
@@ -808,6 +810,7 @@ int main(void) {
 								Footmap fm = graph->cnvGraphToFootmap(
 									graph->dijkstra(Graph::cnvCoordinateToNum(0,0,MazeAngle::SOUTH),Graph::cnvCoordinateToNum(GOAL_X,GOAL_Y-1,MazeAngle::NORTH)));
 								for (int i=0; i<31; ++i) for (int j=0; j<31; ++j) if (fm.getFootmap(i, j, 1024) != 1024 && map.hasReached(i, j) == false) map.goals.add(i, j);
+								if (!is_first_goal) { map.goals.add(0, 0); }
 								speaker->playSound(1500, 50, true);
 							}
 						}
@@ -858,6 +861,12 @@ int main(void) {
 						while(vc->isRunning());
 						mc->resetRadIntegral();
 						mc->resetLinIntegral();
+						if (walldata.isExistWall(MouseAngle::FRONT)) {
+							frontcorrectionStart();
+							frontcorrectionEnd();
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
+						}
 						vc->runPivotTurn(500, angle90, 1000);
 						while(vc->isRunning());
 						frontcorrectionStart();
@@ -880,6 +889,12 @@ int main(void) {
 						while(vc->isRunning());
 						mc->resetRadIntegral();
 						mc->resetLinIntegral();
+						if (walldata.isExistWall(MouseAngle::FRONT)) {
+							frontcorrectionStart();
+							frontcorrectionEnd();
+							mc->resetRadIntegral();
+							mc->resetLinIntegral();
+						}
 						vc->runPivotTurn(500, -angle90, 1000);
 						while(vc->isRunning());
 						frontcorrectionStart();
@@ -907,11 +922,11 @@ int main(void) {
 				vc->startTrapAccel(0.25f, 0.25f, 0.09f, 3.0f);
 			}
 		}
+		Motor::getInstance()->disable();
 		break;
 		case static_cast<uint8_t>(mode::MODE_PRIME::SHRT):
 		{
 			PathType type;
-			bool enabled_graph = true;
 
 			float param_max_straight = 0.3f;
 			float param_max_diago = 0.3f;
@@ -931,28 +946,28 @@ int main(void) {
 				param_max_turn = 0.25f;
 				param_accel = 2.5f;
 				break;
-			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO1_GRAPH):
+			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO1):
 				type = PathType::DIAGO;
-				enabled_graph = true;
 				param_accel = 2.5f;
 				break;
-			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO2_GRAPH):
+			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO2):
 				type = PathType::DIAGO;
-				enabled_graph = true;
 				param_max_straight = 1.0f;
 				param_max_diago = 0.5f;
 				param_accel = 2.5f;
 				break;
-			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO1_ADACHI):
+			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO3):
 				type = PathType::DIAGO;
-				enabled_graph = false;
-				break;
-			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO2_ADACHI):
-				type = PathType::DIAGO;
-				enabled_graph = false;
 				param_max_straight = 1.0f;
-				param_max_diago = 0.5f;
+				param_max_diago = 1.0f;
 				param_accel = 2.5f;
+				break;
+			case static_cast<uint8_t>(mode::MODE_SHRT::DIAGO4):
+				type = PathType::DIAGO;
+				param_max_straight = 1.0f;
+				param_max_diago = 1.0f;
+				param_accel = 2.5f;
+				param_max_turn = 0.4f;
 				break;
 			default:
 				break;
@@ -970,14 +985,14 @@ int main(void) {
 			padachi.setGoal(GOAL_X, GOAL_Y);
 			padachi.setMap(map);
 
-			if (type == PathType::DIAGO && enabled_graph) {
+			// if (type == PathType::DIAGO) {
 				Graph graph;
 				compc->printf("GRAPH\n");
 				graph.connectWithMap(map);
 				compc->printf("CONNECTED WITH MAP\n");
 				vector<uint16_t> result = graph.dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(GOAL_X, GOAL_Y-1, MazeAngle::NORTH));
 				padachi.setFootmap(graph.cnvGraphToFootmap(result));
-			}
+			// }
 			
 			Path path = padachi.getPath(type);
 			if(path.getMotion(0).type == RunType::PIVOTTURN){
@@ -1050,7 +1065,7 @@ int main(void) {
 						vc->setPosition(cur_pos.first, cur_pos.second, path.getAngleCoordinate(i));
 						led->on(LedNumbers::FRONT);
 						if(path.getMotion(i+1).type == RunType::SLALOM90SML_RIGHT || path.getMotion(i+1).type == RunType::SLALOM90SML_LEFT) {
-							vc->runTrapAccel(param_max_turn, param_max_straight, 0.3f, 0.045f*motion.length, param_accel);
+							vc->runTrapAccel(param_max_turn, param_max_straight, param_max_turn, 0.045f*motion.length, param_accel);
 						} else {
 							vc->runTrapAccel(param_max_turn, param_max_straight, param_max_turn, 0.045f*motion.length, param_accel);
 						}
@@ -1088,10 +1103,34 @@ int main(void) {
 			switch(decided_mode.sub){
 			case static_cast<uint8_t>(mode::MODE_TURNADJUST::STRAIGHT_6):
 			{
+				float distance;
+				float velocity;
+				float accel;
+				if (decided_mode.number == 0) {
+					distance = 1.35f;
+					velocity = 0.25f;
+					accel = 2.5f;
+				} else if (decided_mode.number == 1) {
+					distance = 1.35f;
+					velocity = 1.0f;
+					accel = 2.5f;
+				} else if (decided_mode.number == 2) {
+					distance = 1.35f;
+					velocity = 1.2f;
+					accel = 4.0f;
+				} else if (decided_mode.number == 3) {
+					distance = 2.79f;
+					velocity = 1.0f;
+					accel = 2.5f;
+				} else {
+					distance = 2.79f;
+					velocity = 1.2f;
+					accel = 5.0f;
+				}
 				vc->disableWallgap();
 				mc->enableWallControl();
 				mc->stay();
-				vc->runTrapAccel(0.0f, 0.25f, 0.0f, 1.35f, 2.5f);
+				vc->runTrapAccel(0.0f, velocity, 0.0f, distance, accel);
 				while(vc->isRunning());
 				mc->stay();
 				mc->resetLinIntegral();
@@ -1192,6 +1231,15 @@ int main(void) {
 			}
 			case static_cast<uint8_t>(mode::MODE_TURNADJUST::OVERALL_LEFT):
 			{
+				float param;
+				if (decided_mode.number == 0) {
+					param = 0.3f;
+				} else if (decided_mode.number == 1) {
+					param = 0.4f;
+				} else {
+					param = 0.55f;
+				}
+
 				led->off(LedNumbers::FRONT);
 				MotorControl* mc = MotorControl::getInstance();
 				VelocityControl* vc = VelocityControl::getInstance();
@@ -1206,34 +1254,12 @@ int main(void) {
 				mc->stay();
 				mc->resetRadIntegral();
 				mc->resetLinIntegral();
-				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
+				vc->runTrapAccel(0.0f, param, param, 0.09f, 3.0f);
 				while(vc->isRunning());
-				vc->runSlalom(RunType::SLALOM90_LEFT, 0.3f);
+				vc->runSlalom(RunType::SLALOM90_LEFT, param);
 				mc->disableWallControl();
 				while(vc->isRunning());
-				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.09f, 3.0f);
-				mc->disableWallControl();
-				while(vc->isRunning());
-				HAL_Delay(500);
-				led->off(LedNumbers::FRONT);
-				Motor::getInstance()->disable();
-
-				mc->disableWallControl();
-				mode->startcheck(0);
-				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
-				mc->stay();
-				led->on(LedNumbers::FRONT);
-				vc->disableWallgap();
-				mc->enableWallControl();
-				mc->stay();
-				mc->resetRadIntegral();
-				mc->resetLinIntegral();
-				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
-				while(vc->isRunning());
-				vc->runSlalom(RunType::SLALOM180_LEFT, 0.3f);
-				mc->disableWallControl();
-				while(vc->isRunning());
-				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.09f, 3.0f);
+				vc->runTrapAccel(param, param, 0.0f, 0.09f, 3.0f);
 				mc->disableWallControl();
 				while(vc->isRunning());
 				HAL_Delay(500);
@@ -1250,12 +1276,12 @@ int main(void) {
 				mc->stay();
 				mc->resetRadIntegral();
 				mc->resetLinIntegral();
-				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
+				vc->runTrapAccel(0.0f, param, param, 0.09f, 3.0f);
 				while(vc->isRunning());
-				vc->runSlalom(RunType::SLALOM45IN_LEFT, 0.3f);
+				vc->runSlalom(RunType::SLALOM180_LEFT, param);
 				mc->disableWallControl();
 				while(vc->isRunning());
-				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.06364f, 3.0f);
+				vc->runTrapAccel(param, param, 0.0f, 0.09f, 3.0f);
 				mc->disableWallControl();
 				while(vc->isRunning());
 				HAL_Delay(500);
@@ -1272,34 +1298,12 @@ int main(void) {
 				mc->stay();
 				mc->resetRadIntegral();
 				mc->resetLinIntegral();
-				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
+				vc->runTrapAccel(0.0f, param, param, 0.09f, 3.0f);
 				while(vc->isRunning());
-				vc->runSlalom(RunType::SLALOM135IN_LEFT, 0.3f);
+				vc->runSlalom(RunType::SLALOM45IN_LEFT, param);
 				mc->disableWallControl();
 				while(vc->isRunning());
-				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.06364f, 3.0f);
-				mc->disableWallControl();
-				while(vc->isRunning());
-				HAL_Delay(500);
-				led->off(LedNumbers::FRONT);
-				Motor::getInstance()->disable();
-
-				mc->disableWallControl();
-				mode->startcheck(0);
-				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
-				mc->stay();
-				led->on(LedNumbers::FRONT);
-				vc->disableWallgap();
-				mc->disableWallControl();
-				mc->stay();
-				mc->resetRadIntegral();
-				mc->resetLinIntegral();
-				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.06364f, 3.0f);
-				while(vc->isRunning());
-				vc->runSlalom(RunType::SLALOM45OUT_LEFT, 0.3f);
-				mc->disableWallControl();
-				while(vc->isRunning());
-				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.09f, 3.0f);
+				vc->runTrapAccel(param, param, 0.0f, 0.06364f, 3.0f);
 				mc->disableWallControl();
 				while(vc->isRunning());
 				HAL_Delay(500);
@@ -1312,16 +1316,16 @@ int main(void) {
 				mc->stay();
 				led->on(LedNumbers::FRONT);
 				vc->disableWallgap();
-				mc->disableWallControl();
+				mc->enableWallControl();
 				mc->stay();
 				mc->resetRadIntegral();
 				mc->resetLinIntegral();
-				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.06364f, 3.0f);
+				vc->runTrapAccel(0.0f, param, param, 0.09f, 3.0f);
 				while(vc->isRunning());
-				vc->runSlalom(RunType::SLALOM135OUT_LEFT, 0.3f);
+				vc->runSlalom(RunType::SLALOM135IN_LEFT, param);
 				mc->disableWallControl();
 				while(vc->isRunning());
-				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.09f, 3.0f);
+				vc->runTrapAccel(param, param, 0.0f, 0.06364f, 3.0f);
 				mc->disableWallControl();
 				while(vc->isRunning());
 				HAL_Delay(500);
@@ -1333,17 +1337,61 @@ int main(void) {
 				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
 				mc->stay();
 				led->on(LedNumbers::FRONT);
-				vc->disableWallgap();
+				vc->enableWallgap();
 				mc->disableWallControl();
 				mc->stay();
 				mc->resetRadIntegral();
 				mc->resetLinIntegral();
-				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.06364f, 3.0f);
+				vc->runTrapDiago(0.0f, param, param, 0.06364f, 3.0f);
 				while(vc->isRunning());
-				vc->runSlalom(RunType::SLALOM90OBL_LEFT, 0.3f);
+				vc->runSlalom(RunType::SLALOM45OUT_LEFT, param);
 				mc->disableWallControl();
 				while(vc->isRunning());
-				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.06364f, 3.0f);
+				vc->runTrapAccel(param, param, 0.0f, 0.09f, 3.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				HAL_Delay(500);
+				led->off(LedNumbers::FRONT);
+				Motor::getInstance()->disable();
+
+				mc->disableWallControl();
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
+				mc->stay();
+				led->on(LedNumbers::FRONT);
+				vc->enableWallgap();
+				mc->disableWallControl();
+				mc->stay();
+				mc->resetRadIntegral();
+				mc->resetLinIntegral();
+				vc->runTrapDiago(0.0f, param, param, 0.06364f, 3.0f);
+				while(vc->isRunning());
+				vc->runSlalom(RunType::SLALOM135OUT_LEFT, param);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				vc->runTrapAccel(param, param, 0.0f, 0.09f, 3.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				HAL_Delay(500);
+				led->off(LedNumbers::FRONT);
+				Motor::getInstance()->disable();
+
+				mc->disableWallControl();
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
+				mc->stay();
+				led->on(LedNumbers::FRONT);
+				vc->enableWallgap();
+				mc->disableWallControl();
+				mc->stay();
+				mc->resetRadIntegral();
+				mc->resetLinIntegral();
+				vc->runTrapDiago(0.0f, param, param, 0.06364f, 3.0f);
+				while(vc->isRunning());
+				vc->runSlalom(RunType::SLALOM90OBL_LEFT, param);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				vc->runTrapDiago(param, param, 0.0f, 0.06364f, 3.0f);
 				mc->disableWallControl();
 				while(vc->isRunning());
 				HAL_Delay(500);
@@ -1354,6 +1402,15 @@ int main(void) {
 			}
 			case static_cast<uint8_t>(mode::MODE_TURNADJUST::OVERALL_RIGHT):
 			{
+				float param;
+				if (decided_mode.number == 0) {
+					param = 0.3f;
+				} else if (decided_mode.number == 1) {
+					param = 0.4f;
+				} else {
+					param = 0.55f;
+				}
+
 				led->off(LedNumbers::FRONT);
 				MotorControl* mc = MotorControl::getInstance();
 				VelocityControl* vc = VelocityControl::getInstance();
@@ -1368,34 +1425,12 @@ int main(void) {
 				mc->stay();
 				mc->resetRadIntegral();
 				mc->resetLinIntegral();
-				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
+				vc->runTrapAccel(0.0f, param, param, 0.09f, 3.0f);
 				while(vc->isRunning());
-				vc->runSlalom(RunType::SLALOM90_RIGHT, 0.3f);
+				vc->runSlalom(RunType::SLALOM90_RIGHT, param);
 				mc->disableWallControl();
 				while(vc->isRunning());
-				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.09f, 3.0f);
-				mc->disableWallControl();
-				while(vc->isRunning());
-				HAL_Delay(500);
-				led->off(LedNumbers::FRONT);
-				Motor::getInstance()->disable();
-
-				mc->disableWallControl();
-				mode->startcheck(0);
-				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
-				mc->stay();
-				led->on(LedNumbers::FRONT);
-				vc->disableWallgap();
-				mc->enableWallControl();
-				mc->stay();
-				mc->resetRadIntegral();
-				mc->resetLinIntegral();
-				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
-				while(vc->isRunning());
-				vc->runSlalom(RunType::SLALOM180_RIGHT, 0.3f);
-				mc->disableWallControl();
-				while(vc->isRunning());
-				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.09f, 3.0f);
+				vc->runTrapAccel(param, param, 0.0f, 0.09f, 3.0f);
 				mc->disableWallControl();
 				while(vc->isRunning());
 				HAL_Delay(500);
@@ -1412,12 +1447,12 @@ int main(void) {
 				mc->stay();
 				mc->resetRadIntegral();
 				mc->resetLinIntegral();
-				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
+				vc->runTrapAccel(0.0f, param, param, 0.09f, 3.0f);
 				while(vc->isRunning());
-				vc->runSlalom(RunType::SLALOM45IN_RIGHT, 0.3f);
+				vc->runSlalom(RunType::SLALOM180_RIGHT, param);
 				mc->disableWallControl();
 				while(vc->isRunning());
-				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.06364f, 3.0f);
+				vc->runTrapAccel(param, param, 0.0f, 0.09f, 3.0f);
 				mc->disableWallControl();
 				while(vc->isRunning());
 				HAL_Delay(500);
@@ -1434,34 +1469,12 @@ int main(void) {
 				mc->stay();
 				mc->resetRadIntegral();
 				mc->resetLinIntegral();
-				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.09f, 3.0f);
+				vc->runTrapAccel(0.0f, param, param, 0.09f, 3.0f);
 				while(vc->isRunning());
-				vc->runSlalom(RunType::SLALOM135IN_RIGHT, 0.3f);
+				vc->runSlalom(RunType::SLALOM45IN_RIGHT, param);
 				mc->disableWallControl();
 				while(vc->isRunning());
-				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.06364f, 3.0f);
-				mc->disableWallControl();
-				while(vc->isRunning());
-				HAL_Delay(500);
-				led->off(LedNumbers::FRONT);
-				Motor::getInstance()->disable();
-
-				mc->disableWallControl();
-				mode->startcheck(0);
-				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
-				mc->stay();
-				led->on(LedNumbers::FRONT);
-				vc->disableWallgap();
-				mc->disableWallControl();
-				mc->stay();
-				mc->resetRadIntegral();
-				mc->resetLinIntegral();
-				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.06364f, 3.0f);
-				while(vc->isRunning());
-				vc->runSlalom(RunType::SLALOM45OUT_RIGHT, 0.3f);
-				mc->disableWallControl();
-				while(vc->isRunning());
-				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.09f, 3.0f);
+				vc->runTrapAccel(param, param, 0.0f, 0.06364f, 3.0f);
 				mc->disableWallControl();
 				while(vc->isRunning());
 				HAL_Delay(500);
@@ -1474,16 +1487,16 @@ int main(void) {
 				mc->stay();
 				led->on(LedNumbers::FRONT);
 				vc->disableWallgap();
-				mc->disableWallControl();
+				mc->enableWallControl();
 				mc->stay();
 				mc->resetRadIntegral();
 				mc->resetLinIntegral();
-				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.06364f, 3.0f);
+				vc->runTrapAccel(0.0f, param, param, 0.09f, 3.0f);
 				while(vc->isRunning());
-				vc->runSlalom(RunType::SLALOM135OUT_RIGHT, 0.3f);
+				vc->runSlalom(RunType::SLALOM135IN_RIGHT, param);
 				mc->disableWallControl();
 				while(vc->isRunning());
-				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.09f, 3.0f);
+				vc->runTrapAccel(param, param, 0.0f, 0.06364f, 3.0f);
 				mc->disableWallControl();
 				while(vc->isRunning());
 				HAL_Delay(500);
@@ -1495,17 +1508,61 @@ int main(void) {
 				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
 				mc->stay();
 				led->on(LedNumbers::FRONT);
-				vc->disableWallgap();
+				vc->enableWallgap();
 				mc->disableWallControl();
 				mc->stay();
 				mc->resetRadIntegral();
 				mc->resetLinIntegral();
-				vc->runTrapAccel(0.0f, 0.3f, 0.3f, 0.06364f, 3.0f);
+				vc->runTrapDiago(0.0f, param, param, 0.06364f, 3.0f);
 				while(vc->isRunning());
-				vc->runSlalom(RunType::SLALOM90OBL_RIGHT, 0.3f);
+				vc->runSlalom(RunType::SLALOM45OUT_RIGHT, param);
 				mc->disableWallControl();
 				while(vc->isRunning());
-				vc->runTrapAccel(0.3f, 0.3f, 0.0f, 0.06364f, 3.0f);
+				vc->runTrapAccel(param, param, 0.0f, 0.09f, 3.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				HAL_Delay(500);
+				led->off(LedNumbers::FRONT);
+				Motor::getInstance()->disable();
+
+				mc->disableWallControl();
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
+				mc->stay();
+				led->on(LedNumbers::FRONT);
+				vc->enableWallgap();
+				mc->disableWallControl();
+				mc->stay();
+				mc->resetRadIntegral();
+				mc->resetLinIntegral();
+				vc->runTrapDiago(0.0f, param, param, 0.06364f, 3.0f);
+				while(vc->isRunning());
+				vc->runSlalom(RunType::SLALOM135OUT_RIGHT, param);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				vc->runTrapAccel(param, param, 0.0f, 0.09f, 3.0f);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				HAL_Delay(500);
+				led->off(LedNumbers::FRONT);
+				Motor::getInstance()->disable();
+
+				mc->disableWallControl();
+				mode->startcheck(0);
+				speaker->playMusic(MusicNumber::KIRBY3_POWERON);
+				mc->stay();
+				led->on(LedNumbers::FRONT);
+				vc->enableWallgap();
+				mc->disableWallControl();
+				mc->stay();
+				mc->resetRadIntegral();
+				mc->resetLinIntegral();
+				vc->runTrapDiago(0.0f, param, param, 0.06364f, 3.0f);
+				while(vc->isRunning());
+				vc->runSlalom(RunType::SLALOM90OBL_RIGHT, param);
+				mc->disableWallControl();
+				while(vc->isRunning());
+				vc->runTrapDiago(param, param, 0.0f, 0.06364f, 3.0f);
 				mc->disableWallControl();
 				while(vc->isRunning());
 				HAL_Delay(500);
