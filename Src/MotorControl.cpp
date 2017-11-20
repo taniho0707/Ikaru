@@ -10,15 +10,14 @@ MotorControl::MotorControl() :
 	GAIN_LIN_D(0.00f), //要パラメータ調整
 	GAIN_RAD_P(-0.18f),
 	GAIN_RAD_I(-0.026f),
-	// GAIN_RAD_P(-0.2f),
-	// GAIN_RAD_I(-0.03f),
 	GAIN_RAD_D(0.0f),
-	// GAIN_WALL_P(-0.8f),
 	GAIN_WALL_P(-1.8f),
-	GAIN_WALL_SHRT_P(-1.0f),
+	GAIN_WALL_SHRT_P(-0.8f),
 	GAIN_WALL_I(0.0f),
 	GAIN_WALL_D(0.0f),
-	TREAD(380.0f)
+	TREAD(380.0f),
+	
+	GAIN_QUARTER_WALL_P(-1.2f) // Q
 {
 	cur_lin_x = 0.0;
 	cur_lin_vel = 0.0;
@@ -33,6 +32,11 @@ MotorControl::MotorControl() :
 	is_left_gap = false;
 	is_left_gap_diago = false;
 	is_expr_gap = true;
+	is_quarter_mode = false;
+}
+
+void MotorControl::setQuarterMode() {
+	is_quarter_mode = true;
 }
 
 void MotorControl::setVelocity(float vel){
@@ -210,7 +214,9 @@ void MotorControl::controlVel(){
 	last_current_wall_correction = current_wall_correction;
 
 	// rotation成分の計算
-	tar_rad_rev = ((tar_rad_vel - ((is_shrt_wall_control ? GAIN_WALL_SHRT_P : GAIN_WALL_P) * ((tar_lin_vel < 0.001f) ? 3 : 1) * current_wall_correction + GAIN_WALL_D * dif_wall)) - gyro->getGyroYaw());
+	float wallgain = (is_shrt_wall_control ? GAIN_WALL_SHRT_P : GAIN_WALL_P);
+	if (is_quarter_mode) wallgain = GAIN_QUARTER_WALL_P;
+	tar_rad_rev = ((tar_rad_vel - (wallgain * ((tar_lin_vel < 0.001f) ? 3 : 1) * current_wall_correction + GAIN_WALL_D * dif_wall)) - gyro->getGyroYaw());
 	// tar_rad_rev = (tar_rad_vel - gyro->getGyroYaw());
 	// tar_rad_rev = ((tar_rad_vel - enabled_wall_control * GAIN_WALL_P * wall->getCorrection(10000) - enabled_wall_control * GAIN_WALL_D * (wall->getCorrection(10000)-lastwall)) - gyro->getGyroYaw());
 	// d_rad_gyro = (tar_rad_vel - gyro->getGyroYaw()) - tar_rad_rev;

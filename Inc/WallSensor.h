@@ -53,6 +53,13 @@ private:
 	const uint16_t VAL_THR_SLALOM_FRIGHT;
 	const uint16_t VAL_THR_FRONT_SUB;
 
+	const uint16_t VAL_QUARTER_REF_LEFT;
+	const uint16_t VAL_QUARTER_REF_FRONT;
+	const uint16_t VAL_QUARTER_REF_RIGHT;
+	const uint16_t VAL_QUARTER_THR_LEFT;
+	const uint16_t VAL_QUARTER_THR_FRONT;
+	const uint16_t VAL_QUARTER_THR_RIGHT;
+
 	ADC_HandleTypeDef hadc;
 	ADC_ChannelConfTypeDef s_config;
 
@@ -105,6 +112,8 @@ private:
 	bool had_gap_diago[4];
 	bool is_waiting_gap_diago[4];
 
+	bool is_quarter_mode;
+
 	WallSensor();
 
 public:
@@ -137,6 +146,9 @@ public:
 	int16_t getDiffValue(SensorPosition);
 	uint16_t getLastValue(SensorPosition);
 	bool isExistWall(SensorPosition);
+
+	/// QUARTER
+	void setQuarterMode();
 
 	// 斜め左右センサが閾値より低ければ無効化
 	bool isEnableLeft();

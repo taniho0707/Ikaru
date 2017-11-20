@@ -388,6 +388,7 @@ int main(void) {
 		switch(decided_mode.prime){
 		case static_cast<uint8_t>(mode::MODE_PRIME::QUARTER):
 		{
+			wallsensor->setQuarterMode();
 			bool is_expr;
 			bool is_diago;
 			switch(decided_mode.sub){
@@ -406,15 +407,14 @@ int main(void) {
 			default:
 				break;
 			}
-			float gvel = 0.10f;
+			float gvel = 0.15f;
+			float gvelmax = 0.3f;
 			float gaccel = 1.5f;
 			float section = 0.0225f;
 			float turn_coefficient = 0.4f;
 			// ここから左手法で走る
-			mode->startcheck(0);
-			led->initPort(LedNumbers::TOP1);
-			led->flickSync(LedNumbers::TOP1, 4.0f, 2000);
 			led->flickSync(LedNumbers::FRONT, 10, 1000);
+			mode->startcheck(0);
 			speaker->playMusic(MusicNumber::HIRAPA);
 			led->flickAsync(LedNumbers::FRONT, 4, 2000);
 			gyro->resetCalibration();
@@ -425,6 +425,7 @@ int main(void) {
 			Datalog* log = Datalog::getInstance();
 
 			MotorControl* mc = MotorControl::getInstance();
+			mc->setQuarterMode();
 			mc->stay();
 			led->on(LedNumbers::FRONT);
 			VelocityControl* vc = VelocityControl::getInstance();
@@ -432,8 +433,9 @@ int main(void) {
 
 			if (is_expr) {
 				MotorCollection* motorcollection = MotorCollection::getInstance();
-				MethodAdachi adachi;;
-				vc->runTrapAccel(0.0f, gvel, gvel, section*0.5f, gaccel);
+				MethodAdachi adachi;
+				map.goals.add(QUARTER_GOAL_X, QUARTER_GOAL_Y);
+				vc->runTrapAccel(0.0f, gvel, gvel, section, gaccel);
 				mc->enableWallControl();
 				while(vc->isRunning());
 				while(true){
@@ -455,6 +457,7 @@ int main(void) {
 						mc->disableWallControl();
 						fram->saveMap(map, 0);
 						fram->saveMap(map, 2);
+						Motor::getInstance()->disable();
 						speaker->playMusic(MusicNumber::OIRABOKODAZE1);
 						break;
 					}
@@ -470,41 +473,18 @@ int main(void) {
 							frontcorrectionStart();
 							frontcorrectionEnd();
 						}
-						if(walldata.isExistWall(MouseAngle::LEFT)){
-							mc->resetRadIntegral();
-							mc->resetLinIntegral();
-							vc->runPivotTurn(500, angle90, 1000);
-							while(vc->isRunning());
-							frontcorrectionStart();
-							frontcorrectionEnd();
-							mc->resetRadIntegral();
-							mc->resetLinIntegral();
-							vc->runPivotTurn(500, angle90, 1000);
-							while(vc->isRunning());
-							mc->resetRadIntegral();
-							mc->resetLinIntegral();
-						} else if (walldata.isExistWall(MouseAngle::RIGHT)) {
-							mc->resetRadIntegral();
-							mc->resetLinIntegral();
-							vc->runPivotTurn(500, -angle90, 1000);
-							while(vc->isRunning());
-							frontcorrectionStart();
-							frontcorrectionEnd();
-							mc->resetRadIntegral();
-							mc->resetLinIntegral();
-							vc->runPivotTurn(500, -angle90, 1000);
-							while(vc->isRunning());
-							mc->resetRadIntegral();
-							mc->resetLinIntegral();
-						} else {
-							mc->resetRadIntegral();
-							mc->resetLinIntegral();
-							vc->runPivotTurn(500, angle180, 1000);
-							while(vc->isRunning());
-							mc->resetRadIntegral();
-							mc->resetLinIntegral();
-						}
-						backandstraight();
+						mc->resetRadIntegral();
+						mc->resetLinIntegral();
+						vc->runPivotTurn(500, angle180, 1000);
+						while(vc->isRunning());
+						mc->resetRadIntegral();
+						mc->resetLinIntegral();
+						speaker->playSound(1000, 300, true);
+						vc->runTrapAccel(0.0f, gvel, gvel, section, gaccel);
+						mc->resetRadIntegral();
+						mc->resetLinIntegral();
+						while(vc->isRunning());
+						mc->enableWallControl();
 					} else if(runtype == slalomparams::RunType::SLALOM90SML_RIGHT){
 						vc->runSlalom(RunType::SLALOM90SML_RIGHT, gvel);
 						while(vc->isRunning());
@@ -519,11 +499,66 @@ int main(void) {
 					pos.setNextPosition(runtype);
 					vc->startTrapAccel(gvel, gvel, section*2, gaccel);
 				}
-				Motor::getInstance()->disable();
 			} else {
-			
+				DerivingPathBasic1 padachi;
+				fram->loadMap(map, decided_mode.number);
+				padachi.setGoal(QUARTER_GOAL_X, QUARTER_GOAL_Y);
+				padachi.setMap(map);
+				Graph graph;
+				graph.connectWithMap(map);
+				vector<uint16_t> result = graph.dijkstra(Graph::cnvCoordinateToNum(0, 0, MazeAngle::SOUTH), Graph::cnvCoordinateToNum(GOAL_X, GOAL_Y-1, MazeAngle::NORTH));
+				padachi.setFootmap(graph.cnvGraphToFootmap(result));
+				PathType type = (is_diago ? PathType::DIAGO : PathType::SMALL);
+				Path path = padachi.getPath(type);
+				if(path.getMotion(0).type == RunType::PIVOTTURN){ led->flickAsync(LedNumbers::FRONT, 4.0f, 0); while(true); }
+				mc->stay();
+				mc->clearGap();
+				VelocityControl* vc = VelocityControl::getInstance();
+				mc->enableWallControl();
+				mc->setExprWallControl();
+				if (type == PathType::SMALL) {
+					mc->setExprGap();
+				} else {
+					mc->setShrtGap();
+				}
+				if (type == PathType::DIAGO) {
+					vc->setShrtGap();
+				}
+				struct Motion motion;
+				int i=0;
+				vc->disableWallgap();
+				vc->runTrapAccel(0.0f, gvelmax, gvel, 0.005f, gaccel);
+				while(vc->isRunning());
+				while(true){
+					motion = path.getMotion(i);
+					if(i == 0){
+						vc->runTrapAccel(gvel, gvelmax, gvel, section*(motion.length-1), gaccel);
+					} else {
+						if(path.getMotion(i+1).type == RunType::PIVOTTURN){
+							vc->runTrapAccel(gvel, gvelmax, 0.0f, section*(motion.length), gaccel);
+							while(vc->isRunning());
+							break;
+						}
+						if(motion.type == RunType::TRAPACCEL){
+							if(path.getMotion(i+1).type == RunType::SLALOM90SML_RIGHT || path.getMotion(i+1).type == RunType::SLALOM90SML_LEFT) {
+								vc->runTrapAccel(gvel, gvelmax, gvel, section*motion.length, gaccel);
+							} else {
+								vc->runTrapAccel(gvel, gvelmax, gvel, section*motion.length, gaccel);
+							}
+						} else if(motion.type == RunType::TRAPDIAGO){
+							vc->runTrapDiago(gvel, gvelmax, gvel, section*sqrt(2)*motion.length, gaccel);
+						} else if(motion.type == RunType::SLALOM90SML_RIGHT || motion.type == RunType::SLALOM90SML_LEFT){
+							vc->runSlalom(motion.type, gvel);
+						} else {
+							vc->runSlalom(motion.type, gvel);
+						}
+					}
+					while(vc->isRunning());
+					++i;
+					vc->startTrapAccel(gvel, gvel, section*2, gaccel);
+				}
 			}
-
+			/// ここまでがクォーター！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
 		}
 		break;
 		case static_cast<uint8_t>(mode::MODE_PRIME::EXPR):
@@ -1083,9 +1118,8 @@ int main(void) {
 				++i;
 				vc->startTrapAccel(param_max_turn, param_max_turn, 0.09f, param_accel);
 			}
-
+			Motor::getInstance()->disable();
 			while(true);
-
 			break;
 		}
 		case static_cast<uint8_t>(mode::MODE_PRIME::TURNADJUST):

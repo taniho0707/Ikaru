@@ -40,7 +40,12 @@ private:
 	const float GAIN_WALL_I;
 	const float GAIN_WALL_D;
 
+	const float GAIN_QUARTER_WALL_P;
+
 	const float TREAD;
+
+	// QUARTER
+	bool is_quarter_mode;
 
 	float cur_lin_x;
 	float cur_lin_vel;
@@ -75,6 +80,9 @@ private:
 	void controlVel();
 
 public:
+	// QUARTER
+	void setQuarterMode();
+
 	void resetWallIntegral();
 	void resetRadIntegral();
 	void resetLinIntegral();

@@ -8,21 +8,15 @@ using namespace std;
 /// @todo add wait REDEN flag
 WallSensor::WallSensor() :
 	VAL_REF_FLEFT(190),
-	// VAL_REF_LEFT(630),   // Q
-	// VAL_REF_FRONT(1150), // Q
-	// VAL_REF_RIGHT(780),  // Q
-	VAL_REF_LEFT(205),  // H
-	VAL_REF_FRONT(320), // H
-	VAL_REF_RIGHT(220), // H
+	VAL_REF_LEFT(205),
+	VAL_REF_FRONT(320),
+	VAL_REF_RIGHT(220),
 	VAL_REF_FRIGHT(120),
 
 	VAL_THR_FLEFT(165),
-	// VAL_THR_LEFT(400),  // Q
-	// VAL_THR_FRONT(250), // Q
-	// VAL_THR_RIGHT(400), // Q
-	VAL_THR_LEFT(160),  // H
-	VAL_THR_FRONT(115), // H
-	VAL_THR_RIGHT(170), // H
+	VAL_THR_LEFT(160),
+	VAL_THR_FRONT(115),
+	VAL_THR_RIGHT(170),
 	VAL_THR_FRIGHT(185),
 	VAL_THR_FRONT_SUB(200),
 
@@ -31,18 +25,12 @@ WallSensor::WallSensor() :
 	VAL_THR_CONTROL_RIGHT(270),
 
 	VAL_THR_GAP_FLEFT(160),
-	// VAL_THR_GAP_LEFT(160), //ALLJAPAN
-	// VAL_THR_GAP_RIGHT(170), //ALLJAPAN
 	VAL_THR_GAP_LEFT(180),
 	VAL_THR_GAP_RIGHT(180),
 	VAL_THR_GAP_FRIGHT(130),
 	VAL_THR_GAP_DIAGO_FLEFT(160),
-	// VAL_THR_GAP_DIAGO_LEFT(155), //ALLJAPAN
-	// VAL_THR_GAP_DIAGO_RIGHT(170), //ALLJAPAN
 	VAL_THR_GAP_DIAGO_LEFT(180),
 	VAL_THR_GAP_DIAGO_RIGHT(170),
-	// VAL_THR_GAP_DIAGO_LEFT(190),
-	// VAL_THR_GAP_DIAGO_RIGHT(180),
 	VAL_THR_GAP_DIAGO_FRIGHT(140),
 	
 	VAL_THR_SLALOM_FLEFT(500),
@@ -50,8 +38,16 @@ WallSensor::WallSensor() :
 	VAL_THR_SLALOM_RIGHT(500),
 	VAL_THR_SLALOM_FRIGHT(500),
 	
-	THR_WALL_DISAPPEAR(100)
-	// THR_WALL_DISAPPEAR(50)
+	THR_WALL_DISAPPEAR(100),
+	// THR_WALL_DISAPPEAR(50),
+
+	VAL_QUARTER_REF_LEFT(710),   // Q
+	VAL_QUARTER_REF_FRONT(1250), // Q
+	VAL_QUARTER_REF_RIGHT(610),  // Q
+
+	VAL_QUARTER_THR_LEFT(400),  // Q
+	VAL_QUARTER_THR_FRONT(220), // Q
+	VAL_QUARTER_THR_RIGHT(400) // Q
 {
 	__HAL_RCC_ADC1_CLK_ENABLE();
 	__HAL_RCC_GPIOA_CLK_ENABLE();
@@ -102,6 +98,8 @@ WallSensor::WallSensor() :
 	is_waiting_gap[1] = false;
 
 	enabled = true;
+
+	is_quarter_mode = false;
 }
 
 bool WallSensor::isWorking(){
@@ -355,6 +353,22 @@ bool WallSensor::isExistWall(SensorPosition pos){
 bool WallSensor::isExistFrontWall() {
 	if(current_value[static_cast<uint8_t>(SensorPosition::Front)] > valid_val_thr_front_sub) return true;
 	else return false;
+}
+
+void WallSensor::setQuarterMode() {
+	is_quarter_mode = true;
+	valid_val_ref_left             = VAL_QUARTER_REF_LEFT;
+	valid_val_ref_front            = VAL_QUARTER_REF_FRONT;
+	valid_val_ref_right            = VAL_QUARTER_REF_RIGHT;
+	valid_val_thr_left             = VAL_QUARTER_THR_LEFT;
+	valid_val_thr_front            = VAL_QUARTER_THR_FRONT;
+	valid_val_thr_right            = VAL_QUARTER_THR_RIGHT;
+	thr_straight_value[1] = VAL_QUARTER_THR_LEFT;
+	thr_straight_value[2] = VAL_QUARTER_THR_FRONT;
+	thr_straight_value[3] = VAL_QUARTER_THR_RIGHT;
+	ref_straight_value[1] = VAL_QUARTER_REF_LEFT;
+	ref_straight_value[2] = VAL_QUARTER_REF_FRONT;
+	ref_straight_value[3] = VAL_QUARTER_REF_RIGHT;
 }
 
 

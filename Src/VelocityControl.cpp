@@ -408,31 +408,41 @@ void VelocityControl::calcSlalom(int32_t t){
 				  || static_cast<uint8_t>(reg_type) == static_cast<uint8_t>(RunType::SLALOM135OUT_LEFT)
 				  || static_cast<uint8_t>(reg_type) == static_cast<uint8_t>(RunType::SLALOM90OBL_LEFT)
 			){
-			if ((!is_expr_wallgap)
-				&& mc->getDistanceFromGapDiagoLeft() < 0.001f && mc->getDistanceFromGapDiagoLeft() > -0.001f
-				) {
-				speaker->playSound(440, 50, false);
+			if (enabled_wallgap) { // for QUARTER
+				if ((!is_expr_wallgap)
+					&& mc->getDistanceFromGapDiagoLeft() < 0.001f && mc->getDistanceFromGapDiagoLeft() > -0.001f
+					) {
+					speaker->playSound(440, 50, false);
+				}
+				if (mc->getDistanceFromGapDiagoLeft() >= reg_d_before) {
+					reg_slalom_pos = 2;
+					time = Timer::getTime();
+				}
+			} else { // for QUARTER
+				if(x0 >= reg_d_before){
+					reg_slalom_pos = 2;
+					time = Timer::getTime();
+				}
 			}
-			if (mc->getDistanceFromGapDiagoLeft() >= reg_d_before) {
-				reg_slalom_pos = 2;
-				time = Timer::getTime();
-			}
-			// if(x0 >= reg_d_before){
-			// 	reg_slalom_pos = 2;
-			// 	time = Timer::getTime();
-			// }
 		} else if(static_cast<uint8_t>(reg_type) == static_cast<uint8_t>(RunType::SLALOM45OUT_RIGHT)
 				  || static_cast<uint8_t>(reg_type) == static_cast<uint8_t>(RunType::SLALOM135OUT_RIGHT)
 				  || static_cast<uint8_t>(reg_type) == static_cast<uint8_t>(RunType::SLALOM90OBL_RIGHT)
 			){
-			if ((!is_expr_wallgap)
-				&& mc->getDistanceFromGapDiagoRight() < 0.001f && mc->getDistanceFromGapDiagoRight() > -0.001f
-				) {
-				speaker->playSound(880, 50, false);
-			}
-			if (mc->getDistanceFromGapDiagoRight() >= reg_d_before) {
-				reg_slalom_pos = 2;
-				time = Timer::getTime();
+			if (enabled_wallgap) { // for QUARTER
+				if ((!is_expr_wallgap)
+					&& mc->getDistanceFromGapDiagoRight() < 0.001f && mc->getDistanceFromGapDiagoRight() > -0.001f
+					) {
+					speaker->playSound(880, 50, false);
+				}
+				if (mc->getDistanceFromGapDiagoRight() >= reg_d_before) {
+					reg_slalom_pos = 2;
+					time = Timer::getTime();
+				}
+			} else { // for QUARTER
+				if(x0 >= reg_d_before){
+					reg_slalom_pos = 2;
+					time = Timer::getTime();
+				}
 			}
 		} else {
 			// if(mc->getDistanceFromGap() > reg_d_before && mc->getDistanceFromGap() < reg_d_before + 0.02f){
