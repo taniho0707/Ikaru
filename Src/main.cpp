@@ -44,8 +44,8 @@ void SystemClock_Config(void);
 static void MX_NVIC_Init(void);
 
 // 右上座標を指定する
-const uint16_t GOAL_X = 5;
-const uint16_t GOAL_Y = 5;
+const uint16_t GOAL_X = 3;
+const uint16_t GOAL_Y = 15;
 
 const bool japanfinal = false;
 
