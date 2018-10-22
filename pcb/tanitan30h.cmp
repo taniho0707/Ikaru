@@ -1,0 +1,626 @@
+Cmp-Mod V01 Created by Cvpcb (2014-12-04 BZR 5312)-product   date = 2017/08/10 1:36:14
+
+BeginCmp
+TimeStamp = /590F093C;
+Reference = BT1;
+ValeurCmp = Battery_Cell;
+IdModule  = taniho:B2B-ZR;
+EndCmp
+
+BeginCmp
+TimeStamp = /590F8CE0;
+Reference = C1;
+ValeurCmp = 0.1u;
+IdModule  = Capacitors_SMD:C_0402;
+EndCmp
+
+BeginCmp
+TimeStamp = /5913947B;
+Reference = C2;
+ValeurCmp = 0.1u;
+IdModule  = Capacitors_SMD:C_0402;
+EndCmp
+
+BeginCmp
+TimeStamp = /59135D83;
+Reference = C3;
+ValeurCmp = 0.1u;
+IdModule  = Capacitors_SMD:C_0402;
+EndCmp
+
+BeginCmp
+TimeStamp = /590F87E6;
+Reference = C4;
+ValeurCmp = 0.1u;
+IdModule  = Capacitors_SMD:C_0402;
+EndCmp
+
+BeginCmp
+TimeStamp = /59135AD1;
+Reference = C5;
+ValeurCmp = 0.1u;
+IdModule  = Capacitors_SMD:C_0402;
+EndCmp
+
+BeginCmp
+TimeStamp = /5913E8F3;
+Reference = C6;
+ValeurCmp = 0.1u;
+IdModule  = Capacitors_SMD:C_0402;
+EndCmp
+
+BeginCmp
+TimeStamp = /590F62D1;
+Reference = C7;
+ValeurCmp = 1u;
+IdModule  = Capacitors_SMD:C_0402;
+EndCmp
+
+BeginCmp
+TimeStamp = /590F6137;
+Reference = C8;
+ValeurCmp = 0.1u;
+IdModule  = Capacitors_SMD:C_0402;
+EndCmp
+
+BeginCmp
+TimeStamp = /591339B6;
+Reference = C9;
+ValeurCmp = 0.1u;
+IdModule  = Capacitors_SMD:C_0402;
+EndCmp
+
+BeginCmp
+TimeStamp = /59111A1E;
+Reference = C10;
+ValeurCmp = 10u;
+IdModule  = Capacitors_SMD:C_0402;
+EndCmp
+
+BeginCmp
+TimeStamp = /59114640;
+Reference = C11;
+ValeurCmp = 1u;
+IdModule  = Capacitors_SMD:C_0402;
+EndCmp
+
+BeginCmp
+TimeStamp = /590F7076;
+Reference = C12;
+ValeurCmp = 0.1u;
+IdModule  = Capacitors_SMD:C_0402;
+EndCmp
+
+BeginCmp
+TimeStamp = /590F5798;
+Reference = C13;
+ValeurCmp = 2.2u;
+IdModule  = Capacitors_SMD:C_0402;
+EndCmp
+
+BeginCmp
+TimeStamp = /5912A902;
+Reference = C14;
+ValeurCmp = 0.1u;
+IdModule  = Capacitors_SMD:C_0402;
+EndCmp
+
+BeginCmp
+TimeStamp = /5912B11A;
+Reference = C15;
+ValeurCmp = 0.1u;
+IdModule  = Capacitors_SMD:C_0402;
+EndCmp
+
+BeginCmp
+TimeStamp = /595272D5;
+Reference = D1;
+ValeurCmp = D_Photo_OP224;
+IdModule  = taniho:OP224;
+EndCmp
+
+BeginCmp
+TimeStamp = /59528438;
+Reference = D2;
+ValeurCmp = D_Photo_OP224;
+IdModule  = taniho:OP224;
+EndCmp
+
+BeginCmp
+TimeStamp = /5910F53F;
+Reference = D3;
+ValeurCmp = LED_Small_ALT;
+IdModule  = LEDs:LED_0402;
+EndCmp
+
+BeginCmp
+TimeStamp = /59528574;
+Reference = D4;
+ValeurCmp = D_Photo_OP224;
+IdModule  = taniho:OP224;
+EndCmp
+
+BeginCmp
+TimeStamp = /5952870E;
+Reference = D5;
+ValeurCmp = D_Photo_OP224;
+IdModule  = taniho:OP224;
+EndCmp
+
+BeginCmp
+TimeStamp = /59140ACE;
+Reference = D7;
+ValeurCmp = LED_Small_ALT;
+IdModule  = LEDs:LED_0402;
+EndCmp
+
+BeginCmp
+TimeStamp = /59528850;
+Reference = D8;
+ValeurCmp = D_Photo_OP224;
+IdModule  = taniho:OP224;
+EndCmp
+
+BeginCmp
+TimeStamp = /5914FB15;
+Reference = J1;
+ValeurCmp = CONN_01X01;
+IdModule  = taniho:Pad_1_1.5;
+EndCmp
+
+BeginCmp
+TimeStamp = /5914FD5F;
+Reference = J2;
+ValeurCmp = CONN_01X01;
+IdModule  = taniho:Pad_1_1.5;
+EndCmp
+
+BeginCmp
+TimeStamp = /5914F4A3;
+Reference = J3;
+ValeurCmp = CONN_01X01;
+IdModule  = taniho:Pad_1_1.5;
+EndCmp
+
+BeginCmp
+TimeStamp = /5914F7E9;
+Reference = J4;
+ValeurCmp = CONN_01X01;
+IdModule  = taniho:Pad_1_1.5;
+EndCmp
+
+BeginCmp
+TimeStamp = /59150094;
+Reference = J5;
+ValeurCmp = CONN_01X01;
+IdModule  = taniho:Pad_1_0.5;
+EndCmp
+
+BeginCmp
+TimeStamp = /591502BC;
+Reference = J6;
+ValeurCmp = CONN_01X01;
+IdModule  = taniho:Pad_1_1.5;
+EndCmp
+
+BeginCmp
+TimeStamp = /5914EE54;
+Reference = J7;
+ValeurCmp = CONN_01X01;
+IdModule  = taniho:Pad_1_0.5;
+EndCmp
+
+BeginCmp
+TimeStamp = /5914EF96;
+Reference = J8;
+ValeurCmp = CONN_01X01;
+IdModule  = taniho:Pad_1_0.5;
+EndCmp
+
+BeginCmp
+TimeStamp = /591D7C9C;
+Reference = J10;
+ValeurCmp = CONN_02X03;
+IdModule  = taniho:SM06B-SRSS-TB;
+EndCmp
+
+BeginCmp
+TimeStamp = /591D67E5;
+Reference = J11;
+ValeurCmp = CONN_02X03;
+IdModule  = taniho:SBH51-LPSE-D03;
+EndCmp
+
+BeginCmp
+TimeStamp = /590EE107;
+Reference = J16;
+ValeurCmp = CONN_02X03;
+IdModule  = taniho:SBH51-LPSE-D03;
+EndCmp
+
+BeginCmp
+TimeStamp = /5914E5B6;
+Reference = J101;
+ValeurCmp = CONN_01X01;
+IdModule  = taniho:Pad_1_1.5;
+EndCmp
+
+BeginCmp
+TimeStamp = /5914E6E8;
+Reference = J102;
+ValeurCmp = CONN_01X01;
+IdModule  = taniho:Pad_1_1.5;
+EndCmp
+
+BeginCmp
+TimeStamp = /5914D899;
+Reference = J103;
+ValeurCmp = CONN_01X01;
+IdModule  = taniho:Pad_1_1.5;
+EndCmp
+
+BeginCmp
+TimeStamp = /5914DD65;
+Reference = J104;
+ValeurCmp = CONN_01X01;
+IdModule  = taniho:Pad_1_1.5;
+EndCmp
+
+BeginCmp
+TimeStamp = /5914E9F0;
+Reference = J105;
+ValeurCmp = CONN_01X01;
+IdModule  = taniho:Pad_1_0.5;
+EndCmp
+
+BeginCmp
+TimeStamp = /5914EB42;
+Reference = J106;
+ValeurCmp = CONN_01X01;
+IdModule  = taniho:Pad_1_1.5;
+EndCmp
+
+BeginCmp
+TimeStamp = /5914DFB6;
+Reference = J107;
+ValeurCmp = CONN_01X01;
+IdModule  = taniho:Pad_1_0.5;
+EndCmp
+
+BeginCmp
+TimeStamp = /5914E0FE;
+Reference = J108;
+ValeurCmp = CONN_01X01;
+IdModule  = taniho:Pad_1_0.5;
+EndCmp
+
+BeginCmp
+TimeStamp = /59676423;
+Reference = LS1;
+ValeurCmp = Speaker;
+IdModule  = taniho:SMT-0440-T-R;
+EndCmp
+
+BeginCmp
+TimeStamp = /590EE76C;
+Reference = Q1;
+ValeurCmp = PHOTO_TRANSISTER;
+IdModule  = taniho:OP644SL;
+EndCmp
+
+BeginCmp
+TimeStamp = /590EE723;
+Reference = Q2;
+ValeurCmp = PHOTO_TRANSISTER;
+IdModule  = taniho:OP644SL;
+EndCmp
+
+BeginCmp
+TimeStamp = /590EE6CF;
+Reference = Q3;
+ValeurCmp = PHOTO_TRANSISTER;
+IdModule  = taniho:OP644SL;
+EndCmp
+
+BeginCmp
+TimeStamp = /590EE682;
+Reference = Q4;
+ValeurCmp = PHOTO_TRANSISTER;
+IdModule  = taniho:OP644SL;
+EndCmp
+
+BeginCmp
+TimeStamp = /590EE62D;
+Reference = Q5;
+ValeurCmp = PHOTO_TRANSISTER;
+IdModule  = taniho:OP644SL;
+EndCmp
+
+BeginCmp
+TimeStamp = /590EEA78;
+Reference = Q6;
+ValeurCmp = Q_NMOS_GSD;
+IdModule  = taniho:VMT3;
+EndCmp
+
+BeginCmp
+TimeStamp = /590F43AD;
+Reference = Q7;
+ValeurCmp = SIB441EDK;
+IdModule  = taniho:PowerPAK_SC-75-6L-Single;
+EndCmp
+
+BeginCmp
+TimeStamp = /59124620;
+Reference = Q8;
+ValeurCmp = Q_NMOS_GSD;
+IdModule  = taniho:VMT3;
+EndCmp
+
+BeginCmp
+TimeStamp = /59124ABF;
+Reference = Q9;
+ValeurCmp = Q_NMOS_GSD;
+IdModule  = taniho:VMT3;
+EndCmp
+
+BeginCmp
+TimeStamp = /59124AEE;
+Reference = Q10;
+ValeurCmp = Q_NMOS_GSD;
+IdModule  = taniho:VMT3;
+EndCmp
+
+BeginCmp
+TimeStamp = /59675EBA;
+Reference = Q11;
+ValeurCmp = US5U3;
+IdModule  = taniho:TUMT5;
+EndCmp
+
+BeginCmp
+TimeStamp = /59124D1D;
+Reference = Q12;
+ValeurCmp = Q_NMOS_GSD;
+IdModule  = taniho:VMT3;
+EndCmp
+
+BeginCmp
+TimeStamp = /5911CAFA;
+Reference = R1;
+ValeurCmp = 1k;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /5911E345;
+Reference = R2;
+ValeurCmp = 1k;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /5911E489;
+Reference = R3;
+ValeurCmp = 1k;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /5911E495;
+Reference = R4;
+ValeurCmp = 1k;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /5911E59F;
+Reference = R5;
+ValeurCmp = 1k;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /59121EB6;
+Reference = R6;
+ValeurCmp = 10;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /5912462C;
+Reference = R7;
+ValeurCmp = 10;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /59124ACB;
+Reference = R8;
+ValeurCmp = 10;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /59124AFA;
+Reference = R9;
+ValeurCmp = 10;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /59124D29;
+Reference = R10;
+ValeurCmp = 10;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /59119A14;
+Reference = R11;
+ValeurCmp = 10k;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /59124626;
+Reference = R12;
+ValeurCmp = 10k;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /59124AC5;
+Reference = R13;
+ValeurCmp = 10k;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /59124AF4;
+Reference = R14;
+ValeurCmp = 10k;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /59124D23;
+Reference = R15;
+ValeurCmp = 10k;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /5911841C;
+Reference = R16;
+ValeurCmp = 10k;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /5910D92F;
+Reference = R17;
+ValeurCmp = 100k;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /59110313;
+Reference = R18;
+ValeurCmp = 10k;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /591103CB;
+Reference = R19;
+ValeurCmp = 10k;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /5910F624;
+Reference = R20;
+ValeurCmp = 1k;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /5967959D;
+Reference = R21;
+ValeurCmp = 10k;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /596A711C;
+Reference = R22;
+ValeurCmp = 10;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /59140AD4;
+Reference = R23;
+ValeurCmp = 1k;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /598A26AD;
+Reference = R24;
+ValeurCmp = 1k;
+IdModule  = taniho:R_0402_metric;
+EndCmp
+
+BeginCmp
+TimeStamp = /590F06BF;
+Reference = SW1;
+ValeurCmp = SWITCH_INV;
+IdModule  = Buttons_Switches_SMD:SW_SPDT_PCM12;
+EndCmp
+
+BeginCmp
+TimeStamp = /590EE235;
+Reference = U1;
+ValeurCmp = AS5147;
+IdModule  = Housings_SSOP:TSSOP-14_4.4x5mm_Pitch0.65mm;
+EndCmp
+
+BeginCmp
+TimeStamp = /590EE37A;
+Reference = U2;
+ValeurCmp = LSM6DS3;
+IdModule  = taniho:LGA-14L;
+EndCmp
+
+BeginCmp
+TimeStamp = /5913E8CC;
+Reference = U3;
+ValeurCmp = AS5147;
+IdModule  = Housings_SSOP:TSSOP-14_4.4x5mm_Pitch0.65mm;
+EndCmp
+
+BeginCmp
+TimeStamp = /590EE087;
+Reference = U4;
+ValeurCmp = STM32F412Cx;
+IdModule  = taniho:QFN-48-1EP_7x7mm_Pitch0.5mm;
+EndCmp
+
+BeginCmp
+TimeStamp = /590F0BD4;
+Reference = U5;
+ValeurCmp = MB85RS16N;
+IdModule  = Housings_DFN_QFN:DFN-8-1EP_3x2mm_Pitch0.5mm;
+EndCmp
+
+BeginCmp
+TimeStamp = /590F3160;
+Reference = U6;
+ValeurCmp = LP5912;
+IdModule  = Housings_DFN_QFN:DFN-6-1EP_2x2mm_Pitch0.65mm;
+EndCmp
+
+BeginCmp
+TimeStamp = /590EE2AC;
+Reference = U7;
+ValeurCmp = DRV8835;
+IdModule  = taniho:DRV8835;
+EndCmp
+
+BeginCmp
+TimeStamp = /590EF74E;
+Reference = U8;
+ValeurCmp = LEFT_MOTOR;
+IdModule  = taniho:Pin_array_1x2_phi0.4;
+EndCmp
+
+BeginCmp
+TimeStamp = /590EF593;
+Reference = U9;
+ValeurCmp = RIGHT_MOTOR;
+IdModule  = taniho:Pin_array_1x2_phi0.4;
+EndCmp
+
+EndListe
