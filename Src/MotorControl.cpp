@@ -11,7 +11,7 @@ MotorControl::MotorControl() :
 	GAIN_RAD_P(-0.18f),
 	GAIN_RAD_I(-0.026f),
 	GAIN_RAD_D(0.0f),
-	GAIN_WALL_P(-1.8f),
+	GAIN_WALL_P(-1.8 -0.f),
 	GAIN_WALL_SHRT_P(-0.8f),
 	GAIN_WALL_I(0.0f),
 	GAIN_WALL_D(0.0f),
@@ -197,7 +197,8 @@ void MotorControl::controlVel(){
 				current_wall_correction = wall->getCorrectionComb(500);
 			}
 		} else {
-			current_wall_correction = wall->getCorrection(100);
+			// if (tar_lin_vel < 0.1f) current_wall_correction = 0;
+			/*else */current_wall_correction = wall->getCorrection(100);
 		}
 	} else {
 		current_wall_correction = 0;
